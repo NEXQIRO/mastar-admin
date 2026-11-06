@@ -1575,10 +1575,7 @@
         </div>
 
         <div class="topbar-actions">
-          <div class="status-indicator" id="system-status-indicator">
-            <span class="status-dot"></span>
-            <span id="system-status-text">🟢 লাইভ</span>
-          </div>
+
 
           <!-- Admin Notification Bell (Feature 3) -->
           <button class="btn-icon" onclick="toggleAdminNotificationDrawer()" id="btn-admin-notif-bell" title="এডমিন ডিপোজিট ও উইথড্র রিকোয়েস্ট নোটিফিকেশন" style="position: relative;">
@@ -1592,11 +1589,7 @@
             <span id="sound-toggle-label">সাউন্ড অন</span>
           </button>
 
-          <!-- Seed Defaults Button -->
-          <button class="btn btn-primary btn-sm" onclick="seedDatabaseWithDefaults()" title="লাইভ ডাটাবেসে ডিফল্ট টুর্নামেন্ট ও সেটিংস যুক্ত করুন">
-            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-            <span>ডাটাবেস সিড</span>
-          </button>
+
 
           <!-- Language Switcher -->
           <button class="btn btn-secondary btn-sm" onclick="toggleLanguage()" id="lang-switch-btn">
@@ -3857,13 +3850,13 @@
         else if (r.status === 'rejected') showToast(`❌ ৳${r.amount} ব্যালেন্স রিকোয়েস্ট বাতিল হয়েছে`, 'error');
       });
     }
-    async function openAdminFundModal() {
+    async function openAdminFundModal(suggestedAmt) {
       const u = auth && auth.currentUser;
       if (!db || !u) return;
       await u.reload();
       if (!u.emailVerified) { showToast('ইমেইল ভেরিফাই ছাড়া ব্যালেন্স রিকোয়েস্ট করা যাবে না', 'error'); return; }
       await u.getIdToken(true);
-      const a = prompt(`বর্তমান ব্যালেন্স: ৳${STATE.adminBalance}\nMaster Administrator-এর কাছে কত টাকা চান?`, '5000');
+      const a = prompt(`বর্তমান ব্যালেন্স: ৳${STATE.adminBalance}\nMaster Administrator-এর কাছে কত টাকা চান?`, String((typeof suggestedAmt === 'number' && suggestedAmt > 0) ? suggestedAmt : 5000));
       const amt = Math.floor(parseFloat(a));
       if (!amt || amt <= 0) return;
       const note = prompt('নোট (ঐচ্ছিক):', '') || '';
@@ -5985,6 +5978,18 @@
     async function approveDeposit(depId) {
       const dep = STATE.deposits.find(d => d.id === depId);
       if (!dep || !db) return;
+
+      // Admin balance check FIRST: if not enough, notify the admin clearly
+      const _myBal = STATE.adminBalance || 0;
+      const _need = parseFloat(dep.amount) || 0;
+      if (_myBal < _need) {
+        const _short = Math.ceil(_need - _myBal);
+        showToast(`⚠️ আপনার ব্যালেন্স পর্যাপ্ত নয়! দরকার ৳${_need}, আছে ৳${_myBal}`, 'error');
+        if (confirm(`⚠️ এই ডিপোজিট অনুমোদন করা যাচ্ছে না, কারণ আপনার ব্যালেন্স পর্যাপ্ত নয়।\n\nপ্লেয়ার: ${dep.userName}\nডিপোজিট: ৳${_need}\nআপনার ব্যালেন্স: ৳${_myBal}\nঘাটতি: ৳${_short}\n\nMaster-এর কাছে ব্যালেন্সের রিকোয়েস্ট পাঠাতে চান?`)) {
+          openAdminFundModal(_short);
+        }
+        return;
+      }
 
       if (!confirm(`৳${dep.amount} ডিপোজিট নিশ্চিতভাবে অনুমোদন করতে চান? (প্লেয়ার: ${dep.userName})`)) return;
 

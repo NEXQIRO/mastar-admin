@@ -6052,6 +6052,7 @@
         updates[`depositRequests/${depId}/status`] = 'Approved';
         updates[`depositRequests/${depId}/approvedAt`] = firebase.database.ServerValue.TIMESTAMP;
         updates[`users/${dep.uid}/balance`] = newBal;
+        updates[`users/${dep.uid}/adminUid`] = STATE.adminUser.uid;
         updates[`admins/${STATE.adminUser.uid}/balance`] = newAdminBal;
         updates[`transactions/${trxKey}`] = {
           trxId: trxKey,

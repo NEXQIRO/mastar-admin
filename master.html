@@ -70,9 +70,20 @@ async function fAll(v){const o={};FL.forEach(([k])=>o[k]=v);try{await db.ref('ad
 async function gToggle(id){const n=(GAMES[id].status||'Active')==='Active'?'Inactive':'Active';await db.ref('games/'+id).update({status:n,active:n==='Active',isActive:n==='Active',updatedAt:TS})}
 async function gDel(id){if(confirm('"'+(GAMES[id].name||id)+'" মুছে ফেলবেন? ইউজার প্যানেল থেকেও মুছে যাবে।'))await db.ref('games/'+id).remove()}
 async function uAdjust(uid){const u=USERS[uid]||{},a=parseFloat(prompt(`${u.name||uid} (ব্যালেন্স ৳${u.balance||0})\nযোগ করতে +50, কাটতে -50 লিখুন:`,'50'));if(!a)return;const why=prompt('কারণ:','ম্যানুয়াল সমন্বয়');if(!why)return;
+ // টাকা কাটলে সেই টাকা ইউজারের অ্যাডমিনের অ্যাকাউন্টে ফেরত যাবে
+ let adm=null;
+ if(a<0){
+  adm=u.adminUid&&ADM[u.adminUid]?u.adminUid:null;
+  if(!adm){const L=Object.entries(ADM);
+   if(L.length){const pick=prompt(`এই প্লেয়ারের অ্যাডমিন রেকর্ড করা নেই।\nকাটা ৳${-a} কোন অ্যাডমিনের অ্যাকাউন্টে ফেরত যাবে? নম্বর লিখুন\n(খালি রাখলে কোনো অ্যাডমিনকে ফেরত যাবে না, বাতিল চাপলে পুরো কাজ বন্ধ):\n\n`+L.map(([k,x],i)=>`${i+1}. ${x.name||x.email}`).join('\n'),'');
+    if(pick===null)return;const n=parseInt(pick);if(n>=1&&n<=L.length)adm=L[n-1][0]}}
+  if(adm&&!confirm(`৳${-a} প্লেয়ারের ব্যালেন্স থেকে কেটে "${ADM[adm].name||ADM[adm].email}" অ্যাডমিনের অ্যাকাউন্টে ফেরত যাবে। নিশ্চিত?`))return}
  let before=0;const ok=await tx(`users/${uid}/balance`,b=>{if(b===null)return 0;before=b;return b+a>=0?b+a:undefined});if(!ok){toast('ব্যালেন্স আপডেট হয়নি (ঋণাত্মক হয়ে যাবে)');return}
- const k=db.ref('transactions').push().key;await db.ref('transactions/'+k).set({trxId:k,uid,type:a>0?'ADMIN_CREDIT':'ADMIN_DEBIT',amount:Math.abs(a),beforeBal:before,afterBal:before+a,date:new Date().toLocaleString('bn-BD'),timestamp:TS,note:'Master Adjustment: '+why});
- await db.ref('adminAuditLogs').push({admin:auth.currentUser.email,action:'BALANCE_ADJUST',target:uid,details:`Amount: ${a}, Reason: ${why}`,timestamp:Date.now()});toast('সমন্বয় সম্পন্ন ✅')}
+ if(adm){try{if(!await tx(`admins/${adm}/balance`,inc(-a)))throw 0}catch(e){await tx(`users/${uid}/balance`,inc(-a));toast('অ্যাডমিনকে ফেরত দেওয়া যায়নি, তাই কাটা বাতিল করা হয়েছে');return}
+  try{await db.ref(`users/${uid}/adminUid`).set(adm)}catch(e){}
+  try{await log({type:'USER_DEDUCT_RETURN',uid:adm,email:ADM[adm].email||'',amount:-a,note:`${u.name||uid}: ${why}`})}catch(e){}}
+ const k=db.ref('transactions').push().key;await db.ref('transactions/'+k).set({trxId:k,uid,type:a>0?'ADMIN_CREDIT':'ADMIN_DEBIT',amount:Math.abs(a),beforeBal:before,afterBal:before+a,date:new Date().toLocaleString('bn-BD'),timestamp:TS,note:'Master Adjustment: '+why+(adm?` (অ্যাডমিনকে ফেরত: ${ADM[adm].name||ADM[adm].email})`:'')});
+ await db.ref('adminAuditLogs').push({admin:auth.currentUser.email,action:'BALANCE_ADJUST',target:uid,details:`Amount: ${a}, Reason: ${why}${adm?', Returned to admin: '+adm:''}`,timestamp:Date.now()});toast(adm?`সমন্বয় সম্পন্ন ✅ ৳${-a} অ্যাডমিনকে ফেরত গেছে`:'সমন্বয় সম্পন্ন ✅')}
 async function uStatus(uid){const n=(USERS[uid].status||'ACTIVE')==='ACTIVE'?'SUSPENDED':'ACTIVE';if(confirm('স্ট্যাটাস '+n+' করবেন?'))await db.ref(`users/${uid}/status`).set(n)}
 async function tx(p,f){return(await db.ref(p).transaction(f)).committed}
 const dec=a=>b=>b===null?0:(b>=a?b-a:undefined),inc=a=>b=>(b||0)+a;

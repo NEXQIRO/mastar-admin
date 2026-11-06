@@ -8575,9 +8575,7 @@ await db.ref('notices/not_2').set({
   <!-- ==================== PWA: ইনস্টল + মোবাইল নোটিফিকেশন ==================== -->
   <script>
   (function () {
-    // Firebase Console → Project settings → Cloud Messaging → Web Push certificates → Key pair
-    // এই কী এখানে বসান (অথবা firebase-config.js এ window.NP_FCM_VAPID_KEY = "..." দিন)।
-    var FCM_VAPID_KEY = window.NP_FCM_VAPID_KEY || '';
+    var FCM_VAPID_KEY = window.NP_FCM_VAPID_KEY || 'BFMPUSNK0s04bKLNeBc1QIesYB-X_V02WtQXdkdKXOFCbVGxI15SMmZ88GyRfPxfcxXu-6LRm740Gj8cUXsC0Tk';
 
     var swReg = null, deferredPrompt = null;
     var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);

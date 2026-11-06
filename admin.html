@@ -4386,7 +4386,7 @@
       const liveTourneys = STATE.tournaments.filter(t => (t.status || '').toLowerCase() === 'live').length;
       const completedTourneys = STATE.tournaments.filter(t => (t.status || '').toLowerCase() === 'completed').length;
       const pendingDeps = STATE.deposits.filter(d => d.status === 'Pending').length;
-      const pendingWiths = STATE.withdrawals.filter(w => w.status === 'Pending').length;
+      const pendingWiths = STATE.withdrawals.filter(w => isWithdrawalOpen(w.status)).length;
       const totalJoins = STATE.tournaments.reduce((acc, t) => acc + (t.joinedCount || 0), 0);
       const totalPrizesPaid = STATE.ledger
         .filter(l => l.type === 'PRIZE_PAYOUT')
@@ -4449,7 +4449,7 @@
             <td><span class="badge ${isDep ? 'badge-upcoming' : 'badge-completed'}">${isDep ? 'ডিপোজিট' : 'উইথড্র'}</span></td>
             <td><b>${escapeHtml(item.userName || 'Player')}</b></td>
             <td><b>৳ ${item.amount}</b> (${item.method})</td>
-            <td><span class="badge ${item.status === 'Pending' ? 'badge-pending' : item.status === 'Approved' || item.status === 'Completed' ? 'badge-approved' : 'badge-rejected'}">${item.status}</span></td>
+            <td><span class="badge ${['Verified','Processing'].includes(item.status) ? wdStatusMeta(item.status).cls : item.status === 'Pending' ? 'badge-pending' : item.status === 'Approved' || item.status === 'Completed' ? 'badge-approved' : 'badge-rejected'}">${['Verified','Processing'].includes(item.status) ? wdStatusMeta(item.status).label : item.status}</span></td>
             <td style="color:var(--text-dim); font-size:0.8rem;">${new Date(item.createdAt || Date.now()).toLocaleTimeString('bn-BD')}</td>
           </tr>
         `;
@@ -5925,15 +5925,17 @@
           <td><b style="color:var(--accent); font-size:1.05rem; font-family:var(--font-display);">৳ ${w.amount}</b></td>
           <td>৳ ${w.currentBalance || 0}</td>
           <td style="color:var(--text-dim); font-size:0.8rem;">${w.createdAt ? new Date(w.createdAt).toLocaleTimeString('bn-BD') : 'সম্প্রতি'}</td>
-          <td><span class="badge ${w.status === 'Pending' ? 'badge-pending' : w.status === 'Completed' ? 'badge-approved' : 'badge-rejected'}">${w.status}</span></td>
+          <td><span class="badge ${wdStatusMeta(w.status).cls}">${wdStatusMeta(w.status).label}</span></td>
           <td style="text-align: right; white-space: nowrap;">
-            ${w.status === 'Pending' ? `
+            ${isWithdrawalOpen(w.status) ? `
               <select class="action-dropdown-select" onchange="handleWithdrawalActionDropdown(this, '${w.id}')" title="অ্যাকশন নির্বাচন করুন">
                 <option value="" disabled selected>⚡ ব্যবস্থা নিন ▾</option>
-                <option value="complete" style="color:#22c55e; font-weight:700;">✓ টাকা পাঠানো হয়েছে</option>
+                <option value="verify" ${w.status === 'Verified' ? 'disabled' : ''} style="color:#3b82f6; font-weight:700;">🔍 ভেরিফাই করা হয়েছে</option>
+                <option value="processing" ${w.status === 'Processing' ? 'disabled' : ''} style="color:#f59e0b; font-weight:700;">⏳ প্রসেসিং চলছে</option>
+                <option value="complete" style="color:#22c55e; font-weight:700;">✓ কনফার্ম (টাকা পাঠানো হয়েছে)</option>
                 <option value="reject" style="color:#ef4444; font-weight:700;">✕ রিফান্ড / বাতিল</option>
               </select>
-            ` : `<span class="badge ${w.status === 'Completed' ? 'badge-approved' : 'badge-rejected'}" style="font-size:0.75rem;">${w.status === 'Completed' ? '✓ সম্পন্ন' : '✕ বাতিল'}</span>`}
+            ` : `<span class="badge ${wdStatusMeta(w.status).cls}" style="font-size:0.75rem;">${wdStatusMeta(w.status).label}</span>`}
           </td>
         </tr>
       `).join('');
@@ -5965,13 +5967,56 @@
       }
     }
 
+    // Withdrawal status flow: Pending -> Verified -> Processing -> Completed (or Rejected)
+    function isWithdrawalOpen(status) {
+      return ['Pending', 'Verified', 'Processing'].includes(status);
+    }
+    function wdStatusMeta(status) {
+      switch (status) {
+        case 'Pending':    return { label: '⏳ পেন্ডিং', cls: 'badge-pending' };
+        case 'Verified':   return { label: '🔍 ভেরিফাইড', cls: 'badge-upcoming' };
+        case 'Processing': return { label: '⚙️ প্রসেসিং', cls: 'badge-pending' };
+        case 'Completed':
+        case 'Approved':   return { label: '✓ সম্পন্ন', cls: 'badge-approved' };
+        case 'Rejected':   return { label: '✕ বাতিল', cls: 'badge-rejected' };
+        default:           return { label: status || '—', cls: 'badge-rejected' };
+      }
+    }
+
     function handleWithdrawalActionDropdown(sel, withId) {
       const val = sel.value;
       sel.value = ''; // Reset select
-      if (val === 'complete') {
+      if (val === 'verify') {
+        setWithdrawalStatus(withId, 'Verified');
+      } else if (val === 'processing') {
+        setWithdrawalStatus(withId, 'Processing');
+      } else if (val === 'complete') {
         completeWithdrawal(withId);
       } else if (val === 'reject') {
         rejectWithdrawal(withId);
+      }
+    }
+
+    // Verify / Processing: updates the status the user sees in their account
+    async function setWithdrawalStatus(withKey, newStatus) {
+      const w = STATE.withdrawals.find(item => item.id === withKey);
+      if (!w || !db) return;
+      if (!isWithdrawalOpen(w.status)) {
+        showToast('এই উইথড্র ইতিমধ্যে সম্পন্ন বা বাতিল হয়েছে', 'error');
+        return;
+      }
+      if (!['Verified', 'Processing'].includes(newStatus)) return;
+      try {
+        const updates = {};
+        const stamp = firebase.database.ServerValue.TIMESTAMP;
+        updates[`withdrawalRequests/${withKey}/status`] = newStatus;
+        updates[`withdrawalRequests/${withKey}/${newStatus === 'Verified' ? 'verifiedAt' : 'processingAt'}`] = stamp;
+        updates[`withdrawalRequests/${withKey}/statusUpdatedAt`] = stamp;
+        await db.ref().update(updates);
+        recordAuditLog('WITHDRAWAL_' + newStatus.toUpperCase(), withKey, `Status -> ${newStatus} (৳${w.amount}, ${w.userName || w.uid})`);
+        showToast(newStatus === 'Verified' ? '🔍 ভেরিফাই করা হয়েছে। ইউজার তার অ্যাকাউন্টে স্ট্যাটাস দেখবে।' : '⚙️ প্রসেসিং স্ট্যাটাস দেওয়া হয়েছে। ইউজার তার অ্যাকাউন্টে দেখবে।', 'success');
+      } catch (err) {
+        showToast('স্ট্যাটাস পরিবর্তন ব্যর্থ: ' + err.message, 'error');
       }
     }
 
@@ -6053,6 +6098,8 @@
       const w = STATE.withdrawals.find(item => item.id === withKey);
       if (!w || !db) return;
 
+      if (!isWithdrawalOpen(w.status)) { showToast('এই উইথড্র ইতিমধ্যে সম্পন্ন বা বাতিল হয়েছে', 'error'); return; }
+
       const curAdminBal = STATE.adminBalance || 0;
 
       const refId = prompt(`ইউজার ${w.userName} কে ৳${w.amount} পাঠানোর পর আপনার পেমেন্ট TrxID লিখুন:`, 'TRX_' + Math.floor(Math.random() * 899999 + 100000));
@@ -6064,6 +6111,7 @@
         updates[`withdrawalRequests/${withKey}/status`] = 'Completed';
         updates[`withdrawalRequests/${withKey}/paymentRef`] = refId;
         updates[`withdrawalRequests/${withKey}/processedAt`] = firebase.database.ServerValue.TIMESTAMP;
+        updates[`withdrawalRequests/${withKey}/statusUpdatedAt`] = firebase.database.ServerValue.TIMESTAMP;
 
         await db.ref().update(updates);
         setAdminBalance(newAdminBal, `Withdrawal Paid -৳${w.amount} to ${w.userName}`);
@@ -6077,6 +6125,8 @@
     async function rejectWithdrawal(withKey) {
       const w = STATE.withdrawals.find(item => item.id === withKey);
       if (!w || !db) return;
+
+      if (!isWithdrawalOpen(w.status)) { showToast('এই উইথড্র ইতিমধ্যে সম্পন্ন বা বাতিল হয়েছে', 'error'); return; }
 
       const reason = prompt('উইথড্র বাতিলের কারণ লিখুন (টাকা ইউজারের ওয়ালেটে রিফান্ড হবে):', 'ভুল একাউন্ট নাম্বার');
       if (!reason) return;
@@ -7284,7 +7334,7 @@ await db.ref('notices/not_2').set({
       const pendingDepAmt = filteredPendingDeps.reduce((acc, d) => acc + (parseFloat(d.amount) || 0), 0);
       const pendingDepCount = filteredPendingDeps.length;
 
-      const filteredPendingWiths = STATE.withdrawals.filter(w => w.status === 'Pending' && isDateInPeriod(w.createdAt, period, cStart, cEnd));
+      const filteredPendingWiths = STATE.withdrawals.filter(w => isWithdrawalOpen(w.status) && isDateInPeriod(w.createdAt, period, cStart, cEnd));
       const pendingWithAmt = filteredPendingWiths.reduce((acc, w) => acc + (parseFloat(w.amount) || 0), 0);
       const pendingWithCount = filteredPendingWiths.length;
 
@@ -7454,7 +7504,7 @@ await db.ref('notices/not_2').set({
         const mKey = formatMonthKey(w.processedAt || w.createdAt);
         const yKey = formatYearKey(w.processedAt || w.createdAt);
         const isComp = ['completed', 'approved'].includes((w.status || '').toLowerCase());
-        const isPend = w.status === 'Pending';
+        const isPend = isWithdrawalOpen(w.status);
         const amt = parseFloat(w.amount) || 0;
 
         if (dKey) {
@@ -7964,7 +8014,7 @@ await db.ref('notices/not_2').set({
       container.innerHTML = filtered.map(item => {
         const isDep = item.reqType === 'DEPOSIT';
         const isRead = STATE.adminReadNotifs.has(item.id);
-        const isPending = item.status === 'Pending';
+        const isPending = item.status === 'Pending' || (item.reqType === 'WITHDRAWAL' && ['Verified', 'Processing'].includes(item.status));
         const typeLabel = isDep ? 'ডিপোজিট আবেদন' : 'উইথড্র আবেদন';
         const badgeColor = isDep ? 'var(--primary)' : 'var(--accent)';
         const icon = isDep ? '📥' : '📤';
@@ -7977,7 +8027,7 @@ await db.ref('notices/not_2').set({
               <div>
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                   <b style="color: #fff; font-size: 0.95rem;">${typeLabel}: ৳ ${item.amount}</b>
-                  <span class="badge ${item.status === 'Pending' ? 'badge-pending' : item.status === 'Approved' || item.status === 'Completed' ? 'badge-approved' : 'badge-rejected'}" style="font-size: 0.68rem;">${item.status}</span>
+                  <span class="badge ${['Verified','Processing'].includes(item.status) ? wdStatusMeta(item.status).cls : item.status === 'Pending' ? 'badge-pending' : item.status === 'Approved' || item.status === 'Completed' ? 'badge-approved' : 'badge-rejected'}" style="font-size: 0.68rem;">${['Verified','Processing'].includes(item.status) ? wdStatusMeta(item.status).label : item.status}</span>
                   ${!isRead && isPending ? '<span style="width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent);" title="অপঠিত"></span>' : ''}
                 </div>
                 <div style="font-size: 0.82rem; color: var(--text-main); margin-top: 3px;">
@@ -8462,7 +8512,7 @@ await db.ref('notices/not_2').set({
     });
   
     // ===== MASTER-controlled feature switches (Firebase node: adminFeatures) =====
-    var FEATURE_MAP = {"tournaments": {"view": "view-tournaments"}, "users": {"view": "view-users"}, "wallet": {"view": "view-wallet"}, "finance": {"view": "view-finance"}, "notices": {"view": "view-notices"}, "notifications": {"view": "view-notifications"}, "settings": {"view": "view-settings"}, "audit": {"view": "view-audit"}, "t_create": {"fns": ["openCreateTournamentModal", "openEditTournamentModal", "handleSaveTournament"]}, "t_room": {"fns": ["openRoomModal", "handleSaveRoomDetails", "togglePublishRoom", "editRoomCreds"]}, "t_results": {"fns": ["openResultsModal", "handleDistributePrizes"]}, "t_delete": {"fns": ["deleteTournament"]}, "u_ban": {"fns": ["toggleUserStatus", "toggleUserStatusFromSecModal"]}, "u_track": {"fns": ["openPlayerSecurityModal"]}, "u_report": {"fns": ["openPlayerFinancialReport", "exportSinglePlayerCSV"]}, "dep": {"fns": ["approveDeposit", "rejectDeposit", "handleDepositActionDropdown"]}, "wd": {"fns": ["completeWithdrawal", "rejectWithdrawal", "handleWithdrawalActionDropdown"]}, "bal_req": {"fns": ["openAdminFundModal"]}, "notice_pub": {"fns": ["handlePublishNotice", "deleteNotice"]}, "notif_send": {"fns": ["handleSendNotification", "deleteNotification", "quickSendNotificationToUser", "quickNotifyFromSecModal"]}, "set_pay": {"fns": ["handleSavePaymentSettings", "handleSaveSocialSettings"]}, "banners": {"fns": ["handleAddBanner", "handleDeleteBanner"]}};
+    var FEATURE_MAP = {"tournaments": {"view": "view-tournaments"}, "users": {"view": "view-users"}, "wallet": {"view": "view-wallet"}, "finance": {"view": "view-finance"}, "notices": {"view": "view-notices"}, "notifications": {"view": "view-notifications"}, "settings": {"view": "view-settings"}, "audit": {"view": "view-audit"}, "t_create": {"fns": ["openCreateTournamentModal", "openEditTournamentModal", "handleSaveTournament"]}, "t_room": {"fns": ["openRoomModal", "handleSaveRoomDetails", "togglePublishRoom", "editRoomCreds"]}, "t_results": {"fns": ["openResultsModal", "handleDistributePrizes"]}, "t_delete": {"fns": ["deleteTournament"]}, "u_ban": {"fns": ["toggleUserStatus", "toggleUserStatusFromSecModal"]}, "u_track": {"fns": ["openPlayerSecurityModal"]}, "u_report": {"fns": ["openPlayerFinancialReport", "exportSinglePlayerCSV"]}, "dep": {"fns": ["approveDeposit", "rejectDeposit", "handleDepositActionDropdown"]}, "wd": {"fns": ["completeWithdrawal", "rejectWithdrawal", "setWithdrawalStatus", "handleWithdrawalActionDropdown"]}, "bal_req": {"fns": ["openAdminFundModal"]}, "notice_pub": {"fns": ["handlePublishNotice", "deleteNotice"]}, "notif_send": {"fns": ["handleSendNotification", "deleteNotification", "quickSendNotificationToUser", "quickNotifyFromSecModal"]}, "set_pay": {"fns": ["handleSavePaymentSettings", "handleSaveSocialSettings"]}, "banners": {"fns": ["handleAddBanner", "handleDeleteBanner"]}};
     var FEATURES = {};
     function featureOn(k) { return FEATURES[k] !== false; }
     function applyFeatureFlags() {

@@ -1424,6 +1424,44 @@
     .toast.error { border-left-color: #b91c1c; }
     .toast [style*="color:#fff"], .toast [style*="color: #fff"] { color: #0f172a !important; }
     .toast .btn-primary { background: #0f1b2d; color: #fff !important; box-shadow: none; }
+  
+    /* ========================================================
+       MASTER-STYLE LAYOUT (শুধু ডিজাইন; কোনো ফাংশন বদলায়নি)
+       হেডার → ট্যাব বাটন → কনটেন্ট, ঠিক Master পেজের মতো
+       ======================================================== */
+    #app-container { flex-direction: column; }
+    .main-wrapper { display: contents; margin-left: 0 !important; padding-bottom: 0 !important; }
+    .topbar { order: 1; position: static; height: auto; min-height: 56px; padding: 10px 16px; flex-wrap: wrap; gap: 8px; backdrop-filter: none; background: var(--bg-card); }
+    .sidebar { order: 2; position: static; transform: none !important; width: 100%; flex-direction: row; align-items: center; gap: 8px; padding: 10px 14px; background: var(--bg-base); border-right: 0; border-bottom: 1px solid var(--border-subtle); }
+    .brand-header { display: none; }
+    .nav-list { flex-direction: row; flex-wrap: wrap; padding: 0; gap: 8px; overflow: visible; }
+    .nav-item button { width: auto; padding: 7px 12px; gap: 6px; font-size: 14px; font-weight: 600; color: var(--primary); background: var(--bg-inner); border: 1px solid var(--border-color); border-radius: 10px; box-shadow: none; }
+    .nav-item button svg { display: none; }
+    .nav-item button:hover { background: var(--bg-inner); color: var(--primary-hover); border-color: var(--border-color); }
+    .nav-item.active button, .nav-item.active button:hover { background: var(--primary); color: #0A0A0A; border-color: var(--primary); box-shadow: none; }
+    .nav-badge { margin-left: 2px; padding: 1px 7px; }
+    .nav-item.active .nav-badge { background: #0A0A0A; color: var(--primary); }
+    .sidebar-footer { padding: 0; border: 0; background: none; flex-direction: row; }
+    .admin-avatar, .admin-details { display: none; }
+    .mobile-menu-btn, .bottom-nav { display: none !important; }
+    .content-area { order: 3; padding: 14px; max-width: 1000px; }
+
+    .card, .stat-card { box-shadow: none; border-radius: 14px; }
+    .card { padding: 14px; }
+    .card.accent-border, .card.red-border { border-top: 1px solid var(--border-subtle); }
+    .stat-card { padding: 14px; gap: 0; }
+    .stat-card:hover { transform: none; box-shadow: none; border-color: var(--border-subtle); }
+    .stat-icon { display: none; }
+    .stat-title { font-size: 12px; }
+    .stat-value { font-size: 22px; }
+    .btn { min-height: 36px; padding: 7px 12px; font-size: 14px; border-radius: 10px; box-shadow: none !important; }
+    .btn:hover { transform: none !important; }
+    .btn-sm { min-height: 32px; padding: 5px 10px; font-size: 13px; }
+    .table-container { border: 0; background: transparent; border-radius: 0; }
+    th { background: transparent; font-size: 12px; padding: 9px 8px; }
+    td { padding: 9px 8px; }
+    tr:hover td { background: transparent; }
+    @media (max-width: 900px) { .sidebar { padding: 8px 12px; } }
   </style>
 </head>
 <body data-theme="dark">
@@ -1561,9 +1599,6 @@
           <button class="mobile-menu-btn" onclick="toggleSidebar()" title="মেনু">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
           </button>
-          <div class="topbar-brand-title" style="font-family: var(--font-display); font-size: 1.15rem; color: #F5EFE0; font-weight: 700; letter-spacing: 0.5px;">
-            NP TOURNAMENT BD
-          </div>
         </div>
 
         <!-- Admin Balance Pill (৳ 20,000) -->
@@ -8549,6 +8584,17 @@ await db.ref('notices/not_2').set({
     })();
     function attachFeatureFlags() {
       if (!db) return;
+  db.ref('adminSettings/userAdminOn').on('value', (s) => {
+    let ov = document.getElementById('ua-off-overlay');
+    if (s.val() === false) {
+      if (!ov) {
+        ov = document.createElement('div'); ov.id = 'ua-off-overlay';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#0A0A0A;color:#F5EFE0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;font-family:var(--font-body)';
+        ov.innerHTML = '<div style="font-size:42px">⛔</div><div style="font-size:20px;font-weight:700;color:#F59E0B">অ্যাডমিন প্যানেল এখন বন্ধ আছে</div><div style="color:#A89F8A;max-width:340px">Master এডমিন সাময়িকভাবে User Admin সাইড বন্ধ রেখেছেন। চালু হলে আবার ব্যবহার করতে পারবেন।</div><button onclick="handleLogout()" style="margin-top:6px;padding:9px 18px;border-radius:10px;border:1px solid #B97800;background:#1D1A14;color:#F59E0B;font-weight:600;cursor:pointer">লগআউট</button>';
+        document.body.appendChild(ov);
+      }
+    } else if (ov) { ov.remove(); }
+  });
       db.ref('adminFeatures').on('value', (s) => { FEATURES = s.val() || {}; applyFeatureFlags(); });
       const _fuid = STATE.adminUser && STATE.adminUser.uid;
       if (_fuid) db.ref(`admins/${_fuid}/features`).on('value', (s) => { MY_FEATURES = s.val() || {}; applyFeatureFlags(); });

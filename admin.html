@@ -8514,8 +8514,9 @@ await db.ref('notices/not_2').set({
   
     // ===== MASTER-controlled feature switches (Firebase node: adminFeatures) =====
     var FEATURE_MAP = {"tournaments": {"view": "view-tournaments"}, "users": {"view": "view-users"}, "wallet": {"view": "view-wallet"}, "finance": {"view": "view-finance"}, "notices": {"view": "view-notices"}, "notifications": {"view": "view-notifications"}, "settings": {"view": "view-settings"}, "audit": {"view": "view-audit"}, "t_create": {"fns": ["openCreateTournamentModal", "openEditTournamentModal", "handleSaveTournament"]}, "t_room": {"fns": ["openRoomModal", "handleSaveRoomDetails", "togglePublishRoom", "editRoomCreds"]}, "t_results": {"fns": ["openResultsModal", "handleDistributePrizes"]}, "t_delete": {"fns": ["deleteTournament"]}, "u_ban": {"fns": ["toggleUserStatus", "toggleUserStatusFromSecModal"]}, "u_track": {"fns": ["openPlayerSecurityModal"]}, "u_report": {"fns": ["openPlayerFinancialReport", "exportSinglePlayerCSV"]}, "dep": {"fns": ["approveDeposit", "rejectDeposit", "handleDepositActionDropdown"]}, "wd": {"fns": ["completeWithdrawal", "rejectWithdrawal", "setWithdrawalStatus", "handleWithdrawalActionDropdown"]}, "bal_req": {"fns": ["openAdminFundModal"]}, "notice_pub": {"fns": ["handlePublishNotice", "deleteNotice"]}, "notif_send": {"fns": ["handleSendNotification", "deleteNotification", "quickSendNotificationToUser", "quickNotifyFromSecModal"]}, "set_pay": {"fns": ["handleSavePaymentSettings", "handleSaveSocialSettings"]}, "banners": {"fns": ["handleAddBanner", "handleDeleteBanner"]}};
-    var FEATURES = {};
-    function featureOn(k) { return FEATURES[k] !== false; }
+    var FEATURES = {}, MY_FEATURES = {};
+    // A feature is ON only if it is on for everyone (adminFeatures) AND on for this admin (admins/{uid}/features)
+    function featureOn(k) { return FEATURES[k] !== false && MY_FEATURES[k] !== false; }
     function applyFeatureFlags() {
       let css = '';
       Object.entries(FEATURE_MAP).forEach(([k, d]) => {
@@ -8549,6 +8550,8 @@ await db.ref('notices/not_2').set({
     function attachFeatureFlags() {
       if (!db) return;
       db.ref('adminFeatures').on('value', (s) => { FEATURES = s.val() || {}; applyFeatureFlags(); });
+      const _fuid = STATE.adminUser && STATE.adminUser.uid;
+      if (_fuid) db.ref(`admins/${_fuid}/features`).on('value', (s) => { MY_FEATURES = s.val() || {}; applyFeatureFlags(); });
     }
   </script>
 </body>

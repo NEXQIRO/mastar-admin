@@ -15,7 +15,9 @@
 .w{max-width:1000px;margin:0 auto;padding:14px}.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px}
 .cd{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px}.cd b{display:block;font:700 22px Rajdhani;color:var(--gold)}.cd span{color:var(--mu);font-size:12px}
 .tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-button,input{font-family:inherit;font-size:14px}
+button,input,textarea,select{font-family:inherit;font-size:14px}
+textarea{width:100%;background:var(--in);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;color:var(--tx);font-size:13px}
+#tn{height:36px;background:var(--in);color:var(--gold);border:1px solid var(--bg2);border-radius:10px;padding:0 8px;font-weight:600;max-width:200px}
 button{border:1px solid var(--bg2);background:var(--in);color:var(--gold);border-radius:10px;padding:7px 12px;cursor:pointer;font-weight:600}
 button.on,button.p{background:var(--gold);color:#0A0A0A}button.d{color:var(--er);border-color:#6b2a2a}button:disabled{opacity:.4}
 input{height:42px;background:var(--in);border:1px solid var(--bd);border-radius:10px;padding:0 12px;color:var(--tx);width:100%}
@@ -26,36 +28,66 @@ input{height:42px;background:var(--in);border:1px solid var(--bd);border-radius:
 #login h1{font:700 22px Rajdhani;color:var(--gold);text-align:center}#app{display:none}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--in);border:1px solid var(--bg2);padding:10px 16px;border-radius:12px;display:none;z-index:99;max-width:90%}
 </style></head><body>
-<div id="login"><div class="cd"><h1>MASTER ADMINISTRATOR</h1>
+<div id="login"><div class="cd"><h1 id="lt">MASTER ADMINISTRATOR</h1>
 <input id="em" type="email" placeholder="Master ইমেইল"><input id="pw" type="password" placeholder="পাসওয়ার্ড">
-<button class="p" onclick="login()">লগইন</button></div></div>
+<button class="p" onclick="login()">লগইন</button><button id="lback" style="display:none" onclick="switchTenant('main')">← মূল প্রজেক্টে ফিরুন</button></div></div>
 <div id="app">
-<div class="hd"><h1>👑 MASTER ADMINISTRATOR</h1><div class="bal" id="mb">৳ 0</div><button onclick="setMaster()">ব্যালেন্স সেট</button><button class="d" onclick="auth.signOut()">লগআউট</button></div>
+<div class="hd"><h1>👑 MASTER ADMINISTRATOR</h1><select id="tn" onchange="switchTenant(this.value)" title="প্রজেক্ট বদলান"></select><div class="bal" id="mb">৳ 0</div><button onclick="setMaster()">ব্যালেন্স সেট</button><button class="d" onclick="auth.signOut()">লগআউট</button></div>
 <div class="w">
 <div class="g"><div class="cd"><span>Master ব্যালেন্স</span><b id="s1">0</b></div><div class="cd"><span>অ্যাডমিনদের মোট ব্যালেন্স</span><b id="s2">0</b></div><div class="cd"><span>অ্যাডমিন সংখ্যা</span><b id="s3">0</b></div><div class="cd"><span>পেন্ডিং রিকোয়েস্ট</span><b id="s4">0</b></div></div>
-<div class="tabs"><button id="t-admins" onclick="tab('admins')">User Admins</button><button id="t-reqs" onclick="tab('reqs')">ব্যালেন্স রিকোয়েস্ট</button><button id="t-led" onclick="tab('led')">লেজার</button><button id="t-games" onclick="tab('games')">গেম ম্যানেজমেন্ট</button><button id="t-players" onclick="tab('players')">প্লেয়ার</button><button id="t-act" onclick="tab('act')">গেম অ্যাক্টিভিটি</button><button id="t-feat" onclick="tab('feat')">ফিচার কন্ট্রোল</button></div>
+<div class="tabs"><button id="t-admins" onclick="tab('admins')">User Admins</button><button id="t-reqs" onclick="tab('reqs')">ব্যালেন্স রিকোয়েস্ট</button><button id="t-led" onclick="tab('led')">লেজার</button><button id="t-games" onclick="tab('games')">গেম ম্যানেজমেন্ট</button><button id="t-players" onclick="tab('players')">প্লেয়ার</button><button id="t-act" onclick="tab('act')">গেম অ্যাক্টিভিটি</button><button id="t-feat" onclick="tab('feat')">ফিচার কন্ট্রোল</button><button id="t-tenants" onclick="tab('tenants')">🔥 প্রজেক্টসমূহ</button></div>
 <div id="v"></div></div></div><div id="toast"></div>
 <script>
-firebase.initializeApp(window.NP_FIREBASE_CONFIG);const auth=firebase.auth(),db=firebase.database(),TS=firebase.database.ServerValue.TIMESTAMP;
+const MAINCFG=window.NP_FIREBASE_CONFIG,MAINAPP=firebase.initializeApp(MAINCFG),TS=firebase.database.ServerValue.TIMESTAMP;
+let auth=MAINAPP.auth(),db=MAINAPP.database(),TID='main',TCFG=MAINCFG,TNAME='মূল প্রজেক্ট',LST=[],AUTHUNSUB=null;
 const $=i=>document.getElementById(i),fmt=n=>'৳ '+Math.round(n||0).toLocaleString('en-US'),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let ADM={},REQ={},LED={},GAMES={},USERS={},ACT={},MB=0,cur='admins',started=false,Q='',FEAT={},SEL='';
 const FL=[["tournaments", "পেজ", "টুর্নামেন্টসমূহ (পেজ)"], ["users", "পেজ", "প্লেয়ার / ইউজার (পেজ)"], ["wallet", "পেজ", "ওয়ালেট ও রিকোয়েস্ট (পেজ)"], ["finance", "পেজ", "আর্থিক রিপোর্ট / Finance (পেজ)"], ["notices", "পেজ", "নোটিশ ও ঘোষণা (পেজ)"], ["notifications", "পেজ", "ইউজার নোটিফিকেশন (পেজ)"], ["settings", "পেজ", "অ্যাপ সেটিংস (পেজ)"], ["audit", "পেজ", "রিপোর্ট ও অডিট লগ (পেজ)"], ["t_create", "টুর্নামেন্ট", "টুর্নামেন্ট তৈরি ও এডিট"], ["t_room", "টুর্নামেন্ট", "রুম আইডি/পাসওয়ার্ড দেওয়া ও পাবলিশ"], ["t_results", "টুর্নামেন্ট", "রেজাল্ট ও প্রাইজ বিতরণ"], ["t_delete", "টুর্নামেন্ট", "টুর্নামেন্ট ডিলিট"], ["u_ban", "প্লেয়ার", "প্লেয়ার ব্যান / সক্রিয় করা"], ["u_track", "প্লেয়ার", "প্লেয়ার ট্র্যাকিং (IP, ডিভাইস, অডিট)"], ["u_report", "প্লেয়ার", "প্লেয়ার আর্থিক রিপোর্ট ও CSV"], ["dep", "ওয়ালেট", "ডিপোজিট অনুমোদন / বাতিল"], ["wd", "ওয়ালেট", "উইথড্র সম্পন্ন / বাতিল"], ["bal_req", "ওয়ালেট", "Master-এর কাছে ব্যালেন্স রিকোয়েস্ট"], ["notice_pub", "নোটিশ", "নোটিশ পাবলিশ ও ডিলিট"], ["notif_send", "নোটিফিকেশন", "নোটিফিকেশন পাঠানো ও ডিলিট"], ["set_pay", "সেটিংস", "পেমেন্ট ও সোশ্যাল লিংক সেটিংস"], ["banners", "সেটিংস", "ব্যানার যোগ ও ডিলিট"]];
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3500)}
 async function login(){try{await auth.signInWithEmailAndPassword($('em').value.trim(),$('pw').value)}catch(e){toast('লগইন ব্যর্থ: '+e.message)}}
-auth.onAuthStateChanged(async u=>{
- if(!u){$('login').style.display='flex';$('app').style.display='none';return}
- const m=await db.ref('master/balance').once('value').catch(()=>null);
- if(!m){await auth.signOut();toast('এই অ্যাকাউন্টের Master অ্যাক্সেস নেই');return}
- $('login').style.display='none';$('app').style.display='block';
- if(started)return;started=true;
- db.ref('master/balance').on('value',s=>{if(s.val()===null)db.ref('master/balance').set(0);MB=+s.val()||0;draw()});
- db.ref('admins').on('value',s=>{ADM=s.val()||{};draw()});
- db.ref('balanceRequests').limitToLast(100).on('value',s=>{REQ=s.val()||{};draw()});
- db.ref('adminFeatures').on('value',s=>{FEAT=s.val()||{};draw()});
- db.ref('games').on('value',s=>{GAMES=s.val()||{};draw()});
- db.ref('users').on('value',s=>{USERS=s.val()||{};draw()});
- db.ref('balanceLedger').limitToLast(100).on('value',s=>{LED=s.val()||{};draw()});
-});
+const on=(r,cb)=>{r.on('value',cb);LST.push(r)};
+function attachAll(){
+ on(db.ref('master/balance'),s=>{if(s.val()===null)db.ref('master/balance').set(0);MB=+s.val()||0;draw()});
+ on(db.ref('admins'),s=>{ADM=s.val()||{};draw()});
+ on(db.ref('balanceRequests').limitToLast(100),s=>{REQ=s.val()||{};draw()});
+ on(db.ref('adminFeatures'),s=>{FEAT=s.val()||{};draw()});
+ on(db.ref('games'),s=>{GAMES=s.val()||{};draw()});
+ on(db.ref('users'),s=>{USERS=s.val()||{};draw()});
+ on(db.ref('balanceLedger').limitToLast(100),s=>{LED=s.val()||{};draw()})}
+function detachAll(){LST.forEach(r=>{try{r.off()}catch(e){}});LST=[];started=false;ADM={};REQ={};LED={};GAMES={};USERS={};ACT={};MB=0;FEAT={};SEL=''}
+function bindAuth(){if(AUTHUNSUB)AUTHUNSUB();const my=TID;
+ AUTHUNSUB=auth.onAuthStateChanged(async u=>{if(my!==TID)return;
+  if(!u){$('lt').textContent=TID==='main'?'MASTER ADMINISTRATOR':'লগইন: '+TNAME;$('lback').style.display=TID==='main'?'none':'block';$('login').style.display='flex';$('app').style.display='none';return}
+  const m=await db.ref('master/balance').once('value').catch(()=>null);if(my!==TID)return;
+  if(!m){await auth.signOut();toast('এই অ্যাকাউন্টের Master অ্যাক্সেস নেই ('+TNAME+'): ওই প্রজেক্টে রুলস পাবলিশ ও Master ইউজার আছে কিনা দেখুন');return}
+  $('login').style.display='none';$('app').style.display='block';
+  if(started)return;started=true;attachAll();draw()})}
+// ===== একাধিক Firebase প্রজেক্ট (টেন্যান্ট) =====
+function getTenants(){try{return JSON.parse(localStorage.getItem('np_tenants')||'[]')}catch(e){return[]}}
+function parseCfg(t){const g=k=>{const m=String(t).match(new RegExp('["\']?'+k+'["\']?\\s*:\\s*["\']([^"\']+)["\']'));return m?m[1].trim():''};
+ const c={apiKey:g('apiKey'),authDomain:g('authDomain'),databaseURL:g('databaseURL'),projectId:g('projectId'),storageBucket:g('storageBucket'),messagingSenderId:g('messagingSenderId'),appId:g('appId')};
+ if(!c.authDomain&&c.projectId)c.authDomain=c.projectId+'.firebaseapp.com';
+ if(!c.databaseURL&&c.projectId)c.databaseURL='https://'+c.projectId+'-default-rtdb.firebaseio.com';
+ Object.keys(c).forEach(k=>{if(!c[k])delete c[k]});return c}
+function drawTn(){const sel=$('tn');if(!sel)return;const L=[['main','মূল প্রজেক্ট'],...getTenants().map(t=>[t.id,t.name])];
+ sel.innerHTML=L.map(([id,n])=>`<option value="${esc(id)}"${id===TID?' selected':''}>${esc(n)}</option>`).join('')}
+function switchTenant(id){if(id===TID){drawTn();return}
+ const t=id==='main'?{id:'main',name:'মূল প্রজেক্ট',config:MAINCFG}:getTenants().find(x=>x.id===id);
+ if(!t){toast('প্রজেক্ট পাওয়া যায়নি');drawTn();return}
+ detachAll();TID=t.id;TNAME=t.name;TCFG=t.config;
+ let app;try{if(t.id==='main')app=MAINAPP;else{const nm='t_'+t.id;app=firebase.apps.find(a=>a.name===nm)||firebase.initializeApp(t.config,nm)}}
+ catch(e){toast('প্রজেক্টে সংযোগ ব্যর্থ: '+e.message);TID='main';TNAME='মূল প্রজেক্ট';TCFG=MAINCFG;app=MAINAPP}
+ auth=app.auth();db=app.database();cur='admins';drawTn();bindAuth()}
+function addTenant(){const name=$('tnm').value.trim(),c=parseCfg($('tcf').value);
+ if(!name){toast('প্রজেক্টের নাম দিন');return}
+ if(!c.apiKey||!c.projectId){toast('কনফিগে অন্তত apiKey ও projectId থাকতে হবে');return}
+ const id=c.projectId.toLowerCase().replace(/[^a-z0-9]/g,'');const L=getTenants();
+ if(!id||id==='main'||c.projectId===MAINCFG.projectId||L.some(x=>x.id===id)){toast('এই প্রজেক্ট আগে থেকেই যোগ করা আছে');return}
+ L.push({id,name,config:c});try{localStorage.setItem('np_tenants',JSON.stringify(L))}catch(e){toast('সেভ করা যায়নি');return}
+ $('tnm').value='';$('tcf').value='';toast('প্রজেক্ট যোগ হয়েছে ✅ এবার "খুলুন" চাপুন');drawTn();draw()}
+function delTenant(id){if(!confirm('এই প্রজেক্ট তালিকা থেকে সরাবেন? (Firebase-এর কোনো ডেটা মুছবে না)'))return;
+ localStorage.setItem('np_tenants',JSON.stringify(getTenants().filter(x=>x.id!==id)));if(TID===id)switchTenant('main');drawTn();draw()}
+bindAuth();
 function tab(t){cur=t;if(t==='act')loadAct();draw()}
 async function loadAct(){try{const s=await db.ref('game_sessions').limitToLast(200).once('value');ACT=s.val()||{}}catch(e){toast('অ্যাক্টিভিটি লোড ব্যর্থ: '+e.message)}draw()}
 async function saveGame(id){const g=id?GAMES[id]:{};
@@ -116,7 +148,7 @@ async function approve(id){const r=REQ[id],a=ADM[r.uid];
  catch(e){await db.ref(`balanceRequests/${id}/status`).set('pending');toast(e.message)}}
 async function reject(id){if(!confirm('বাতিল করবেন?'))return;await db.ref('balanceRequests/'+id).update({status:'rejected',processedAt:TS})}
 async function createAdmin(){const n=$('an').value.trim(),e=$('ae').value.trim(),p=$('ap').value;if(!n||!e||p.length<6){toast('নাম, ইমেইল ও ৬+ অক্ষরের পাসওয়ার্ড দিন');return}
- try{const sec=firebase.apps.find(a=>a.name==='sec')||firebase.initializeApp(window.NP_FIREBASE_CONFIG,'sec');
+ try{const sec=firebase.apps.find(a=>a.name==='sec_'+TID)||firebase.initializeApp(TCFG,'sec_'+TID);
   const cr=await sec.auth().createUserWithEmailAndPassword(e,p);await cr.user.sendEmailVerification();
   await db.ref('admins/'+cr.user.uid).set({name:n,email:e,role:'USER_ADMIN',active:true,balance:0,emailVerified:false,createdAt:TS});
   await sec.auth().signOut();toast('অ্যাডমিন তৈরি হয়েছে। ভেরিফিকেশন ইমেইল পাঠানো হয়েছে।');$('an').value=$('ae').value=$('ap').value=''}
@@ -124,7 +156,7 @@ async function createAdmin(){const n=$('an').value.trim(),e=$('ae').value.trim()
 function draw(){if(!started)return;
  const A=Object.entries(ADM),P=Object.entries(REQ).filter(([k,r])=>r.status==='pending');
  $('mb').textContent=$('s1').textContent=fmt(MB);$('s2').textContent=fmt(A.reduce((s,[k,a])=>s+(+a.balance||0),0));$('s3').textContent=A.length;$('s4').textContent=P.length;
- ['admins','reqs','led','games','players','act','feat'].forEach(t=>$('t-'+t).className=(t===cur||(t==='admins'&&cur==='admin'))?'on':'');let h='';
+ drawTn();['admins','reqs','led','games','players','act','feat','tenants'].forEach(t=>$('t-'+t).className=(t===cur||(t==='admins'&&cur==='admin'))?'on':'');let h='';
  if(cur==='admins'){h=`<div class="row"><input id="an" placeholder="নাম"><input id="ae" type="email" placeholder="ইমেইল"><input id="ap" type="password" placeholder="পাসওয়ার্ড (৬+)"><button class="p" onclick="createAdmin()">+ নতুন অ্যাডমিন</button></div><div class="sc"><table><tr><th>নাম/ইমেইল</th><th>ব্যালেন্স</th><th>ইমেইল</th><th>স্ট্যাটাস</th><th>অ্যাকশন</th></tr>`+
   A.map(([u,a])=>`<tr><td><a href="#" style="color:var(--gold);font-weight:700;text-decoration:none" onclick="openAdmin('${u}');return false">${esc(a.name||a.email||'-')} ›</a><br><small>${esc(a.email)}</small></td><td>${fmt(a.balance)}</td><td><span class="pl ${a.emailVerified?'':'y'}">${a.emailVerified?'ভেরিফাইড':'পেন্ডিং'}</span></td><td><span class="pl ${a.active===false?'b':''}">${a.active===false?'বন্ধ':'সক্রিয়'}</span></td><td><button onclick="send('${u}')">পাঠান</button> <button onclick="reclaim('${u}')">ফেরত</button> <button class="d" onclick="toggle('${u}')">${a.active===false?'চালু':'বন্ধ'}</button></td></tr>`).join('')+`</table></div>`}
  if(cur==='reqs'){h=`<div class="sc"><table><tr><th>অ্যাডমিন</th><th>পরিমাণ</th><th>নোট</th><th>সময়</th><th>স্ট্যাটাস</th><th></th></tr>`+
@@ -154,7 +186,22 @@ function draw(){if(!started)return;
 <div class="sc"><table><tr><th>পরিমাণ</th><th>নোট</th><th>সময়</th><th>স্ট্যাটাস</th><th></th></tr>`+rq.map(([k,r])=>`<tr><td>${fmt(r.amount)}</td><td>${esc(r.note)}</td><td>${r.createdAt?new Date(r.createdAt).toLocaleString('bn-BD'):''}</td><td><span class="pl ${r.status==='rejected'?'b':r.status==='pending'?'y':''}">${esc(r.status)}</span></td><td>${r.status==='pending'?`<button class="p" onclick="approve('${k}')">অনুমোদন</button> <button class="d" onclick="reject('${k}')">বাতিল</button>`:''}</td></tr>`).join('')+`</table></div>
 <div class="cd" style="margin:14px 0 10px"><b style="font-size:16px">সাম্প্রতিক লেনদেন (শেষ ২০টি)</b></div>
 <div class="sc"><table><tr><th>সময়</th><th>ধরন</th><th>পরিমাণ</th><th>নোট</th></tr>`+lg.map(l=>`<tr><td>${l.time?new Date(l.time).toLocaleString('bn-BD'):''}</td><td>${esc(l.type)}</td><td>${fmt(l.amount)}</td><td>${esc(l.note)}</td></tr>`).join('')+`</table></div>`}
- const keep={};$('v').querySelectorAll('input,select').forEach(e=>{if(e.id)keep[e.id]=e.value});$('v').innerHTML=h;
+
+ if(cur==='tenants'){const L=getTenants();
+  h=`<div class="cd" style="margin-bottom:10px"><b style="font-size:16px">নতুন Firebase প্রজেক্ট যোগ করুন</b><span>প্রতিটা ব্যবসার আলাদা Firebase হলে এখানে যোগ করুন। যোগের আগে ওই প্রজেক্টে: ১) Realtime Database ও Authentication (Email/Password) চালু করুন, ২) আপনার database_rules.json পাবলিশ করুন, ৩) Authentication → Users এ আপনার Master ইমেইল দিয়ে একটা ইউজার বানান। তারপর নিচে কনফিগ পেস্ট করে যোগ করুন, তালিকায় "খুলুন" চেপে ওই প্রজেক্টের Master লগইন দিন।</span></div>
+<div class="row"><input id="tnm" placeholder="ব্যবসা / প্রজেক্টের নাম (যেমন: ABC Gaming)"></div>
+<div class="row"><textarea id="tcf" rows="8" placeholder='Firebase Console → Project settings → Your apps → Config থেকে কপি করে পেস্ট করুন। যেমন:
+apiKey: "AIza...",
+authDomain: "myproj.firebaseapp.com",
+databaseURL: "https://myproj-default-rtdb.firebaseio.com",
+projectId: "myproj",
+appId: "1:123:web:abc"'></textarea></div>
+<div class="row"><button class="p" onclick="addTenant()">+ প্রজেক্ট যোগ করুন</button></div>
+<div class="sc"><table><tr><th>নাম</th><th>Project ID</th><th>অবস্থা</th><th>অ্যাকশন</th></tr>
+<tr><td>মূল প্রজেক্ট</td><td>${esc(MAINCFG.projectId||'')}</td><td><span class="pl ${TID==='main'?'':'y'}">${TID==='main'?'এখন খোলা':'—'}</span></td><td><button onclick="switchTenant('main')">খুলুন</button></td></tr>`+
+  L.map(t=>`<tr><td>${esc(t.name)}</td><td>${esc(t.config.projectId||'')}</td><td><span class="pl ${TID===t.id?'':'y'}">${TID===t.id?'এখন খোলা':'—'}</span></td><td><button class="p" onclick="switchTenant('${esc(t.id)}')">খুলুন</button> <button class="d" onclick="delTenant('${esc(t.id)}')">সরান</button></td></tr>`).join('')+`</table></div>
+<div class="cd" style="margin-top:10px"><span>প্রজেক্টের তালিকা শুধু এই ডিভাইসের ব্রাউজারে সেভ থাকে (পাসওয়ার্ড সেভ হয় না)। অন্য ফোন বা কম্পিউটারে খুললে আবার যোগ করতে হবে।</span></div>`}
+ const keep={};$('v').querySelectorAll('input,select,textarea').forEach(e=>{if(e.id)keep[e.id]=e.value});$('v').innerHTML=h;
  Object.entries(keep).forEach(([i,v])=>{const e=$(i);if(e)e.value=v;});
  const f=document.activeElement;if(f&&f.id==='pq'){}}
 </script></body></html>

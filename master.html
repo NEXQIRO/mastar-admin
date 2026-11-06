@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MASTER ADMINISTRATOR</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<style>
+:root{--bg:#0A0A0A;--card:#151310;--in:#1D1A14;--bd:#2E281C;--gold:#F59E0B;--bg2:#B97800;--tx:#F5EFE0;--mu:#A89F8A;--ok:#4ADE80;--er:#F87171}
+*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--tx);font-family:'Hind Siliguri',sans-serif;font-size:14px}
+.hd{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.hd h1{flex:1;font:700 20px Rajdhani;color:var(--gold);letter-spacing:1px}
+.bal{border:1px solid var(--bg2);background:var(--in);color:var(--gold);border-radius:99px;padding:4px 14px;font:700 15px Rajdhani}
+.w{max-width:1000px;margin:0 auto;padding:14px}.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px}
+.cd{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px}.cd b{display:block;font:700 22px Rajdhani;color:var(--gold)}.cd span{color:var(--mu);font-size:12px}
+.tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+button,input{font-family:inherit;font-size:14px}
+button{border:1px solid var(--bg2);background:var(--in);color:var(--gold);border-radius:10px;padding:7px 12px;cursor:pointer;font-weight:600}
+button.on,button.p{background:var(--gold);color:#0A0A0A}button.d{color:var(--er);border-color:#6b2a2a}button:disabled{opacity:.4}
+input{height:42px;background:var(--in);border:1px solid var(--bd);border-radius:10px;padding:0 12px;color:var(--tx);width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.row input{flex:1;min-width:140px}
+.sc{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:640px}th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--bd)}th{color:var(--mu);font-size:12px}
+.pl{padding:2px 9px;border-radius:99px;font-size:11px;border:1px solid #1f5b35;color:var(--ok)}.pl.b{border-color:#6b2a2a;color:var(--er)}.pl.y{border-color:var(--bg2);color:var(--gold)}
+#login{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;z-index:9}#login .cd{width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px}
+#login h1{font:700 22px Rajdhani;color:var(--gold);text-align:center}#app{display:none}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--in);border:1px solid var(--bg2);padding:10px 16px;border-radius:12px;display:none;z-index:99;max-width:90%}
+</style></head><body>
+<div id="login"><div class="cd"><h1>MASTER ADMINISTRATOR</h1>
+<input id="em" type="email" placeholder="Master ইমেইল"><input id="pw" type="password" placeholder="পাসওয়ার্ড">
+<button class="p" onclick="login()">লগইন</button></div></div>
+<div id="app">
+<div class="hd"><h1>👑 MASTER ADMINISTRATOR</h1><div class="bal" id="mb">৳ 0</div><button onclick="setMaster()">ব্যালেন্স সেট</button><button class="d" onclick="auth.signOut()">লগআউট</button></div>
+<div class="w">
+<div class="g"><div class="cd"><span>Master ব্যালেন্স</span><b id="s1">0</b></div><div class="cd"><span>অ্যাডমিনদের মোট ব্যালেন্স</span><b id="s2">0</b></div><div class="cd"><span>অ্যাডমিন সংখ্যা</span><b id="s3">0</b></div><div class="cd"><span>পেন্ডিং রিকোয়েস্ট</span><b id="s4">0</b></div></div>
+<div class="tabs"><button id="t-admins" onclick="tab('admins')">User Admins</button><button id="t-reqs" onclick="tab('reqs')">ব্যালেন্স রিকোয়েস্ট</button><button id="t-led" onclick="tab('led')">লেজার</button><button id="t-games" onclick="tab('games')">গেম ম্যানেজমেন্ট</button><button id="t-players" onclick="tab('players')">প্লেয়ার</button><button id="t-act" onclick="tab('act')">গেম অ্যাক্টিভিটি</button><button id="t-feat" onclick="tab('feat')">ফিচার কন্ট্রোল</button></div>
+<div id="v"></div></div></div><div id="toast"></div>
+<script>
+firebase.initializeApp(window.NP_FIREBASE_CONFIG);const auth=firebase.auth(),db=firebase.database(),TS=firebase.database.ServerValue.TIMESTAMP;
+const $=i=>document.getElementById(i),fmt=n=>'৳ '+Math.round(n||0).toLocaleString('en-US'),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let ADM={},REQ={},LED={},GAMES={},USERS={},ACT={},MB=0,cur='admins',started=false,Q='',FEAT={};
+const FL=[["tournaments", "পেজ", "টুর্নামেন্টসমূহ (পেজ)"], ["users", "পেজ", "প্লেয়ার / ইউজার (পেজ)"], ["wallet", "পেজ", "ওয়ালেট ও রিকোয়েস্ট (পেজ)"], ["finance", "পেজ", "আর্থিক রিপোর্ট / Finance (পেজ)"], ["notices", "পেজ", "নোটিশ ও ঘোষণা (পেজ)"], ["notifications", "পেজ", "ইউজার নোটিফিকেশন (পেজ)"], ["settings", "পেজ", "অ্যাপ সেটিংস (পেজ)"], ["audit", "পেজ", "রিপোর্ট ও অডিট লগ (পেজ)"], ["t_create", "টুর্নামেন্ট", "টুর্নামেন্ট তৈরি ও এডিট"], ["t_room", "টুর্নামেন্ট", "রুম আইডি/পাসওয়ার্ড দেওয়া ও পাবলিশ"], ["t_results", "টুর্নামেন্ট", "রেজাল্ট ও প্রাইজ বিতরণ"], ["t_delete", "টুর্নামেন্ট", "টুর্নামেন্ট ডিলিট"], ["u_ban", "প্লেয়ার", "প্লেয়ার ব্যান / সক্রিয় করা"], ["u_track", "প্লেয়ার", "প্লেয়ার ট্র্যাকিং (IP, ডিভাইস, অডিট)"], ["u_report", "প্লেয়ার", "প্লেয়ার আর্থিক রিপোর্ট ও CSV"], ["dep", "ওয়ালেট", "ডিপোজিট অনুমোদন / বাতিল"], ["wd", "ওয়ালেট", "উইথড্র সম্পন্ন / বাতিল"], ["bal_req", "ওয়ালেট", "Master-এর কাছে ব্যালেন্স রিকোয়েস্ট"], ["notice_pub", "নোটিশ", "নোটিশ পাবলিশ ও ডিলিট"], ["notif_send", "নোটিফিকেশন", "নোটিফিকেশন পাঠানো ও ডিলিট"], ["set_pay", "সেটিংস", "পেমেন্ট ও সোশ্যাল লিংক সেটিংস"], ["banners", "সেটিংস", "ব্যানার যোগ ও ডিলিট"]];
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3500)}
+async function login(){try{await auth.signInWithEmailAndPassword($('em').value.trim(),$('pw').value)}catch(e){toast('লগইন ব্যর্থ: '+e.message)}}
+auth.onAuthStateChanged(async u=>{
+ if(!u){$('login').style.display='flex';$('app').style.display='none';return}
+ const m=await db.ref('master/balance').once('value').catch(()=>null);
+ if(!m){await auth.signOut();toast('এই অ্যাকাউন্টের Master অ্যাক্সেস নেই');return}
+ $('login').style.display='none';$('app').style.display='block';
+ if(started)return;started=true;
+ db.ref('master/balance').on('value',s=>{if(s.val()===null)db.ref('master/balance').set(0);MB=+s.val()||0;draw()});
+ db.ref('admins').on('value',s=>{ADM=s.val()||{};draw()});
+ db.ref('balanceRequests').limitToLast(100).on('value',s=>{REQ=s.val()||{};draw()});
+ db.ref('adminFeatures').on('value',s=>{FEAT=s.val()||{};draw()});
+ db.ref('games').on('value',s=>{GAMES=s.val()||{};draw()});
+ db.ref('users').on('value',s=>{USERS=s.val()||{};draw()});
+ db.ref('balanceLedger').limitToLast(100).on('value',s=>{LED=s.val()||{};draw()});
+});
+function tab(t){cur=t;if(t==='act')loadAct();draw()}
+async function loadAct(){try{const s=await db.ref('game_sessions').limitToLast(200).once('value');ACT=s.val()||{}}catch(e){toast('অ্যাক্টিভিটি লোড ব্যর্থ: '+e.message)}draw()}
+async function saveGame(id){const g=id?GAMES[id]:{};
+ const name=id?prompt('গেমের নাম:',g.name||''):$('gn').value.trim(),cat=id?prompt('ক্যাটাগরি (Popular Games / Crash Games):',g.category||'Popular Games'):$('gc').value,
+ img=id?prompt('ছবির লিংক:',g.image||''):$('gi').value.trim(),url=id?prompt('গেমের লিংক:',g.url||''):$('gu').value.trim();
+ if(!name||!img||!url){toast('সব তথ্য দিন');return}
+ const k=id||db.ref('games').push().key,st=g.status||'Active';
+ const d={id:k,name,category:cat,image:img,imageUrl:img,url,gameUrl:url,status:st,active:st==='Active',isActive:st==='Active',updatedAt:TS};if(!id)d.createdAt=TS;
+ try{await db.ref('games/'+k).update(d);toast('গেম সংরক্ষিত ✅');if(!id)['gn','gi','gu'].forEach(i=>$(i).value='')}catch(e){toast('ব্যর্থ: '+e.message)}}
+async function fSet(k,v){try{await db.ref('adminFeatures/'+k).set(v)}catch(e){toast('ব্যর্থ: '+e.message)}}
+async function fAll(v){const o={};FL.forEach(([k])=>o[k]=v);try{await db.ref('adminFeatures').set(o);toast(v?'সব ফিচার চালু ✅':'সব ফিচার বন্ধ ⛔')}catch(e){toast('ব্যর্থ: '+e.message)}}
+async function gToggle(id){const n=(GAMES[id].status||'Active')==='Active'?'Inactive':'Active';await db.ref('games/'+id).update({status:n,active:n==='Active',isActive:n==='Active',updatedAt:TS})}
+async function gDel(id){if(confirm('"'+(GAMES[id].name||id)+'" মুছে ফেলবেন? ইউজার প্যানেল থেকেও মুছে যাবে।'))await db.ref('games/'+id).remove()}
+async function uAdjust(uid){const u=USERS[uid]||{},a=parseFloat(prompt(`${u.name||uid} (ব্যালেন্স ৳${u.balance||0})\nযোগ করতে +50, কাটতে -50 লিখুন:`,'50'));if(!a)return;const why=prompt('কারণ:','ম্যানুয়াল সমন্বয়');if(!why)return;
+ let before=0;const ok=await tx(`users/${uid}/balance`,b=>{if(b===null)return 0;before=b;return b+a>=0?b+a:undefined});if(!ok){toast('ব্যালেন্স আপডেট হয়নি (ঋণাত্মক হয়ে যাবে)');return}
+ const k=db.ref('transactions').push().key;await db.ref('transactions/'+k).set({trxId:k,uid,type:a>0?'ADMIN_CREDIT':'ADMIN_DEBIT',amount:Math.abs(a),beforeBal:before,afterBal:before+a,date:new Date().toLocaleString('bn-BD'),timestamp:TS,note:'Master Adjustment: '+why});
+ await db.ref('adminAuditLogs').push({admin:auth.currentUser.email,action:'BALANCE_ADJUST',target:uid,details:`Amount: ${a}, Reason: ${why}`,timestamp:Date.now()});toast('সমন্বয় সম্পন্ন ✅')}
+async function uStatus(uid){const n=(USERS[uid].status||'ACTIVE')==='ACTIVE'?'SUSPENDED':'ACTIVE';if(confirm('স্ট্যাটাস '+n+' করবেন?'))await db.ref(`users/${uid}/status`).set(n)}
+async function tx(p,f){return(await db.ref(p).transaction(f)).committed}
+const dec=a=>b=>b===null?0:(b>=a?b-a:undefined),inc=a=>b=>(b||0)+a;
+async function log(o){await db.ref('balanceLedger').push({...o,time:TS})}
+async function toAdmin(uid,amt,type,note,reqId){
+ if(!await tx('master/balance',dec(amt)))throw new Error('Master ব্যালেন্স যথেষ্ট নয়');
+ try{if(!await tx(`admins/${uid}/balance`,inc(amt)))throw 0}catch(e){await tx('master/balance',inc(amt));throw new Error('ট্রান্সফার ব্যর্থ, টাকা ফেরত দেওয়া হয়েছে')}
+ await log({type,uid,email:(ADM[uid]||{}).email||'',amount:amt,note:note||'',reqId:reqId||''})}
+async function fromAdmin(uid,amt,note){
+ if(!await tx(`admins/${uid}/balance`,dec(amt)))throw new Error('অ্যাডমিনের ব্যালেন্স যথেষ্ট নয়');
+ await tx('master/balance',inc(amt));await log({type:'MASTER_RECLAIM',uid,email:(ADM[uid]||{}).email||'',amount:amt,note:note||''})}
+async function setMaster(){const v=parseFloat(prompt('নতুন Master ব্যালেন্স (টাকা):',MB));if(isNaN(v)||v<0)return;const n=prompt('কারণ/নোট:','Master fund update')||'';
+ await db.ref('master/balance').set(v);await log({type:'MASTER_SET',amount:v,note:n});toast('Master ব্যালেন্স আপডেট হয়েছে')}
+async function send(uid){const a=Math.floor(parseFloat(prompt('কত টাকা পাঠাবেন?','1000')));if(!a||a<=0)return;
+ try{await toAdmin(uid,a,'MASTER_CREDIT','Direct send');toast('পাঠানো হয়েছে')}catch(e){toast(e.message)}}
+async function reclaim(uid){const a=Math.floor(parseFloat(prompt('কত টাকা ফেরত নেবেন?','1000')));if(!a||a<=0)return;
+ try{await fromAdmin(uid,a,'Reclaim');toast('ফেরত নেওয়া হয়েছে')}catch(e){toast(e.message)}}
+async function toggle(uid){await db.ref(`admins/${uid}/active`).set(ADM[uid].active===false)}
+async function reauth(){const p=prompt('নিশ্চিত করতে আপনার Master পাসওয়ার্ড দিন:');if(!p)return false;
+ try{await auth.currentUser.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(auth.currentUser.email,p));return true}catch(e){toast('পাসওয়ার্ড ভুল');return false}}
+async function approve(id){const r=REQ[id],a=ADM[r.uid];
+ if(!a||a.active===false){toast('অ্যাডমিন সক্রিয় নয়');return}
+ if(!a.emailVerified){toast('এই অ্যাডমিনের ইমেইল ভেরিফাই হয়নি');return}
+ if(!await reauth())return;
+ const c=await db.ref(`balanceRequests/${id}/status`).transaction(s=>s==='pending'?'processing':undefined);if(!c.committed)return;
+ try{await toAdmin(r.uid,r.amount,'REQUEST_APPROVED',r.note,id);await db.ref('balanceRequests/'+id).update({status:'approved',processedAt:TS});toast('অনুমোদিত ✅')}
+ catch(e){await db.ref(`balanceRequests/${id}/status`).set('pending');toast(e.message)}}
+async function reject(id){if(!confirm('বাতিল করবেন?'))return;await db.ref('balanceRequests/'+id).update({status:'rejected',processedAt:TS})}
+async function createAdmin(){const n=$('an').value.trim(),e=$('ae').value.trim(),p=$('ap').value;if(!n||!e||p.length<6){toast('নাম, ইমেইল ও ৬+ অক্ষরের পাসওয়ার্ড দিন');return}
+ try{const sec=firebase.apps.find(a=>a.name==='sec')||firebase.initializeApp(window.NP_FIREBASE_CONFIG,'sec');
+  const cr=await sec.auth().createUserWithEmailAndPassword(e,p);await cr.user.sendEmailVerification();
+  await db.ref('admins/'+cr.user.uid).set({name:n,email:e,role:'USER_ADMIN',active:true,balance:0,emailVerified:false,createdAt:TS});
+  await sec.auth().signOut();toast('অ্যাডমিন তৈরি হয়েছে। ভেরিফিকেশন ইমেইল পাঠানো হয়েছে।');$('an').value=$('ae').value=$('ap').value=''}
+ catch(x){toast('ব্যর্থ: '+x.message)}}
+function draw(){if(!started)return;
+ const A=Object.entries(ADM),P=Object.entries(REQ).filter(([k,r])=>r.status==='pending');
+ $('mb').textContent=$('s1').textContent=fmt(MB);$('s2').textContent=fmt(A.reduce((s,[k,a])=>s+(+a.balance||0),0));$('s3').textContent=A.length;$('s4').textContent=P.length;
+ ['admins','reqs','led','games','players','act','feat'].forEach(t=>$('t-'+t).className=t===cur?'on':'');let h='';
+ if(cur==='admins'){h=`<div class="row"><input id="an" placeholder="নাম"><input id="ae" type="email" placeholder="ইমেইল"><input id="ap" type="password" placeholder="পাসওয়ার্ড (৬+)"><button class="p" onclick="createAdmin()">+ নতুন অ্যাডমিন</button></div><div class="sc"><table><tr><th>নাম/ইমেইল</th><th>ব্যালেন্স</th><th>ইমেইল</th><th>স্ট্যাটাস</th><th>অ্যাকশন</th></tr>`+
+  A.map(([u,a])=>`<tr><td>${esc(a.name||'-')}<br><small>${esc(a.email)}</small></td><td>${fmt(a.balance)}</td><td><span class="pl ${a.emailVerified?'':'y'}">${a.emailVerified?'ভেরিফাইড':'পেন্ডিং'}</span></td><td><span class="pl ${a.active===false?'b':''}">${a.active===false?'বন্ধ':'সক্রিয়'}</span></td><td><button onclick="send('${u}')">পাঠান</button> <button onclick="reclaim('${u}')">ফেরত</button> <button class="d" onclick="toggle('${u}')">${a.active===false?'চালু':'বন্ধ'}</button></td></tr>`).join('')+`</table></div>`}
+ if(cur==='reqs'){h=`<div class="sc"><table><tr><th>অ্যাডমিন</th><th>পরিমাণ</th><th>নোট</th><th>সময়</th><th>স্ট্যাটাস</th><th></th></tr>`+
+  Object.entries(REQ).reverse().map(([k,r])=>`<tr><td>${esc(r.email)}</td><td>${fmt(r.amount)}</td><td>${esc(r.note)}</td><td>${r.createdAt?new Date(r.createdAt).toLocaleString('bn-BD'):''}</td><td><span class="pl ${r.status==='rejected'?'b':r.status==='pending'?'y':''}">${esc(r.status)}</span></td><td>${r.status==='pending'?`<button class="p" onclick="approve('${k}')">অনুমোদন</button> <button class="d" onclick="reject('${k}')">বাতিল</button>`:''}</td></tr>`).join('')+`</table></div>`}
+ if(cur==='led'){h=`<div class="sc"><table><tr><th>সময়</th><th>ধরন</th><th>অ্যাডমিন</th><th>পরিমাণ</th><th>নোট</th></tr>`+
+  Object.values(LED).reverse().map(l=>`<tr><td>${l.time?new Date(l.time).toLocaleString('bn-BD'):''}</td><td>${esc(l.type)}</td><td>${esc(l.email)}</td><td>${fmt(l.amount)}</td><td>${esc(l.note)}</td></tr>`).join('')+`</table></div>`}
+ if(cur==='games'){h=`<div class="row"><input id="gn" placeholder="গেমের নাম"><select id="gc" style="height:42px;background:var(--in);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:0 10px"><option>Popular Games</option><option>Crash Games</option></select><input id="gi" placeholder="ছবির লিংক"><input id="gu" placeholder="গেমের লিংক"><button class="p" onclick="saveGame()">+ নতুন গেম</button></div><div class="cd" style="margin-bottom:10px"><span>জনপ্রিয় গেমস ও ক্র্যাশ গেমস তালিকা (Firebase Node: games) — ${Object.keys(GAMES).length} টি</span></div><div class="sc"><table><tr><th>নাম</th><th>ক্যাটাগরি</th><th>স্ট্যাটাস</th><th>অ্যাকশন</th></tr>`+
+  Object.entries(GAMES).map(([k,g])=>`<tr><td>${esc(g.name)}</td><td>${esc(g.category)}</td><td><span class="pl ${(g.status||'Active')==='Active'?'':'b'}">${esc(g.status||'Active')}</span></td><td><button onclick="saveGame('${k}')">এডিট</button> <button onclick="gToggle('${k}')">চালু/বন্ধ</button> <button class="d" onclick="gDel('${k}')">মুছুন</button></td></tr>`).join('')+`</table></div>`}
+ if(cur==='players'){const q=Q.toLowerCase();h=`<div class="row"><input id="pq" placeholder="নাম/ইমেইল/ফোন দিয়ে খুঁজুন" value="${esc(Q)}" oninput="Q=this.value;draw();const p=$('pq');p.focus();p.setSelectionRange(Q.length,Q.length)"></div><div class="sc"><table><tr><th>প্লেয়ার</th><th>ব্যালেন্স</th><th>স্ট্যাটাস</th><th>অ্যাকশন</th></tr>`+
+  Object.entries(USERS).filter(([k,u])=>!q||[u.name,u.email,u.phone,u.username].join(' ').toLowerCase().includes(q)).slice(0,200).map(([k,u])=>`<tr><td>${esc(u.name||u.username||k)}<br><small>${esc(u.email||u.phone||'')}</small></td><td>${fmt(u.balance)}</td><td><span class="pl ${(u.status||'ACTIVE')==='ACTIVE'?'':'b'}">${esc(u.status||'ACTIVE')}</span></td><td><button onclick="uAdjust('${k}')">৳ সমন্বয়</button> <button class="d" onclick="uStatus('${k}')">${(u.status||'ACTIVE')==='ACTIVE'?'ব্যান':'সক্রিয়'}</button></td></tr>`).join('')+`</table></div>`}
+ if(cur==='act'){h=`<div class="sc"><table><tr><th>প্লেয়ার</th><th>গেম</th><th>শুরু</th><th>এন্ট্রি</th><th>এক্সিট</th><th>নেট</th><th>IP/ডিভাইস</th><th>স্ট্যাটাস</th></tr>`+
+  Object.values(ACT).reverse().map(s=>{const n=typeof s.netWinLoss==='number'?s.netWinLoss:(+s.exitBalance||0)-(+s.entryBalance||0);return`<tr><td>${esc(s.userName||(USERS[s.uid]||{}).name||s.uid)}</td><td>${esc(s.gameName||'-')}</td><td>${s.startTime?new Date(s.startTime).toLocaleString('bn-BD'):''}</td><td>${fmt(s.entryBalance)}</td><td>${fmt(s.exitBalance)}</td><td style="color:${n>=0?'var(--ok)':'var(--er)'}">${fmt(n)}</td><td><small>${esc(s.ip||'-')}<br>${esc(s.device||'')}</small></td><td>${esc(s.status||'')}</td></tr>`}).join('')+`</table></div>`}
+ if(cur==='feat'){let g='';h=`<div class="row"><button class="p" onclick="fAll(true)">সব চালু</button><button class="d" onclick="fAll(false)">সব বন্ধ</button></div><div class="cd" style="margin-bottom:10px"><span>এখানে বন্ধ করা ফিচার User Admin প্যানেলে লুকিয়ে যাবে ও কাজ করবে না। চালু করলে আবার দেখা যাবে ও কাজ করবে।</span></div><div class="sc"><table>`+
+  FL.map(([k,gr,l])=>{const on=FEAT[k]!==false,hd=gr!==g?`<tr><th colspan="3" style="color:var(--gold)">${esc(gr)}</th></tr>`:'';g=gr;return hd+`<tr><td>${esc(l)}</td><td><span class="pl ${on?'':'b'}">${on?'চালু':'বন্ধ'}</span></td><td><button class="${on?'d':'p'}" onclick="fSet('${k}',${!on})">${on?'বন্ধ করুন':'চালু করুন'}</button></td></tr>`}).join('')+`</table></div>`}
+ const keep={};$('v').querySelectorAll('input,select').forEach(e=>{if(e.id)keep[e.id]=e.value});$('v').innerHTML=h;
+ Object.entries(keep).forEach(([i,v])=>{const e=$(i);if(e)e.value=v;});
+ const f=document.activeElement;if(f&&f.id==='pq'){}}
+</script></body></html>

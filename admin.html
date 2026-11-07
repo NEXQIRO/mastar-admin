@@ -4,6 +4,58 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>NP TOURNAMENT BD - Admin Control Panel</title>
+  <script>
+  /* Phone ke shob somoy app-er moto mobile layout-e dekhabe (Chrome "Desktop site" mode-eo) */
+  (function () {
+    var de = document.documentElement;
+    function apply() {
+      try {
+        var touch = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in window);
+        var phone = touch && Math.min(screen.width, screen.height) <= 820;
+        if (!phone) {
+          de.classList.remove('force-mobile', 'force-narrow', 'force-zoom');
+          de.style.removeProperty('zoom'); de.style.removeProperty('--fz');
+          return;
+        }
+        /* Installed app (standalone) hole: browser-er "Desktop site" er moto sidebar + grid layout dekhabe */
+        var isApp = (window.matchMedia && (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: minimal-ui)').matches)) || navigator.standalone === true;
+        if (isApp) {
+          var vm = document.querySelector('meta[name="viewport"]');
+          if (vm && vm.getAttribute('content').indexOf('width=980') === -1) {
+            vm.setAttribute('content', 'width=980, user-scalable=no, viewport-fit=cover');
+          }
+          de.classList.remove('force-mobile', 'force-narrow', 'force-zoom');
+          de.style.removeProperty('zoom'); de.style.removeProperty('--fz');
+          return;
+        }
+        var iw = window.innerWidth || de.clientWidth, sw = screen.width;
+        var k = iw / sw, eff = iw;
+        if (k > 1.15) {            // browser wide (desktop-site) viewport use korche
+          de.style.setProperty('--fz', k.toFixed(4));
+          de.style.zoom = k.toFixed(4);
+          de.classList.add('force-zoom');
+          eff = sw;
+        } else {
+          de.style.removeProperty('zoom'); de.style.removeProperty('--fz');
+          de.classList.remove('force-zoom');
+        }
+        de.classList.toggle('force-mobile', eff <= 900);
+        de.classList.toggle('force-narrow', eff <= 500);
+      } catch (e) {}
+    }
+    apply();
+    window.addEventListener('resize', apply);
+    window.addEventListener('orientationchange', function () { setTimeout(apply, 250); });
+    window.addEventListener('load', function () { setTimeout(apply, 150); setTimeout(apply, 900); });
+  })();
+  </script>
+  <link rel="manifest" href="admin-manifest.json">
+  <meta name="theme-color" content="#0A0A0A">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="NP Admin">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="admin-icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -13,6 +65,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 
   <style>
     /* ========================================================
@@ -49,50 +102,81 @@
       --radius-xl: 18px;
       --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.5);
       --shadow-glow: 0 0 20px rgba(245, 158, 11, 0.22);
+      --c-base: #0A0A0A;
+      --c-deep: #12100E;
+      --c-surface: #151310;
+      --c-inner: #1D1A14;
+      --c-line: #2E281C;
+      --c-gold-line: #B97800;
+      --c-text: #F5EFE0;
+      --c-muted: #A89F8A;
+      --c-dim: #736B5E;
+      --c-on-primary: #0A0A0A;
     }
 
     [data-theme="light"] {
-      --bg-base: #12100E;
-      --bg-surface: #1B1814;
-      --bg-card: #1B1814;
-      --bg-card-hover: #24201B;
-      --bg-inner: #24201B;
+      --bg-base: #F4F1EA;
+      --bg-surface: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #FAF6EC;
+      --bg-inner: #F6F2E8;
       --border-color: #D97706;
-      --border-subtle: #3D3527;
-      --text-main: #FBF8F2;
-      --text-muted: #B8AF9C;
-      --text-dim: #8A8170;
-      --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.4);
+      --border-subtle: #E6DECB;
+      --primary: #D97706;
+      --primary-hover: #B45309;
+      --primary-glow: rgba(217, 119, 6, 0.25);
+      --accent: #DC2626;
+      --accent-hover: #B91C1C;
+      --accent-glow: rgba(220, 38, 38, 0.25);
+      --success: #15803D;
+      --warning: #B45309;
+      --info: #0369A1;
+      --text-main: #1C1917;
+      --text-muted: #57534E;
+      --text-dim: #78716C;
+      --shadow-card: 0 2px 10px rgba(60, 40, 10, 0.10);
+      --shadow-glow: 0 0 14px rgba(217, 119, 6, 0.15);
+      --c-base: #F4F1EA;
+      --c-deep: #EFEBE0;
+      --c-surface: #FFFFFF;
+      --c-inner: #F6F2E8;
+      --c-line: #E6DECB;
+      --c-gold-line: #D97706;
+      --c-text: #1C1917;
+      --c-muted: #57534E;
+      --c-dim: #78716C;
+      --c-on-primary: #1C1917;
+      color-scheme: light;
     }
 
     /* MostWinn88 Preview Specific Utilities */
-    .ph { background: #0A0A0A; color: #F5EFE0; border-radius: 20px; border: 1px solid #2E281C; overflow: hidden; position: relative; }
+    .ph { background: var(--c-base); color: var(--c-text); border-radius: 20px; border: 1px solid var(--c-line); overflow: hidden; position: relative; }
     .ph * { box-sizing: border-box; }
-    .hd { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #2E281C; background: #151310; }
-    .hd b { flex: 1; font-size: 15px; font-weight: 600; color: #F5EFE0; }
-    .bal { border: 1px solid #B97800; background: #1D1A14; color: #F59E0B; border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 600; letter-spacing: 0.4px; }
-    .mn { width: 40px; height: 40px; border-radius: 12px; background: #151310; border: 1px solid #2E281C; display: grid; place-items: center; font-size: 20px; color: #F5EFE0; cursor: pointer; transition: all 0.2s; }
-    .mn:hover { border-color: #B97800; color: #F59E0B; }
+    .hd { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--c-line); background: var(--c-surface); }
+    .hd b { flex: 1; font-size: 15px; font-weight: 600; color: var(--c-text); }
+    .bal { border: 1px solid var(--c-gold-line); background: var(--c-inner); color: #F59E0B; border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 600; letter-spacing: 0.4px; }
+    .mn { width: 40px; height: 40px; border-radius: 12px; background: var(--c-surface); border: 1px solid var(--c-line); display: grid; place-items: center; font-size: 20px; color: var(--c-text); cursor: pointer; transition: all 0.2s; }
+    .mn:hover { border-color: var(--c-gold-line); color: #F59E0B; }
     .bd { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
-    .cd { background: #151310; border: 1px solid #2E281C; border-radius: 14px; padding: 14px; box-shadow: var(--shadow-card); }
-    .lb { font-size: 12px; color: #A89F8A; font-weight: 500; }
+    .cd { background: var(--c-surface); border: 1px solid var(--c-line); border-radius: 14px; padding: 14px; box-shadow: var(--shadow-card); }
+    .lb { font-size: 12px; color: var(--c-muted); font-weight: 500; }
     .gold { color: #F59E0B; font-weight: 600; }
-    .gb { display: block; width: 100%; height: 44px; border: 0; border-radius: 12px; background: #F59E0B; color: #0A0A0A; font-size: 14px; font-weight: 600; letter-spacing: 0.3px; cursor: pointer; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25); transition: all 0.2s; }
+    .gb { display: block; width: 100%; height: 44px; border: 0; border-radius: 12px; background: #F59E0B; color: var(--c-on-primary); font-size: 14px; font-weight: 600; letter-spacing: 0.3px; cursor: pointer; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25); transition: all 0.2s; }
     .gb:hover { background: #FFAF1A; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(245, 158, 11, 0.35); }
     .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .st { background: #151310; border: 1px solid #2E281C; border-radius: 14px; padding: 12px; }
-    .st b { display: block; font-size: 20px; font-weight: 700; color: #F5EFE0; font-family: var(--font-display); }
-    .rw { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 0; border-bottom: 1px solid #2E281C; font-size: 14px; }
+    .st { background: var(--c-surface); border: 1px solid var(--c-line); border-radius: 14px; padding: 12px; }
+    .st b { display: block; font-size: 20px; font-weight: 700; color: var(--c-text); font-family: var(--font-display); }
+    .rw { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--c-line); font-size: 14px; }
     .rw:last-child { border: 0; }
     .pl { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; border: 1px solid #1f5b35; color: #4ADE80; background: rgba(74, 222, 128, 0.1); }
     .pl.b { border-color: #6b2a2a; color: #F87171; background: rgba(248, 113, 113, 0.1); }
-    .nv { display: grid; grid-template-columns: repeat(5, 1fr); background: #151310; border-top: 1px solid #2E281C; }
-    .nv span { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; font-size: 11px; color: #A89F8A; cursor: pointer; transition: color 0.2s; }
+    .nv { display: grid; grid-template-columns: repeat(5, 1fr); background: var(--c-surface); border-top: 1px solid var(--c-line); }
+    .nv span { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; font-size: 11px; color: var(--c-muted); cursor: pointer; transition: color 0.2s; }
     .nv i { font-size: 20px; }
     .nv .on { color: #F59E0B; font-weight: 600; }
-    .inp { height: 44px; background: #1D1A14; border: 1px solid #2E281C; border-radius: 12px; padding: 0 14px; display: flex; align-items: center; color: #A89F8A; font-size: 14px; }
-    .ad { border: 1px solid #B97800; color: #F59E0B; background: #1D1A14; border-radius: 999px; padding: 3px 10px; font-size: 12px; margin-top: 4px; display: inline-block; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .ad:hover { background: #B97800; color: #0A0A0A; }
+    .inp { height: 44px; background: var(--c-inner); border: 1px solid var(--c-line); border-radius: 12px; padding: 0 14px; display: flex; align-items: center; color: var(--c-muted); font-size: 14px; }
+    .ad { border: 1px solid var(--c-gold-line); color: #F59E0B; background: var(--c-inner); border-radius: 999px; padding: 3px 10px; font-size: 12px; margin-top: 4px; display: inline-block; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .ad:hover { background: var(--c-gold-line); color: var(--c-on-primary); }
 
     /* Core Document Reset */
     * {
@@ -131,14 +215,14 @@
       height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #0A0A0A;
+      background: var(--c-base);
     }
     ::-webkit-scrollbar-thumb {
-      background: #2E281C;
+      background: var(--c-line);
       border-radius: 4px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #B97800;
+      background: var(--c-gold-line);
     }
 
     /* Sidebar - MostWinn88 Dark Slate */
@@ -162,14 +246,14 @@
       align-items: center;
       gap: 12px;
       border-bottom: 1px solid var(--border-subtle);
-      background: #151310;
+      background: var(--c-surface);
     }
 
     .brand-logo {
       width: 42px;
       height: 42px;
       border-radius: var(--radius-md);
-      background: linear-gradient(135deg, #F59E0B, #B97800);
+      background: #F59E0B;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -181,13 +265,13 @@
     .brand-logo svg {
       width: 24px;
       height: 24px;
-      fill: #0A0A0A;
+      fill: var(--c-on-primary);
     }
 
     .brand-title {
       font-size: 1.15rem;
       font-weight: 700;
-      color: #F5EFE0;
+      color: var(--c-text);
       line-height: 1.2;
       font-family: var(--font-display);
       letter-spacing: 0.5px;
@@ -242,7 +326,7 @@
     }
 
     .nav-item.active button {
-      background: #1D1A14;
+      background: var(--c-inner);
       border: 1px solid var(--border-color);
       color: var(--primary);
       font-weight: 600;
@@ -252,7 +336,7 @@
     .nav-badge {
       margin-left: auto;
       background: var(--border-color);
-      color: #0A0A0A;
+      color: var(--c-on-primary);
       font-size: 0.72rem;
       padding: 2px 8px;
       border-radius: 999px;
@@ -280,7 +364,7 @@
       height: 36px;
       border-radius: 10px;
       background: var(--primary);
-      color: #0A0A0A;
+      color: var(--c-on-primary);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -323,7 +407,7 @@
     /* Top Bar - MostWinn88 Precision */
     .topbar {
       height: var(--header-height);
-      background: #151310;
+      background: var(--c-surface);
       border-bottom: 1px solid var(--border-subtle);
       position: sticky;
       top: 0;
@@ -340,9 +424,9 @@
       width: 40px;
       height: 40px;
       border-radius: 12px;
-      background: #151310;
-      border: 1px solid #2E281C;
-      color: #F5EFE0;
+      background: var(--c-surface);
+      border: 1px solid var(--c-line);
+      color: var(--c-text);
       cursor: pointer;
       display: grid;
       place-items: center;
@@ -366,7 +450,7 @@
       align-items: center;
       gap: 8px;
       border: 1px solid #1f5b35;
-      background: #1D1A14;
+      background: var(--c-inner);
       padding: 4px 12px;
       border-radius: 999px;
       font-size: 0.75rem;
@@ -376,7 +460,7 @@
     }
 
     .status-indicator.demo {
-      border-color: #B97800;
+      border-color: var(--c-gold-line);
       color: #F59E0B;
     }
 
@@ -389,8 +473,8 @@
     }
 
     .btn-icon {
-      background: #151310;
-      border: 1px solid #2E281C;
+      background: var(--c-surface);
+      border: 1px solid var(--c-line);
       color: var(--text-muted);
       width: 38px;
       height: 38px;
@@ -405,7 +489,7 @@
     .btn-icon:hover {
       color: var(--primary);
       border-color: var(--border-color);
-      background: #1D1A14;
+      background: var(--c-inner);
     }
 
     .btn-icon svg {
@@ -467,7 +551,7 @@
     .card-title {
       font-size: 1.1rem;
       font-weight: 700;
-      color: #F5EFE0;
+      color: var(--c-text);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -519,7 +603,7 @@
     .stat-icon svg {
       width: 22px;
       height: 22px;
-      fill: #F5EFE0;
+      fill: var(--c-text);
     }
 
     .stat-gold { background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); color: var(--primary); }
@@ -542,7 +626,7 @@
     .stat-value {
       font-size: 1.6rem;
       font-weight: 700;
-      color: #F5EFE0;
+      color: var(--c-text);
       line-height: 1.1;
       font-family: var(--font-display);
     }
@@ -573,7 +657,7 @@
 
     .btn-primary {
       background: #F59E0B;
-      color: #0A0A0A;
+      color: var(--c-on-primary);
       box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
       font-weight: 700;
     }
@@ -586,7 +670,7 @@
 
     .btn-accent, .btn-danger {
       background: #F87171;
-      color: #0A0A0A;
+      color: var(--c-on-primary);
       box-shadow: 0 4px 14px rgba(248, 113, 113, 0.25);
       font-weight: 700;
     }
@@ -597,18 +681,18 @@
     }
 
     .btn-outline {
-      background: #1D1A14;
+      background: var(--c-inner);
       border: 1px solid var(--border-color);
       color: var(--primary);
     }
 
     .btn-outline:hover {
       background: var(--border-color);
-      color: #0A0A0A;
+      color: var(--c-on-primary);
     }
 
     .btn-secondary {
-      background: #1D1A14;
+      background: var(--c-inner);
       border: 1px solid var(--border-subtle);
       color: var(--text-main);
     }
@@ -620,7 +704,7 @@
 
     .btn-success {
       background: #4ADE80;
-      color: #0A0A0A;
+      color: var(--c-on-primary);
       font-weight: 700;
     }
 
@@ -648,11 +732,11 @@
       letter-spacing: 0.5px;
     }
 
-    .badge-upcoming { background: #1D1A14; color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.4); }
+    .badge-upcoming { background: var(--c-inner); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.4); }
     .badge-live { background: rgba(248, 113, 113, 0.15); color: #F87171; border: 1px solid #6b2a2a; animation: pulse 2s infinite; }
     .badge-completed, .badge-approved { background: rgba(74, 222, 128, 0.12); color: #4ADE80; border: 1px solid #1f5b35; }
     .badge-cancelled, .badge-rejected { background: rgba(248, 113, 113, 0.12); color: #F87171; border: 1px solid #6b2a2a; }
-    .badge-pending { background: #1D1A14; color: #F59E0B; border: 1px solid #B97800; }
+    .badge-pending { background: var(--c-inner); color: #F59E0B; border: 1px solid var(--c-gold-line); }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
@@ -665,7 +749,7 @@
       overflow-x: auto;
       border-radius: var(--radius-md);
       border: 1px solid var(--border-subtle);
-      background: #151310;
+      background: var(--c-surface);
     }
 
     table {
@@ -676,7 +760,7 @@
     }
 
     th {
-      background: #1D1A14;
+      background: var(--c-inner);
       color: var(--text-muted);
       font-family: var(--font-display);
       font-weight: 600;
@@ -699,7 +783,7 @@
     }
 
     tr:hover td {
-      background: #1D1A14;
+      background: var(--c-inner);
     }
 
     /* Toolbar */
@@ -716,7 +800,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background: #1D1A14;
+      background: var(--c-inner);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
       padding: 0 14px;
@@ -750,7 +834,7 @@
     }
 
     select.filter-select {
-      background: #1D1A14;
+      background: var(--c-inner);
       border: 1px solid var(--border-subtle);
       color: var(--text-main);
       padding: 0 14px;
@@ -768,7 +852,7 @@
     }
 
     select.action-dropdown-select {
-      background: linear-gradient(135deg, #1f232e 0%, #151821 100%);
+      background: #1f232e;
       border: 1px solid #3b4254;
       color: #f3f4f6;
       padding: 5px 12px;
@@ -849,7 +933,7 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      background: #1D1A14;
+      background: var(--c-inner);
       color: var(--primary);
       padding: 3px 8px;
       border-radius: 6px;
@@ -871,7 +955,7 @@
     .card-game-title {
       font-size: 1.1rem;
       font-weight: 700;
-      color: #F5EFE0;
+      color: var(--c-text);
       line-height: 1.3;
       font-family: var(--font-display);
     }
@@ -880,7 +964,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      background: #1D1A14;
+      background: var(--c-inner);
       padding: 10px 12px;
       border-radius: var(--radius-md);
       border: 1px solid var(--border-subtle);
@@ -921,7 +1005,7 @@
 
     .slot-bar-bg {
       height: 6px;
-      background: #1D1A14;
+      background: var(--c-inner);
       border: 1px solid var(--border-subtle);
       border-radius: 999px;
       overflow: hidden;
@@ -929,13 +1013,13 @@
 
     .slot-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, var(--primary), #FFAF1A);
+      background: var(--primary);
       border-radius: 999px;
       transition: width 0.3s;
     }
 
     .room-cred-box {
-      background: #1D1A14;
+      background: var(--c-inner);
       border: 1px dashed var(--border-color);
       padding: 8px 12px;
       border-radius: var(--radius-sm);
@@ -948,7 +1032,7 @@
     .room-code {
       font-family: monospace;
       font-weight: 700;
-      color: #F5EFE0;
+      color: var(--c-text);
     }
 
     .card-actions {
@@ -980,7 +1064,7 @@
     }
 
     .modal-card {
-      background: #151310;
+      background: var(--c-surface);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-xl);
       width: 100%;
@@ -1016,14 +1100,14 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #151310;
+      background: var(--c-surface);
       flex-shrink: 0;
     }
 
     .modal-title {
       font-size: 1.15rem;
       font-weight: 700;
-      color: #F5EFE0;
+      color: var(--c-text);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -1031,7 +1115,7 @@
     }
 
     .modal-close {
-      background: #1D1A14;
+      background: var(--c-inner);
       border: 1px solid var(--border-subtle);
       color: var(--text-muted);
       cursor: pointer;
@@ -1059,7 +1143,7 @@
       flex: 1 1 auto;
       min-height: 0;
       box-sizing: border-box;
-      background: #12100E;
+      background: var(--c-deep);
     }
 
     .modal-footer {
@@ -1069,7 +1153,7 @@
       align-items: center;
       justify-content: flex-end;
       gap: 12px;
-      background: #151310;
+      background: var(--c-surface);
       flex-shrink: 0;
     }
 
@@ -1087,7 +1171,7 @@
     }
 
     .form-control {
-      background: #1D1A14;
+      background: var(--c-inner);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
       color: var(--text-main);
@@ -1119,11 +1203,11 @@
 
     /* Notice Live Preview Box */
     .notice-preview-card {
-      background: #151310;
+      background: var(--c-surface);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
       padding: 14px;
-      color: #F5EFE0;
+      color: var(--c-text);
       position: relative;
       margin-top: 10px;
     }
@@ -1143,7 +1227,7 @@
       font-family: var(--font-body);
       font-size: 0.92rem;
       line-height: 1.5;
-      color: #F5EFE0;
+      color: var(--c-text);
     }
 
     /* Toast */
@@ -1159,13 +1243,13 @@
     }
 
     .toast {
-      background: #151310;
+      background: var(--c-surface);
       border-left: 4px solid var(--primary);
       border: 1px solid var(--border-subtle);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
       border-radius: var(--radius-md);
       padding: 12px 18px;
-      color: #F5EFE0;
+      color: var(--c-text);
       font-size: 0.88rem;
       display: flex;
       align-items: center;
@@ -1187,7 +1271,7 @@
     #login-overlay {
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at center, #151310 0%, #0A0A0A 100%);
+      background: var(--c-base);
       z-index: 1500;
       display: flex;
       align-items: center;
@@ -1198,7 +1282,7 @@
     .login-box {
       width: 100%;
       max-width: 420px;
-      background: #151310;
+      background: var(--c-surface);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-xl);
       padding: 32px 28px;
@@ -1211,7 +1295,7 @@
       height: 60px;
       margin: 0 auto 16px;
       border-radius: var(--radius-lg);
-      background: linear-gradient(135deg, #F59E0B, #B97800);
+      background: #F59E0B;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1221,12 +1305,12 @@
     .login-logo svg {
       width: 32px;
       height: 32px;
-      fill: #0A0A0A;
+      fill: var(--c-on-primary);
     }
 
     .login-title {
       font-size: 1.5rem;
-      color: #F5EFE0;
+      color: var(--c-text);
       margin-bottom: 4px;
       font-family: var(--font-display);
       letter-spacing: 0.5px;
@@ -1246,7 +1330,7 @@
       left: 0;
       right: 0;
       height: var(--bottom-nav-height);
-      background: #151310;
+      background: var(--c-surface);
       border-top: 1px solid var(--border-subtle);
       z-index: 95;
       justify-content: space-around;
@@ -1321,6 +1405,13 @@
       --text-main: #0f172a;
       --text-muted: #475569;
       --text-dim: #64748b;
+      --c-text: #0f172a;
+      --c-muted: #475569;
+      --c-dim: #64748b;
+      --c-surface: #ffffff;
+      --c-inner: #f8fafc;
+      --c-line: #e2e8f0;
+      --c-base: #f8fafc;
       background: #ffffff;
       color: #0f172a;
       border: 1px solid #e2e8f0;
@@ -1328,7 +1419,7 @@
       box-shadow: 0 24px 60px rgba(8, 15, 30, 0.45), 0 2px 6px rgba(8, 15, 30, 0.2);
     }
     .modal-card .modal-header {
-      background: linear-gradient(135deg, #0f1b2d, #1a2b45);
+      background: #0f1b2d;
       border-bottom: 3px solid #c9a227;
       padding: 16px 20px;
     }
@@ -1424,9 +1515,79 @@
     .toast.error { border-left-color: #b91c1c; }
     .toast [style*="color:#fff"], .toast [style*="color: #fff"] { color: #0f172a !important; }
     .toast .btn-primary { background: #0f1b2d; color: #fff !important; box-shadow: none; }
-  </style>
+  
+    /* ========================================================
+       FORCE MOBILE (app) LAYOUT on phones, even in "Desktop site" mode
+       ======================================================== */
+    html.force-mobile .sidebar { transform: translateX(-100%); }
+    html.force-mobile .sidebar.open { transform: translateX(0); }
+    html.force-mobile .main-wrapper { margin-left: 0; padding-bottom: var(--bottom-nav-height); }
+    html.force-mobile .mobile-menu-btn { display: grid; }
+    html.force-mobile .bottom-nav { display: flex; }
+    html.force-mobile .content-area { padding: 14px; }
+    html.force-mobile .stats-grid { grid-template-columns: 1fr 1fr; }
+    html.force-mobile .form-row, html.force-mobile .form-row-3 { grid-template-columns: 1fr; }
+    html.force-narrow .stats-grid { grid-template-columns: 1fr; }
+    html.force-zoom body, html.force-zoom #app-container { min-height: calc(100vh / var(--fz, 1)); }
+    html.force-zoom .modal-card { max-height: calc(92vh / var(--fz, 1)) !important; }
+    html.force-mobile .topbar-actions .theme-toggle-btn { order: -1; }
+    @media (max-width: 900px) { .topbar-actions .theme-toggle-btn { order: -1; } }
+
+    /* Theme toggle button */
+    .theme-toggle-btn svg { width: 20px; height: 20px; fill: currentColor; }
+    .theme-toggle-btn { flex-shrink: 0; }
+
+    /* ========================================================
+       LIGHT THEME extras (inline-style colours that variables can't reach)
+       ======================================================== */
+    body[data-theme="light"] [style*="#F5EFE0" i]:not(.modal-card *),
+    body[data-theme="light"] [style*="color:#fff" i]:not(.badge):not(.btn):not(#admin-notif-badge-counter):not(.modal-card *),
+    body[data-theme="light"] [style*="color: #fff" i]:not(.badge):not(.btn):not(#admin-notif-badge-counter):not(.modal-card *) { color: var(--text-main) !important; }
+    body[data-theme="light"] [style*="#A89F8A" i]:not(.modal-card *) { color: var(--text-muted) !important; }
+    body[data-theme="light"] [style*="background:#1D1A14" i]:not(.modal-card *),
+    body[data-theme="light"] [style*="background: #1D1A14" i]:not(.modal-card *),
+    body[data-theme="light"] [style*="background:#151310" i]:not(.modal-card *),
+    body[data-theme="light"] [style*="background: #151310" i]:not(.modal-card *),
+    body[data-theme="light"] [style*="gradient(135deg, #1D1A14" i]:not(.modal-card *) { background: var(--bg-inner) !important; }
+    body[data-theme="light"] [style*="rgba(0,0,0,0.25)"]:not(.modal-card *),
+    body[data-theme="light"] [style*="rgba(0, 0, 0, 0.25)"]:not(.modal-card *) { background: rgba(60, 40, 10, 0.06) !important; }
+    body[data-theme="light"] select.action-dropdown-select option { background: #FFFFFF; color: #1C1917; }
+    body[data-theme="light"] .sidebar { box-shadow: 2px 0 12px rgba(60, 40, 10, 0.08); }
+    body[data-theme="light"] .topbar { backdrop-filter: none; }
+    body[data-theme="light"] .bottom-nav { box-shadow: 0 -2px 10px rgba(60, 40, 10, 0.08); }
+    body[data-theme="light"] .badge-pending, body[data-theme="light"] .bal, body[data-theme="light"] .gold,
+    body[data-theme="light"] .ad, body[data-theme="light"] .nv .on, body[data-theme="light"] .status-indicator.demo { color: #B45309; }
+    body[data-theme="light"] #topbar-admin-balance-val { color: #B45309 !important; }
+    body[data-theme="light"] [style*="#141c30" i]:not(.modal-card *):not(.toast) { background: linear-gradient(90deg, #FFF7E6, #FFFFFF) !important; }
+    body[data-theme="light"] [style*="14, 19, 31"]:not(.modal-card *),
+    body[data-theme="light"] [style*="21, 19, 16"]:not(.modal-card *),
+    body[data-theme="light"] [style*="rgba(0,0,0,0.5)"]:not(.modal-card *) { background: var(--bg-card) !important; }
+    body[data-theme="light"] .accent-border { background: linear-gradient(90deg, #FFF7E6, #FFFFFF) !important; }
+    body[data-theme="light"] ::-webkit-scrollbar-thumb { background: #D8CCAE; }
+    body[data-theme="light"] select.action-dropdown-select { background: linear-gradient(135deg, #FFFFFF 0%, #F6F2E8 100%) !important; color: #1C1917 !important; border-color: #D8CCAE !important; box-shadow: none; }
+  
+    /* Popup er bhetor card/section chepte lukiye jabe na; popup scroll hobe */
+    .modal-body > * { flex-shrink: 0; }
+    .modal-body { min-height: 0; }
+    /* Table cells: ek line e dekhabe (double line noy) */
+    table td .badge, table th .badge { white-space: nowrap; flex-wrap: nowrap; }
+    #view-users table td { white-space: nowrap; vertical-align: middle; }
+    #view-users table td small { white-space: nowrap; }
+    /* ========================================================
+       CLASSIC FLAT LOOK (no 3D: no shadows, glow, gradients, lift-on-hover)
+       ======================================================== */
+    *, *::before, *::after { box-shadow: none !important; text-shadow: none !important; }
+    :is(.btn, .btn-icon, .gb, .stat-card, .card, .cd, .st, .nav-item, .bottom-nav-btn, [class*="card"]):hover { transform: none !important; }
+    :is(.btn, .btn-icon, .gb, .stat-card, .card, .cd, .st, [class*="card"]):active { transform: none !important; }
+    [style*="gradient"]:not(.modal-header):not(.toast):not(.modal-card *) { background-image: none !important; background-color: var(--bg-card) !important; }
+    .modal-backdrop { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+    .stat-card, .card, .cd, .st, .modal-card { border-radius: 10px; }
+    body[data-theme="light"] [style*="#141c30" i]:not(.modal-card *):not(.toast),
+    body[data-theme="light"] .accent-border { background-image: none !important; background-color: #FFF7E6 !important; }
+</style>
 </head>
 <body data-theme="dark">
+<script>try{var __t=localStorage.getItem("np_admin_theme");if(__t==="light"||__t==="dark")document.body.setAttribute("data-theme",__t);}catch(e){}</script>
 
   <!-- ==================== LOGIN OVERLAY ==================== -->
   <div id="login-overlay">
@@ -1435,28 +1596,23 @@
         <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
       </div>
       <h2 class="login-title">NP TOURNAMENT BD</h2>
-      <p class="login-sub">অ্যাডমিন কন্ট্রোল প্যানেল (MostWinn88 UI Design)</p>
+      <p class="login-sub" data-bn="অ্যাডমিন কন্ট্রোল প্যানেল" data-en="Admin Control Panel">অ্যাডমিন কন্ট্রোল প্যানেল</p>
       
       <form id="admin-login-form" onsubmit="handleAdminLogin(event)">
         <div class="form-group" style="text-align: left; margin-bottom: 14px;">
-          <label>অ্যাডমিন ইউজারনেম বা ইমেইল (Username / Email)</label>
-          <input type="text" id="login-email" class="form-control" placeholder="admin / trunamentgame@gmail.com" value="admin" required autocomplete="username">
+          <label data-bn="অ্যাডমিন ইউজারনেম বা ইমেইল" data-en="Admin Username or Email">অ্যাডমিন ইউজারনেম বা ইমেইল</label>
+          <input type="text" id="login-email" class="form-control" placeholder="admin" value="admin" required autocomplete="username">
         </div>
         <div class="form-group" style="text-align: left; margin-bottom: 20px;">
-          <label>পাসওয়ার্ড / Password</label>
+          <label data-bn="পাসওয়ার্ড" data-en="Password">পাসওয়ার্ড</label>
           <input type="password" id="login-password" class="form-control" placeholder="••••••••" value="admin12345" required autocomplete="current-password">
         </div>
 
         <button type="submit" class="btn btn-primary" id="btn-admin-login" style="width: 100%;">
           <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-          লগইন করুন (Admin Sign In)
+          <span data-bn="লগইন করুন" data-en="Sign In">লগইন করুন</span>
         </button>
 
-        <div style="margin-top: 12px; display: flex; gap: 8px;">
-          <button type="button" class="btn btn-outline btn-sm" onclick="handleCreateAdminAccount()" style="flex:1;">
-            ➕ নতুন এডমিন অনুমোদন ও তৈরি
-          </button>
-        </div>
 
         <p style="margin-top: 14px; font-size: 0.75rem; color: var(--text-dim);">
           🔒 শুধুমাত্র অনুমোদিত এডমিন অ্যাকাউন্ট ব্যবহার করুন। সাধারণ ইউজারদের অ্যাক্সেস সম্পূর্ণ নিষিদ্ধ।
@@ -1545,6 +1701,7 @@
             <div class="admin-name" id="sidebar-email">Mijanbabu2015@gmail.com</div>
             <div class="admin-role">USER ADMIN</div>
           </div>
+          <button class="btn-icon theme-toggle-btn" onclick="cycleTheme()" title="ডার্ক / লাইট থিম" style="width:32px; height:32px;"><svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg></button>
           <button class="btn-icon" onclick="handleLogout()" title="লগআউট" style="width:32px; height:32px;">
             <svg viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
           </button>
@@ -1557,11 +1714,6 @@
       
       <!-- TOPBAR -->
       <header class="topbar">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <button class="mobile-menu-btn" onclick="toggleSidebar()" title="মেনু">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
-          </button>
-        </div>
 
         <!-- Admin Balance Pill (৳ 20,000) -->
         <div class="bal" id="topbar-admin-balance" onclick="openAdminFundModal()" title="এডমিনের নিজস্ব লেনদেন তহবিল (ক্লিক করুন বিস্তারিত দেখতে বা ব্যালেন্স রিচার্জ করতে)" style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
@@ -1594,9 +1746,7 @@
           </button>
 
           <!-- Theme Toggle -->
-          <button class="btn-icon" onclick="cycleTheme()" title="থিম পরিবর্তন">
-            <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
-          </button>
+          <button class="btn-icon theme-toggle-btn" onclick="cycleTheme()" title="ডার্ক / লাইট থিম"><svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg></button>
         </div>
       </header>
 
@@ -2029,17 +2179,6 @@
             <div style="display: flex; gap: 8px;">
               <button class="btn btn-primary btn-sm" onclick="openAdminFundModal()">💰 Master-এর কাছে ব্যালেন্স রিকোয়েস্ট</button>
             </div>
-          </div>
-
-          <div class="cd" id="bonus-card" style="display:none;margin-bottom:18px">
-            <div class="lb" style="color: var(--primary); font-weight: 600;">🎁 ডিপোজিট বোনাস ও টার্নওভার</div>
-            <small id="bonus-limits" style="color: var(--text-muted); display:block; margin:4px 0 8px;"></small>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <input id="bonus-pct" type="number" min="0" step="0.5" placeholder="বোনাস %" style="flex:1; min-width:120px; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:transparent; color:inherit;">
-              <input id="turnover-pct" type="number" min="0" step="10" placeholder="টার্নওভার %" style="flex:1; min-width:120px; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:transparent; color:inherit;">
-              <button class="btn btn-primary btn-sm" onclick="npSaveBonus()">সেভ</button>
-            </div>
-            <small style="color: var(--text-muted); display:block; margin-top:8px;">বোনাসের টাকা আপনার ওয়ালেট থেকে কাটবে। উদাহরণ: ১০০০ ডিপোজিটে ৩% বোনাস হলে প্লেয়ার পাবে ১০৩০, আপনার ওয়ালেট থেকে কাটবে ১০৩০।</small>
           </div>
 
           <!-- Sub Tabs -->
@@ -4170,6 +4309,7 @@
     }
 
     function showRequestVisualAlert(type, userName, amount, id) {
+      try { if (window.npSystemNotify) window.npSystemNotify(type, userName, amount, id); } catch (e) {}
       const isDep = type === 'deposit';
       const typeLabel = isDep ? 'ডিপোজিট রিকোয়েস্ট' : 'উইথড্র রিকোয়েস্ট';
       const badgeColor = isDep ? '#f59e0b' : '#ef4444';
@@ -4387,6 +4527,17 @@
       }
     }
 
+    // ===== আর্থিক সারসংক্ষেপ রিসেট =====
+    // এই সময়ের আগের সব ডিপোজিট/উইথড্র হিসাব থেকে বাদ (ডেটা মোছা হয়নি, শুধু হিসাব ০ থেকে শুরু)।
+    // আবার ০ করতে চাইলে নিচের সংখ্যাটা বদলে নতুন সময় (Date.now()) বসান; 0 দিলে আগের সব হিসাব ফিরে আসবে।
+    const FIN_RESET_TS = 1794004229687;
+    function finAfterReset(ts) {
+      if (!FIN_RESET_TS) return true;
+      const t = (typeof ts === 'number') ? ts : new Date(ts).getTime();
+      if (isNaN(t)) return true;
+      return t >= FIN_RESET_TS;
+    }
+
     // --- Dashboard Renderer ---
     function renderDashboard() {
       const totalUsers = STATE.users.length;
@@ -4401,11 +4552,11 @@
         .reduce((acc, l) => acc + (parseFloat(l.amount) || 0), 0);
 
       // Financial Summary: ONLY Approved Deposits & Completed Withdrawals (Pending/Rejected excluded!)
-      const approvedDeposits = STATE.deposits.filter(d => (d.status || '').toLowerCase() === 'approved');
+      const approvedDeposits = STATE.deposits.filter(d => (d.status || '').toLowerCase() === 'approved' && finAfterReset(d.approvedAt || d.createdAt));
       const totalApprovedDepositAmount = approvedDeposits.reduce((acc, d) => acc + (parseFloat(d.amount) || 0), 0);
       const totalApprovedDepositCount = approvedDeposits.length;
 
-      const completedWithdrawals = STATE.withdrawals.filter(w => (w.status || '').toLowerCase() === 'completed' || (w.status || '').toLowerCase() === 'approved');
+      const completedWithdrawals = STATE.withdrawals.filter(w => ((w.status || '').toLowerCase() === 'completed' || (w.status || '').toLowerCase() === 'approved') && finAfterReset(w.processedAt || w.createdAt));
       const totalCompletedWithdrawAmount = completedWithdrawals.reduce((acc, w) => acc + (parseFloat(w.amount) || 0), 0);
       const totalCompletedWithdrawCount = completedWithdrawals.length;
 
@@ -5604,8 +5755,10 @@
             <td><b style="color:#10b981; font-family:var(--font-display); font-size:1rem;">৳ ${depTotal.toLocaleString('bn-BD')}</b></td>
             <td><b style="color:#ef4444; font-family:var(--font-display); font-size:1rem;">৳ ${withTotal.toLocaleString('bn-BD')}</b></td>
             <td>
+              <div style="display:flex; align-items:center; gap:10px; white-space:nowrap;">
               <div style="font-family:monospace; font-size:0.85rem; color:#F5EFE0; font-weight:700;">🌐 ${escapeHtml(currentIp)}</div>
-              <div style="font-size:0.75rem; color:var(--text-dim); max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(currentDevice)}">📱 ${escapeHtml(currentDevice)}</div>
+              <div style="font-size:0.75rem; color:var(--text-dim); max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(currentDevice)}">📱 ${escapeHtml(currentDevice)}</div>
+              </div>
             </td>
             <td>
               ${signalHtml}
@@ -6034,8 +6187,7 @@
 
       // Admin balance check FIRST: if not enough, notify the admin clearly
       const _myBal = STATE.adminBalance || 0;
-      const _bonus = npDepBonus(dep.amount);
-      const _need = npR2((parseFloat(dep.amount) || 0) + _bonus);
+      const _need = parseFloat(dep.amount) || 0;
       if (_myBal < _need) {
         const _short = Math.ceil(_need - _myBal);
         showToast(`⚠️ আপনার ব্যালেন্স পর্যাপ্ত নয়! দরকার ৳${_need}, আছে ৳${_myBal}`, 'error');
@@ -6050,28 +6202,18 @@
       try {
         const uSnap = await db.ref(`users/${dep.uid}/balance`).once('value');
         const curBal = parseFloat(uSnap.val()) || 0;
-        const trSnap = await db.ref(`users/${dep.uid}/turnoverRequired`).once('value');
-        const _tp = npTurnoverPct();
-        const _addReq = _tp > 0 ? npR2((dep.amount + _bonus) * _tp / 100) : 0;
-        const newBal = npR2(curBal + dep.amount + _bonus);
+        const newBal = curBal + dep.amount;
         const trxKey = db.ref('transactions').push().key;
 
         const curAdminBal = STATE.adminBalance || 0;
-        if (curAdminBal < npR2(dep.amount + _bonus)) { showToast(`আপনার ব্যালেন্স পর্যাপ্ত নয় (৳${curAdminBal})। Master-এর কাছে রিকোয়েস্ট করুন।`, 'error'); return; }
-        const newAdminBal = npR2(curAdminBal - dep.amount - _bonus);
+        if (curAdminBal < dep.amount) { showToast(`আপনার ব্যালেন্স পর্যাপ্ত নয় (৳${curAdminBal})। Master-এর কাছে রিকোয়েস্ট করুন।`, 'error'); return; }
+        const newAdminBal = curAdminBal - dep.amount;
 
         const updates = {};
         updates[`depositRequests/${depId}/status`] = 'Approved';
         updates[`depositRequests/${depId}/approvedAt`] = firebase.database.ServerValue.TIMESTAMP;
         updates[`users/${dep.uid}/balance`] = newBal;
         updates[`users/${dep.uid}/adminUid`] = STATE.adminUser.uid;
-        if (_addReq > 0) updates[`users/${dep.uid}/turnoverRequired`] = npR2((parseFloat(trSnap.val()) || 0) + _addReq);
-        updates[`depositRequests/${depId}/bonus`] = _bonus;
-        updates[`depositRequests/${depId}/turnoverAdded`] = _addReq;
-        if (_bonus > 0) {
-          const bKey = db.ref('transactions').push().key;
-          updates[`transactions/${bKey}`] = { trxId: bKey, uid: dep.uid, type: 'DEPOSIT_BONUS', amount: _bonus, beforeBal: npR2(curBal + dep.amount), afterBal: newBal, date: new Date().toLocaleString('bn-BD'), timestamp: firebase.database.ServerValue.TIMESTAMP, note: `Deposit Bonus (Admin Balance -৳${_bonus})` };
-        }
         updates[`admins/${STATE.adminUser.uid}/balance`] = newAdminBal;
         updates[`transactions/${trxKey}`] = {
           trxId: trxKey,
@@ -7335,13 +7477,13 @@ await db.ref('notices/not_2').set({
       const cEnd = STATE.financeCustomEnd;
 
       // 1. Filter Approved Deposits
-      const allApprovedDeps = STATE.deposits.filter(d => ['approved', 'completed'].includes((d.status || '').toLowerCase()));
+      const allApprovedDeps = STATE.deposits.filter(d => ['approved', 'completed'].includes((d.status || '').toLowerCase()) && finAfterReset(d.approvedAt || d.createdAt));
       const filteredApprovedDeps = allApprovedDeps.filter(d => isDateInPeriod(d.approvedAt || d.createdAt, period, cStart, cEnd));
       const totalApprovedDepAmt = filteredApprovedDeps.reduce((acc, d) => acc + (parseFloat(d.amount) || 0), 0);
       const totalApprovedDepCount = filteredApprovedDeps.length;
 
       // 2. Filter Completed Withdrawals
-      const allCompletedWiths = STATE.withdrawals.filter(w => ['completed', 'approved'].includes((w.status || '').toLowerCase()));
+      const allCompletedWiths = STATE.withdrawals.filter(w => ['completed', 'approved'].includes((w.status || '').toLowerCase()) && finAfterReset(w.processedAt || w.createdAt));
       const filteredCompletedWiths = allCompletedWiths.filter(w => isDateInPeriod(w.processedAt || w.createdAt, period, cStart, cEnd));
       const totalCompletedWithAmt = filteredCompletedWiths.reduce((acc, w) => acc + (parseFloat(w.amount) || 0), 0);
       const totalCompletedWithCount = filteredCompletedWiths.length;
@@ -7498,7 +7640,7 @@ await db.ref('notices/not_2').set({
         const dKey = formatDateKey(d.approvedAt || d.createdAt);
         const mKey = formatMonthKey(d.approvedAt || d.createdAt);
         const yKey = formatYearKey(d.approvedAt || d.createdAt);
-        const isApp = ['approved', 'completed'].includes((d.status || '').toLowerCase());
+        const isApp = ['approved', 'completed'].includes((d.status || '').toLowerCase()) && finAfterReset(d.approvedAt || d.createdAt);
         const isPend = d.status === 'Pending';
         const amt = parseFloat(d.amount) || 0;
 
@@ -7523,7 +7665,7 @@ await db.ref('notices/not_2').set({
         const dKey = formatDateKey(w.processedAt || w.createdAt);
         const mKey = formatMonthKey(w.processedAt || w.createdAt);
         const yKey = formatYearKey(w.processedAt || w.createdAt);
-        const isComp = ['completed', 'approved'].includes((w.status || '').toLowerCase());
+        const isComp = ['completed', 'approved'].includes((w.status || '').toLowerCase()) && finAfterReset(w.processedAt || w.createdAt);
         const isPend = isWithdrawalOpen(w.status);
         const amt = parseFloat(w.amount) || 0;
 
@@ -8107,6 +8249,7 @@ await db.ref('notices/not_2').set({
 
     function applyLanguage(lang) {
       STATE.currentLanguage = lang;
+      applyLoginLang(lang);
       const isBn = lang === 'bn';
       const switchBtn = document.getElementById('lang-switch-btn');
       if (switchBtn) {
@@ -8278,12 +8421,34 @@ await db.ref('notices/not_2').set({
       showToast(STATE.currentLanguage === 'bn' ? 'ভাষা বাংলায় পরিবর্তিত হয়েছে' : 'Language set to English', 'success');
     }
 
+    const THEME_ICON_MOON = '<svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>';
+    const THEME_ICON_SUN = '<svg viewBox="0 0 24 24"><path d="M12 7a5 5 0 100 10 5 5 0 000-10zM2 13h2a1 1 0 000-2H2a1 1 0 000 2zm18 0h2a1 1 0 000-2h-2a1 1 0 000 2zM11 2v2a1 1 0 002 0V2a1 1 0 00-2 0zm0 18v2a1 1 0 002 0v-2a1 1 0 00-2 0zM5.99 4.58a1 1 0 00-1.41 1.41l1.06 1.06a1 1 0 001.41-1.41L5.99 4.58zm12.37 12.37a1 1 0 00-1.41 1.41l1.06 1.06a1 1 0 001.41-1.41l-1.06-1.06zm1.06-10.96a1 1 0 00-1.41-1.41l-1.06 1.06a1 1 0 001.41 1.41l1.06-1.06zM7.05 18.36a1 1 0 00-1.41-1.41l-1.06 1.06a1 1 0 001.41 1.41l1.06-1.06z"/></svg>';
+
+    function applyLoginLang(lang) {
+      document.querySelectorAll('#login-overlay [data-bn]').forEach(function (el) {
+        el.textContent = lang === 'en' ? el.getAttribute('data-en') : el.getAttribute('data-bn');
+      });
+    }
+    try { applyLoginLang(localStorage.getItem('admin_panel_lang') === 'en' ? 'en' : 'bn'); } catch (e) {}
+
+    function applyTheme(theme) {
+      document.body.setAttribute('data-theme', theme);
+      try { localStorage.setItem('np_admin_theme', theme); } catch (e) {}
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', theme === 'light' ? '#F4F1EA' : '#0A0A0A');
+      document.querySelectorAll('.theme-toggle-btn').forEach(function (b) {
+        b.innerHTML = theme === 'light' ? THEME_ICON_SUN : THEME_ICON_MOON;
+        b.title = theme === 'light' ? 'ডার্ক থিমে যান' : 'লাইট থিমে যান';
+      });
+    }
+
     function cycleTheme() {
       const current = document.body.getAttribute('data-theme') || 'dark';
       const next = current === 'dark' ? 'light' : 'dark';
-      document.body.setAttribute('data-theme', next);
-      showToast(`Theme: ${next.toUpperCase()}`, 'success');
+      applyTheme(next);
+      showToast(next === 'light' ? '☀️ লাইট থিম চালু হয়েছে' : '🌙 ডার্ক থিম চালু হয়েছে', 'success');
     }
+    applyTheme(document.body.getAttribute('data-theme') || 'dark');
 
     // ---------- Game Activity: which user played which game, how long, balance in/out, IP & Device ----------
     const GA = { rows: [], loading: false };
@@ -8566,46 +8731,127 @@ await db.ref('notices/not_2').set({
         return sv.call(this, id, ...r);
       };
     })();
-    var BONUS_CFG = {}, MY_BONUS = {};
-    function npR2(n) { return Math.round((+n || 0) * 100) / 100; }
-    function npBonusOn() { return featureOn('dep_bonus') && BONUS_CFG.enabled === true; }
-    function npDepBonus(a) {
-      if (!npBonusOn()) return 0;
-      const p = Math.min(+MY_BONUS.bonusPercent || 0, +BONUS_CFG.maxPercent || 0);
-      return p > 0 ? npR2((+a || 0) * p / 100) : 0;
-    }
-    function npTurnoverPct() {
-      if (!npBonusOn()) return 0;
-      return Math.max(+MY_BONUS.turnoverPercent || 0, +BONUS_CFG.minTurnoverPercent || 0);
-    }
-    function npRenderBonusCard() {
-      const c = document.getElementById('bonus-card'); if (!c) return;
-      c.style.display = npBonusOn() ? 'block' : 'none';
-      const l = document.getElementById('bonus-limits');
-      if (l) l.textContent = `Master-এর সীমা: বোনাস সর্বোচ্চ ${BONUS_CFG.maxPercent ?? '—'}%, টার্নওভার ন্যূনতম ${BONUS_CFG.minTurnoverPercent ?? '—'}%`;
-      const b = document.getElementById('bonus-pct'), t = document.getElementById('turnover-pct');
-      if (b && document.activeElement !== b) b.value = MY_BONUS.bonusPercent ?? '';
-      if (t && document.activeElement !== t) t.value = MY_BONUS.turnoverPercent ?? '';
-    }
-    async function npSaveBonus() {
-      const bp = parseFloat(document.getElementById('bonus-pct').value), tp = parseFloat(document.getElementById('turnover-pct').value);
-      if (isNaN(bp) || isNaN(tp) || bp < 0 || tp < 0) { showToast('বোনাস % ও টার্নওভার % দুটোই দিন', 'error'); return; }
-      if (bp > (+BONUS_CFG.maxPercent || 0)) { showToast(`বোনাস সর্বোচ্চ ${BONUS_CFG.maxPercent}% এর বেশি হবে না`, 'error'); return; }
-      if (tp < (+BONUS_CFG.minTurnoverPercent || 0)) { showToast(`টার্নওভার ন্যূনতম ${BONUS_CFG.minTurnoverPercent}% এর কম হবে না`, 'error'); return; }
-      const uid = STATE.adminUser && STATE.adminUser.uid; if (!uid || !db) return;
-      try {
-        await db.ref().update({ [`admins/${uid}/bonusPercent`]: bp, [`admins/${uid}/turnoverPercent`]: tp });
-        showToast('বোনাস ও টার্নওভার সেভ হয়েছে ✅', 'success');
-      } catch (e) { showToast('সেভ হয়নি: ' + e.message, 'error'); }
-    }
     function attachFeatureFlags() {
       if (!db) return;
-      db.ref('adminFeatures').on('value', (s) => { FEATURES = s.val() || {}; applyFeatureFlags(); npRenderBonusCard(); });
+      db.ref('adminFeatures').on('value', (s) => { FEATURES = s.val() || {}; applyFeatureFlags(); });
       const _fuid = STATE.adminUser && STATE.adminUser.uid;
-      if (_fuid) db.ref(`admins/${_fuid}/features`).on('value', (s) => { MY_FEATURES = s.val() || {}; applyFeatureFlags(); npRenderBonusCard(); });
-      db.ref('adminSettings/depositBonus').on('value', (s) => { BONUS_CFG = s.val() || {}; npRenderBonusCard(); });
-      if (_fuid) db.ref(`admins/${_fuid}`).on('value', (s) => { const v = s.val() || {}; MY_BONUS = { bonusPercent: v.bonusPercent, turnoverPercent: v.turnoverPercent }; npRenderBonusCard(); });
+      if (_fuid) db.ref(`admins/${_fuid}/features`).on('value', (s) => { MY_FEATURES = s.val() || {}; applyFeatureFlags(); });
     }
   </script>
+
+  <!-- ==================== PWA: ইনস্টল + মোবাইল নোটিফিকেশন ==================== -->
+  <script>
+  (function () {
+    var FCM_VAPID_KEY = window.NP_FCM_VAPID_KEY || 'BFMPUSNK0s04bKLNeBc1QIesYB-X_V02WtQXdkdKXOFCbVGxI15SMmZ88GyRfPxfcxXu-6LRm740Gj8cUXsC0Tk';
+
+    var swReg = null, deferredPrompt = null;
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+    var hasNotif = ('Notification' in window);
+
+    // ---- নোটিফিকেশন দেখানো ----
+    function showNotif(title, body, tag, view) {
+      var opts = { body: body, icon: './admin-icon-192.png', badge: './admin-icon-192.png', tag: tag, renotify: true,
+                   requireInteraction: true, vibrate: [300, 120, 300, 120, 300], data: { view: view || 'view-wallet' } };
+      if (swReg && swReg.showNotification) swReg.showNotification(title, opts);
+      else { try { new Notification(title, opts); } catch (e) {} }
+    }
+    // অ্যাপ খোলা কিন্তু স্ক্রিনে নেই (ব্যাকগ্রাউন্ড) হলে নতুন রিকোয়েস্টে মোবাইল নোটিফিকেশন
+    window.npSystemNotify = function (type, userName, amount, id) {
+      if (!hasNotif || Notification.permission !== 'granted') return;
+      if (document.visibilityState === 'visible' && document.hasFocus()) return; // খোলা থাকলে নিজের টোস্ট ও সাউন্ড আছে
+      var isDep = type === 'deposit';
+      showNotif(isDep ? '📥 নতুন ডিপোজিট রিকোয়েস্ট' : '📤 নতুন উইথড্র রিকোয়েস্ট',
+                (userName || 'ইউজার') + ' — ৳' + (amount || 0), 'req-' + id, 'view-wallet');
+    };
+
+    // ---- FCM টোকেন (অ্যাপ বন্ধ থাকলেও পুশ পাঠানোর জন্য) ----
+    async function registerFcm() {
+      try {
+        if (!FCM_VAPID_KEY || !swReg || !window.firebase || !firebase.messaging || !firebase.messaging.isSupported()) return;
+        var u = firebase.auth().currentUser; if (!u) return;
+        var token = await firebase.messaging().getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
+        if (token) await firebase.database().ref('adminFcmTokens/' + u.uid + '/' + token).set({ t: Date.now(), ua: (navigator.userAgent || '').slice(0, 90) });
+      } catch (e) { console.warn('FCM token error:', e); }
+    }
+
+    // ---- সার্ভিস ওয়ার্কার ----
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+      navigator.serviceWorker.register('./admin-sw.js').then(function (r) { swReg = r; refreshBar(); if (hasNotif && Notification.permission === 'granted') registerFcm(); })
+        .catch(function (e) { console.warn('SW register failed:', e); });
+      navigator.serviceWorker.addEventListener('message', function (e) {
+        if (e.data && e.data.view && typeof switchView === 'function') switchView(e.data.view);
+      });
+    }
+    try {
+      firebase.auth().onAuthStateChanged(function (u) {
+        if (!u) return;
+        if (hasNotif && Notification.permission === 'granted') registerFcm();
+        var v = new URLSearchParams(location.search).get('view');
+        if (v) setTimeout(function () { try { switchView(v); } catch (e) {} }, 1500);
+      });
+    } catch (e) {}
+
+    // ---- ইনস্টল ও নোটিফিকেশন বাটন বার ----
+    var bar = document.createElement('div');
+    bar.id = 'np-pwa-bar';
+    bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 12px);z-index:99990;display:none;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;background:transparent;border:0;border-radius:0;padding:0;box-shadow:none;max-width:94vw;font-family:inherit';
+    bar.innerHTML = '<button id="np-install-btn" style="display:none;background:#F59E0B;color:#0A0A0A;border:0;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px">📲 অ্যাপ ইনস্টল করুন</button>' +
+      '<button id="np-notif-btn" style="display:none;background:#1D1A14;color:#F59E0B;border:1px solid #B97800;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px">🔔 নোটিফিকেশন চালু করুন</button>' +
+      '<span id="np-notif-denied" style="display:none;color:#F87171;font-size:12px;max-width:260px">নোটিফিকেশন বন্ধ করা আছে। ব্রাউজার/ফোন সেটিংস থেকে এই সাইটের নোটিফিকেশন Allow করুন।</span>' +
+      '<button id="np-bar-close" title="বন্ধ করুন" style="background:transparent;color:#A89F8A;border:0;font-size:18px;cursor:pointer">✕</button>';
+    function mountBar() { if (!document.body.contains(bar)) document.body.appendChild(bar); }
+
+    function refreshBar() {
+      mountBar();
+      if (sessionStorage.getItem('np_bar_closed') === '1') { bar.style.display = 'none'; return; }
+      var inst = document.getElementById('np-install-btn'), nb = document.getElementById('np-notif-btn'), nd = document.getElementById('np-notif-denied');
+      var showInst = !standalone && (!!deferredPrompt || isIOS || true);
+      inst.style.display = (!standalone) ? 'inline-block' : 'none';
+      var perm = hasNotif ? Notification.permission : 'unsupported';
+      nb.style.display = 'none';
+      nd.style.display = 'none';
+      var xb = document.getElementById('np-bar-close'); if (xb) xb.style.display = 'none';
+      var any = inst.style.display !== 'none';
+      bar.style.display = any ? 'flex' : 'none';
+    }
+
+    window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferredPrompt = e; refreshBar(); });
+    window.addEventListener('appinstalled', function () { standalone = true; deferredPrompt = null; refreshBar(); });
+
+    document.addEventListener('click', async function (e) {
+      var id = e.target && e.target.id;
+      if (id === 'np-bar-close') { sessionStorage.setItem('np_bar_closed', '1'); bar.style.display = 'none'; }
+      if (id === 'np-install-btn') {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          try { await deferredPrompt.userChoice; } catch (x) {}
+          deferredPrompt = null; refreshBar();
+        } else if (isIOS) {
+          alert('iPhone/iPad এ ইনস্টল করতে:\n১) Safari তে এই পেজ খুলুন\n২) নিচের Share (⬆️) বাটন চাপুন\n৩) "Add to Home Screen" চাপুন\n(ইনস্টলের পরেই iPhone এ নোটিফিকেশন কাজ করবে)');
+        } else {
+          alert('ইনস্টল করতে ব্রাউজারের মেনু (⋮) খুলে "Install app" বা "Add to Home screen" চাপুন।');
+        }
+      }
+      if (id === 'np-notif-btn') {
+        try {
+          var r = await Notification.requestPermission();
+          if (r === 'granted') { showNotif('✅ নোটিফিকেশন চালু হয়েছে', 'নতুন ডিপোজিট/উইথড্র রিকোয়েস্ট এলে এভাবে জানানো হবে।', 'np-test', 'view-wallet'); registerFcm(); }
+        } catch (x) {}
+        refreshBar();
+      }
+    });
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refreshBar); else refreshBar();
+  })();
+  </script>
+<script>
+/* Fix: kichu popup (ট্র্যাকিং, রিপোর্ট, নোটিফিকেশন) onno popup er bhetor nested chilo, tai dekha jeto na. Body te sorano holo. */
+(function () {
+  document.querySelectorAll('.modal-backdrop').forEach(function (m) {
+    if (m.parentElement && m.parentElement.closest('.modal-backdrop')) document.body.appendChild(m);
+  });
+})();
+</script>
 </body>
 </html>

@@ -6489,6 +6489,9 @@
         updates[`users/${dep.uid}/balance`] = newBal;
         updates[`users/${dep.uid}/bonusBalance`] = newBonusBal;
         updates[`users/${dep.uid}/turnoverRequired`] = newTurnoverReq;
+        const curTurnDone = parseFloat(uData.turnoverDone !== undefined ? uData.turnoverDone : uData.turnoverCompleted) || 0;
+        updates[`users/${dep.uid}/turnoverDone`] = curTurnDone;
+        updates[`users/${dep.uid}/turnoverCompleted`] = curTurnDone;
         updates[`users/${dep.uid}/adminUid`] = STATE.adminUser.uid;
         updates[`admins/${STATE.adminUser.uid}/balance`] = newAdminBal;
 
@@ -9122,7 +9125,8 @@ await db.ref('notices/not_2').set({
 
       try {
         await db.ref(`users/${u.uid}`).update({
-          turnoverCompleted: reqTurnover
+          turnoverCompleted: reqTurnover,
+          turnoverDone: reqTurnover
         });
         recordAuditLog('TURNOVER_CLEARED', u.uid, `Marked turnover completed (Req: ৳${reqTurnover})`);
         showToast('✓ ইউজারের টার্নওভার সম্পন্ন হিসেবে মার্ক করা হয়েছে!', 'success');
@@ -9148,7 +9152,8 @@ await db.ref('notices/not_2').set({
       try {
         await db.ref(`users/${u.uid}`).update({
           turnoverRequired: req,
-          turnoverCompleted: comp
+          turnoverCompleted: comp,
+          turnoverDone: comp
         });
         recordAuditLog('TURNOVER_MANUAL_ADJUST', u.uid, `Required: ৳${req}, Completed: ৳${comp}`);
         showToast('টার্নওভার সেটিংস সফলভাবে আপডেট হয়েছে!', 'success');
@@ -9169,7 +9174,8 @@ await db.ref('notices/not_2').set({
         await db.ref(`users/${u.uid}`).update({
           bonusBalance: 0,
           turnoverRequired: 0,
-          turnoverCompleted: 0
+          turnoverCompleted: 0,
+          turnoverDone: 0
         });
         recordAuditLog('TURNOVER_BONUS_RESET', u.uid, 'Reset bonus and turnover to 0');
         showToast('ইউজারের বোনাস ও টার্নওভার রিসেট করা হয়েছে', 'info');

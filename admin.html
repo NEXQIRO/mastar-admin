@@ -17,6 +17,17 @@
           de.style.removeProperty('zoom'); de.style.removeProperty('--fz');
           return;
         }
+        /* Installed app (standalone) hole: browser-er "Desktop site" er moto sidebar + grid layout dekhabe */
+        var isApp = (window.matchMedia && (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: minimal-ui)').matches)) || navigator.standalone === true;
+        if (isApp) {
+          var vm = document.querySelector('meta[name="viewport"]');
+          if (vm && vm.getAttribute('content').indexOf('width=980') === -1) {
+            vm.setAttribute('content', 'width=980, user-scalable=no, viewport-fit=cover');
+          }
+          de.classList.remove('force-mobile', 'force-narrow', 'force-zoom');
+          de.style.removeProperty('zoom'); de.style.removeProperty('--fz');
+          return;
+        }
         var iw = window.innerWidth || de.clientWidth, sw = screen.width;
         var k = iw / sw, eff = iw;
         if (k > 1.15) {            // browser wide (desktop-site) viewport use korche
@@ -8784,7 +8795,7 @@ await db.ref('notices/not_2').set({
     // ---- ইনস্টল ও নোটিফিকেশন বাটন বার ----
     var bar = document.createElement('div');
     bar.id = 'np-pwa-bar';
-    bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:99990;display:none;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;background:#151310;border:1px solid #B97800;border-radius:14px;padding:10px 12px;box-shadow:0 8px 30px rgba(0,0,0,.7);max-width:94vw;font-family:inherit';
+    bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 12px);z-index:99990;display:none;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;background:transparent;border:0;border-radius:0;padding:0;box-shadow:none;max-width:94vw;font-family:inherit';
     bar.innerHTML = '<button id="np-install-btn" style="display:none;background:#F59E0B;color:#0A0A0A;border:0;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px">📲 অ্যাপ ইনস্টল করুন</button>' +
       '<button id="np-notif-btn" style="display:none;background:#1D1A14;color:#F59E0B;border:1px solid #B97800;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px">🔔 নোটিফিকেশন চালু করুন</button>' +
       '<span id="np-notif-denied" style="display:none;color:#F87171;font-size:12px;max-width:260px">নোটিফিকেশন বন্ধ করা আছে। ব্রাউজার/ফোন সেটিংস থেকে এই সাইটের নোটিফিকেশন Allow করুন।</span>' +
@@ -8798,9 +8809,10 @@ await db.ref('notices/not_2').set({
       var showInst = !standalone && (!!deferredPrompt || isIOS || true);
       inst.style.display = (!standalone) ? 'inline-block' : 'none';
       var perm = hasNotif ? Notification.permission : 'unsupported';
-      nb.style.display = (perm === 'default') ? 'inline-block' : 'none';
-      nd.style.display = (perm === 'denied') ? 'inline-block' : 'none';
-      var any = inst.style.display !== 'none' || nb.style.display !== 'none' || nd.style.display !== 'none';
+      nb.style.display = 'none';
+      nd.style.display = 'none';
+      var xb = document.getElementById('np-bar-close'); if (xb) xb.style.display = 'none';
+      var any = inst.style.display !== 'none';
       bar.style.display = any ? 'flex' : 'none';
     }
 

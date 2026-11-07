@@ -2383,6 +2383,20 @@
                   </div>
                 </div>
 
+                <!-- Multiple Deposit Promotion Tiers -->
+                <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 6px;">
+                    <b style="color: #a78bfa; font-size: 0.95rem;">🎯 একাধিক ডিপোজিট প্রমোশন ও টার্নওভার অপশন (Tiers)</b>
+                    <span class="badge" style="background:#8b5cf6; color:#fff; font-size:0.7rem;">নতুন ফিচার</span>
+                  </div>
+                  <div style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 8px;">
+                    ইউজার বিভিন্ন পরিমাণ ডিপোজিট করলে আলাদা বোনাস % ও আলাদা টার্নওভার গুণক প্রযোজ্য হবে।
+                    <br><span style="color:#f59e0b;">নিয়ম: প্রতি লাইনে <b>ডিপোজিট টাকা, বোনাস %, টার্নওভার গুণক</b> লিখুন (যেমন: 300, 3, 1 এবং 500, 10, 3)।</span>
+                  </div>
+                  <textarea id="wallet-setting-bonus-tiers" class="form-control" rows="3" style="font-family: monospace; font-size: 0.85rem;" placeholder="300, 3, 1&#10;500, 10, 3" oninput="syncBonusFields(this.value, 'wallet-tiers')"></textarea>
+                  <small style="color: var(--text-dim); font-size: 0.72rem; margin-top: 4px; display: block;">* ফাঁকা রাখলে উপরের সাধারণ ডিফল্ট বোনাস % ও টার্নওভার কার্যকর হবে। মাস্টার থেকে সেট করা থাকলে ডিফল্ট হিসেবে অটো আসবে, আপনি নিজের ইচ্ছেমতো পরিবর্তন করতে পারেন।</small>
+                </div>
+
                 <div style="background: rgba(245, 158, 11, 0.08); border: 1px dashed rgba(245, 158, 11, 0.35); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 14px;">
                   <div>
                     <div style="font-weight: 700; color: #F5EFE0; font-size: 0.95rem;">⚠️ উইথড্রল চেকিংয়ে টার্নওভার শর্ত আবশ্যিক রাখা</div>
@@ -3065,6 +3079,20 @@
                   </select>
                   <small style="color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; display: block;">কোন টাকার উপর টার্নওভার গুণক কার্যকর হবে।</small>
                 </div>
+              </div>
+
+              <!-- Multiple Deposit Promotion Tiers -->
+              <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 6px;">
+                  <b style="color: #a78bfa; font-size: 0.95rem;">🎯 একাধিক ডিপোজিট প্রমোশন ও টার্নওভার স্ল্যাব (Tiers)</b>
+                  <span class="badge" style="background:#8b5cf6; color:#fff; font-size:0.7rem;">নতুন ফিচার</span>
+                </div>
+                <div style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 8px;">
+                  ইউজার বিভিন্ন পরিমাণ ডিপোজিট করলে আলাদা বোনাস % ও আলাদা টার্নওভার প্রযোজ্য হবে।
+                  <br><span style="color:#f59e0b;">নিয়ম: প্রতি লাইনে <b>ডিপোজিট টাকা, বোনাস %, টার্নওভার গুণক</b> লিখুন (যেমন: 300, 3, 1 এবং 500, 10, 3)।</span>
+                </div>
+                <textarea id="setting-bonus-tiers" class="form-control" rows="3" style="font-family: monospace; font-size: 0.85rem;" placeholder="300, 3, 1&#10;500, 10, 3"></textarea>
+                <small style="color: var(--text-dim); font-size: 0.72rem; margin-top: 4px; display: block;">* ফাঁকা রাখলে উপরের সাধারণ ডিফল্ট বোনাস % ও টার্নওভার কার্যকর হবে। মাস্টার থেকে সেট করা থাকলে ডিফল্ট হিসেবে অটো আসবে, আপনি নিজের ইচ্ছেমতো পরিবর্তন করতে পারেন।</small>
               </div>
 
               <!-- 7. Enforce Turnover on Withdrawal Checkbox -->
@@ -4301,12 +4329,20 @@
         if (typeof a.bonusEnabled !== 'undefined') {
           STATE.settings.depositBonusEnabled = a.bonusEnabled;
         }
+        if (a.depositBonusTiers || a.tiers) {
+          STATE.settings.depositBonusTiers = a.depositBonusTiers || a.tiers;
+        }
         try { updateBonusTurnoverSummaryUI(); } catch (e) {}
       });
       db.ref('adminSettings/depositBonus').on('value', (s) => {
         const g = s.val() || {};
         if (g.enabled !== undefined && STATE.settings.depositBonusEnabled === undefined) {
           STATE.settings.depositBonusEnabled = g.enabled;
+        }
+        if ((g.tiers || g.depositBonusTiers) && !STATE.settings.customAdminTiers) {
+          if (!STATE.settings.depositBonusTiers) {
+            STATE.settings.depositBonusTiers = g.tiers || g.depositBonusTiers;
+          }
         }
         try { updateBonusTurnoverSummaryUI(); } catch (e) {}
       });
@@ -4320,8 +4356,9 @@
     async function openAdminFundModal(suggestedAmt) {
       const u = auth && auth.currentUser;
       if (!db || !u) return;
-      await u.reload();
-      if (!u.emailVerified) { showToast('ইমেইল ভেরিফাই ছাড়া ব্যালেন্স রিকোয়েস্ট করা যাবে না', 'error'); return; }
+      const aSnap = await db.ref(`admins/${u.uid}`).once('value');
+      const isApproved = aSnap.exists() && aSnap.val().active !== false;
+      if (!u.emailVerified && !isApproved) { showToast('অনুমোদিত অ্যাডমিন ছাড়া ব্যালেন্স রিকোয়েস্ট করা যাবে না', 'error'); return; }
       await u.getIdToken(true);
       const a = prompt(`বর্তমান ব্যালেন্স: ৳${STATE.adminBalance}\nMaster Administrator-এর কাছে কত টাকা চান?`, String((typeof suggestedAmt === 'number' && suggestedAmt > 0) ? suggestedAmt : 5000));
       const amt = Math.floor(parseFloat(a));
@@ -4685,7 +4722,6 @@
 
       auth.onAuthStateChanged(async (user) => {
         if (user) {
-          if (!user.emailVerified) { executeLogoutUI(); return; }
           const userEmail = (user.email || '').toLowerCase();
           const isSuperAdminEmail = false;
           let hasAdminRole = isSuperAdminEmail;
@@ -4763,16 +4799,18 @@
           }
         }
 
-        if (!cred.user.emailVerified) {
-          try { await cred.user.sendEmailVerification(); } catch (e) {}
-          await auth.signOut();
-          showToast('ইমেইল ভেরিফাই হয়নি! আপনার ইমেইলে ভেরিফিকেশন লিংক পাঠানো হয়েছে, ভেরিফাই করে আবার লগইন করুন।', 'error');
-          return;
-        }
         if (!hasAdminRole) {
           await auth.signOut();
           showToast('অননুমোদিত অ্যাক্সেস! সাধারণ ব্যবহারকারীরা এডমিন প্যানেলে প্রবেশ করতে পারবেন না।', 'error');
           return;
+        }
+
+        // Master-authorized admins (registered in admins/$uid) can log in directly without email verification block
+        if (!cred.user.emailVerified) {
+          try {
+            // mark verified in admins node if master allowed
+            if (db) db.ref(`admins/${cred.user.uid}/emailVerified`).set(true).catch(() => {});
+          } catch (e) {}
         }
 
         // Keep username mapping stored for future quick login
@@ -6548,16 +6586,29 @@
 
       const depAmt = parseFloat(dep.amount) || 0;
 
-      // 1. Calculate Deposit Bonus & Turnover Rules
+      // 1. Calculate Deposit Bonus & Turnover Rules (supports Multiple Tiers)
       const isBonusActive = STATE.settings.depositBonusEnabled === true || String(STATE.settings.depositBonusEnabled) === 'true';
+      let bonusPct = parseFloat(STATE.settings.depositBonusPercent) || 0;
+      let mult = parseFloat(STATE.settings.turnoverMultiplier) || 1;
       const minDepForBonus = parseFloat(STATE.settings.minDepositForBonus) || 0;
-      const bonusPct = parseFloat(STATE.settings.depositBonusPercent) || 0;
       const maxBonus = parseFloat(STATE.settings.maxBonusAmount) || 0;
-      const mult = parseFloat(STATE.settings.turnoverMultiplier) || 1;
       const tBase = STATE.settings.turnoverBase || 'deposit_plus_bonus';
 
+      // Check if multi-tier promotions are configured (e.g. 300 -> 3%, 1x turnover; 500 -> 10%, 3x turnover)
+      const tiers = Array.isArray(STATE.settings.depositBonusTiers) ? STATE.settings.depositBonusTiers : [];
+      let matchedTier = null;
+      if (tiers.length > 0) {
+        // find highest tier where depAmt >= minDeposit
+        const sortedTiers = [...tiers].sort((a,b) => (parseFloat(b.minDeposit)||0) - (parseFloat(a.minDeposit)||0));
+        matchedTier = sortedTiers.find(t => depAmt >= (parseFloat(t.minDeposit)||0));
+        if (matchedTier) {
+          bonusPct = parseFloat(matchedTier.bonusPercent) || 0;
+          mult = parseFloat(matchedTier.turnoverMultiplier) || 1;
+        }
+      }
+
       let bonusAmt = 0;
-      if (isBonusActive && depAmt >= minDepForBonus) {
+      if (isBonusActive && (matchedTier || depAmt >= minDepForBonus)) {
         let calc = Math.round((depAmt * bonusPct) / 100);
         if (maxBonus > 0 && calc > maxBonus) calc = maxBonus;
         bonusAmt = calc;
@@ -7252,6 +7303,14 @@
         if (elBase) elBase.value = tBase;
         const elEnforce = document.getElementById(prefix + 'turnover-enforce');
         if (elEnforce) elEnforce.checked = STATE.settings.enforceTurnover !== false;
+
+        const elTiers = document.getElementById(prefix + 'bonus-tiers');
+        if (elTiers && !elTiers.dataset.userEdited) {
+          const tiers = STATE.settings.depositBonusTiers || [];
+          if (Array.isArray(tiers) && tiers.length > 0) {
+            elTiers.value = tiers.map(t => `${t.minDeposit}, ${t.bonusPercent}, ${t.turnoverMultiplier}`).join('\n');
+          }
+        }
       });
     }
 
@@ -7265,7 +7324,27 @@
       } else if (type === 'wallet-mult') {
         const target = document.getElementById('setting-turnover-multiplier');
         if (target) target.value = val;
+      } else if (type === 'wallet-tiers') {
+        const target = document.getElementById('setting-bonus-tiers');
+        if (target) { target.value = val; target.dataset.userEdited = 'true'; }
       }
+    }
+
+    function parseAdminTiers(txt) {
+      if (!txt) return [];
+      const lines = txt.split('\n');
+      const out = [];
+      for (let l of lines) {
+        const parts = l.split(',').map(s => s.trim());
+        if (parts.length >= 3) {
+          const min = parseFloat(parts[0]), bp = parseFloat(parts[1]), to = parseFloat(parts[2]);
+          if (!isNaN(min) && !isNaN(bp) && !isNaN(to) && min > 0) {
+            out.push({ minDeposit: min, bonusPercent: bp, turnoverMultiplier: to });
+          }
+        }
+      }
+      out.sort((a,b) => a.minDeposit - b.minDeposit);
+      return out;
     }
 
     async function handleSaveBonusTurnoverSettings(e) {
@@ -7279,6 +7358,7 @@
       const elMult = document.getElementById('wallet-setting-turnover-multiplier') || document.getElementById('setting-turnover-multiplier');
       const elBase = document.getElementById('wallet-setting-turnover-base') || document.getElementById('setting-turnover-base');
       const elEnf = document.getElementById('wallet-setting-turnover-enforce') || document.getElementById('setting-turnover-enforce');
+      const elTiers = document.getElementById('wallet-setting-bonus-tiers') || document.getElementById('setting-bonus-tiers');
 
       const depositBonusEnabled = elEn ? (elEn.value === 'true') : false;
       const depositBonusPercent = elPct ? (parseFloat(elPct.value) || 0) : 10;
@@ -7287,6 +7367,7 @@
       const turnoverMultiplier = elMult ? (parseFloat(elMult.value) || 1) : 1;
       const turnoverBase = elBase ? elBase.value : 'deposit_plus_bonus';
       const enforceTurnover = elEnf ? elEnf.checked : true;
+      const parsedTiers = elTiers ? parseAdminTiers(elTiers.value) : [];
 
       try {
         const adminUid = STATE.adminUser ? STATE.adminUser.uid : (auth.currentUser ? auth.currentUser.uid : null);
@@ -7298,11 +7379,13 @@
         updates['settings/turnoverMultiplier'] = turnoverMultiplier;
         updates['settings/turnoverBase'] = turnoverBase;
         updates['settings/enforceTurnover'] = enforceTurnover;
+        updates['settings/depositBonusTiers'] = parsedTiers;
 
         if (adminUid) {
           updates[`admins/${adminUid}/bonusPercent`] = depositBonusPercent;
           updates[`admins/${adminUid}/turnoverPercent`] = turnoverMultiplier;
           updates[`admins/${adminUid}/bonusEnabled`] = depositBonusEnabled;
+          updates[`admins/${adminUid}/depositBonusTiers`] = parsedTiers;
         }
 
         await db.ref().update(updates);
@@ -7315,11 +7398,13 @@
           maxBonusAmount,
           turnoverMultiplier,
           turnoverBase,
-          enforceTurnover
+          enforceTurnover,
+          depositBonusTiers: parsedTiers,
+          customAdminTiers: true
         };
         updateBonusTurnoverSummaryUI();
-        recordAuditLog('SETTINGS_BONUS_UPDATE', 'SETTINGS', `Bonus: ${depositBonusEnabled ? 'ON' : 'OFF'} (${depositBonusPercent}%), Turnover: ${turnoverMultiplier}x`);
-        showToast('🎁 ডিপোজিট বোনাস ও টার্নওভার সেটিংস সফলভাবে সেভ হয়েছে!', 'success');
+        recordAuditLog('SETTINGS_BONUS_UPDATE', 'SETTINGS', `Bonus: ${depositBonusEnabled ? 'ON' : 'OFF'} (${depositBonusPercent}%), Turnover: ${turnoverMultiplier}x, Tiers: ${parsedTiers.length}`);
+        showToast('🎁 ডিপোজিট প্রমোশন ও টার্নওভার অপশন সফলভাবে সেভ হয়েছে!', 'success');
       } catch (err) {
         showToast('সেটিংস সেভ করতে ব্যর্থ: ' + err.message, 'error');
       }

@@ -1555,6 +1555,9 @@
     body[data-theme="light"] ::-webkit-scrollbar-thumb { background: #D8CCAE; }
     body[data-theme="light"] select.action-dropdown-select { background: linear-gradient(135deg, #FFFFFF 0%, #F6F2E8 100%) !important; color: #1C1917 !important; border-color: #D8CCAE !important; box-shadow: none; }
   
+    /* Popup er bhetor card/section chepte lukiye jabe na; popup scroll hobe */
+    .modal-body > * { flex-shrink: 0; }
+    .modal-body { min-height: 0; }
     /* Table cells: ek line e dekhabe (double line noy) */
     table td .badge, table th .badge { white-space: nowrap; flex-wrap: nowrap; }
     #view-users table td { white-space: nowrap; vertical-align: middle; }

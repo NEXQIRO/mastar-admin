@@ -1,53 +1,4 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>NP TOURNAMENT BD - Admin Control Panel</title>
-  <script>
-  /* Phone ke shob somoy app-er moto mobile layout-e dekhabe (Chrome "Desktop site" mode-eo) */
-  (function () {
-    var de = document.documentElement;
-    function apply() {
-      try {
-        var touch = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in window);
-        var phone = touch && Math.min(screen.width, screen.height) <= 820;
-        if (!phone) {
-          de.classList.remove('force-mobile', 'force-narrow', 'force-zoom');
-          de.style.removeProperty('zoom'); de.style.removeProperty('--fz');
-          return;
-        }
-        /* Installed app (standalone) hole: browser-er "Desktop site" er moto sidebar + grid layout dekhabe */
-        var isApp = (window.matchMedia && (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: minimal-ui)').matches)) || navigator.standalone === true;
-        if (isApp) {
-          var vm = document.querySelector('meta[name="viewport"]');
-          if (vm && vm.getAttribute('content').indexOf('width=980') === -1) {
-            vm.setAttribute('content', 'width=980, user-scalable=no, viewport-fit=cover');
-          }
-          de.classList.remove('force-mobile', 'force-narrow', 'force-zoom');
-          de.style.removeProperty('zoom'); de.style.removeProperty('--fz');
-          return;
-        }
-        var iw = window.innerWidth || de.clientWidth, sw = screen.width;
-        var k = iw / sw, eff = iw;
-        if (k > 1.15) {            // browser wide (desktop-site) viewport use korche
-          de.style.setProperty('--fz', k.toFixed(4));
-          de.style.zoom = k.toFixed(4);
-          de.classList.add('force-zoom');
-          eff = sw;
-        } else {
-          de.style.removeProperty('zoom'); de.style.removeProperty('--fz');
-          de.classList.remove('force-zoom');
-        }
-        de.classList.toggle('force-mobile', eff <= 900);
-        de.classList.toggle('force-narrow', eff <= 500);
-      } catch (e) {}
-    }
-    apply();
-    window.addEventListener('resize', apply);
-    window.addEventListener('orientationchange', function () { setTimeout(apply, 250); });
-    window.addEventListener('load', function () { setTimeout(apply, 150); setTimeout(apply, 900); });
-  })();
+
   </script>
   <link rel="manifest" href="admin-manifest.json">
   <meta name="theme-color" content="#0A0A0A">
@@ -2187,24 +2138,6 @@
             </div>
           </div>
 
-          <!-- Bonus & Turnover Quick Overview Bar -->
-          <div id="wallet-bonus-turnover-summary" style="margin-bottom: 16px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(21, 19, 16, 0.85)); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="font-size: 24px;">🎁</div>
-              <div>
-                <div style="font-weight: 700; color: #a78bfa; font-size: 0.95rem;">
-                  ডিপোজিট বোনাস: <span id="quick-bonus-pct" style="color: #fff; background: #8b5cf6; padding: 2px 8px; border-radius: 6px;">10%</span>
-                  <span id="quick-bonus-status" class="badge badge-approved" style="margin-left: 6px; font-size: 0.72rem;">সক্রিয়</span>
-                </div>
-                <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 3px;">
-                  উইথড্র টার্নওভার গুণক: <strong id="quick-turnover-mult" style="color: #f59e0b;">2x</strong> | ভিত্তি: <span id="quick-turnover-base">ডিপোজিট + বোনাস</span>
-                </div>
-              </div>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="switchWalletTab('bonus-turnover')" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); border-color: #8b5cf6;">
-              ⚙️ বোনাস ও টার্নওভার পরিবর্তন করুন
-            </button>
-          </div>
 
           <!-- Sub Tabs -->
           <div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px; flex-wrap: wrap;">
@@ -2213,9 +2146,6 @@
             </button>
             <button class="btn btn-secondary btn-sm" id="tab-withdrawals-btn" onclick="switchWalletTab('withdrawals')">
               📤 উইথড্র রিকোয়েস্ট (<span id="count-pending-withdrawals">0</span>)
-            </button>
-            <button class="btn btn-secondary btn-sm" id="tab-bonus-turnover-btn" onclick="switchWalletTab('bonus-turnover')">
-              🎁 বোনাস ও টার্নওভার সেটিংস
             </button>
             <button class="btn btn-secondary btn-sm" id="tab-ledger-btn" onclick="switchWalletTab('ledger')">
               📜 সব লেনদেন লেজার (All Ledger)
@@ -2321,106 +2251,6 @@
             </div>
           </div>
 
-          <!-- Bonus & Turnover Sub Tab in Wallet -->
-          <div id="wallet-sub-bonus-turnover" style="display:none;">
-            <div class="card" style="border: 1px solid rgba(139, 92, 246, 0.4); background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(21, 19, 16, 0.95));">
-              <div class="card-header">
-                <div class="card-title" style="color: #a78bfa;">
-                  <svg viewBox="0 0 24 24" style="fill: #a78bfa;"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.65-.5-.65C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/></svg>
-                  <span>🎁 ডিপোজিট বোনাস ও টার্নওভার অপশন সেটিংস (Deposit Bonus & Turnover)</span>
-                </div>
-                <div style="font-size: 0.8rem; color: var(--text-dim);">
-                  ইউজার ডিপোজিট করলে বোনাস পার্সেন্টেজ প্রদান এবং উইথড্রল শর্তে টার্নওভার নিয়মাবলী
-                </div>
-              </div>
-
-              <form id="wallet-bonus-turnover-form" onsubmit="handleSaveBonusTurnoverSettings(event)">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 16px;">
-                  <div class="form-group">
-                    <label style="font-weight: 700; color: #a78bfa;">ডিপোজিট বোনাস সিস্টেম</label>
-                    <select id="wallet-setting-bonus-enabled" class="form-control" style="border-color: #a78bfa; font-weight: 700;" onchange="syncBonusFields(this.value, 'wallet')">
-                      <option value="false">❌ নিষ্ক্রিয় (Disabled)</option>
-                      <option value="true">✅ সক্রিয় (Active / Enabled)</option>
-                    </select>
-                    <small style="color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; display: block;">সক্রিয় থাকলে ডিপোজিট অনুমোদনের সাথে সাথে বোনাস যোগ হবে।</small>
-                  </div>
-
-                  <div class="form-group">
-                    <label style="font-weight: 700;">ডিপোজিট বোনাস শতকরা হার (%)</label>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <input type="number" id="wallet-setting-bonus-percent" class="form-control" value="10" min="0" max="500" step="1" required oninput="syncBonusFields(this.value, 'wallet-pct')">
-                      <span style="font-weight: 700; color: var(--primary);">%</span>
-                    </div>
-                    <small style="color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; display: block;">যেমন: 10% দিলে ৳১০০ ডিপোজিটে ৳১০ বোনাস।</small>
-                  </div>
-
-                  <div class="form-group">
-                    <label style="font-weight: 700;">বোনাস প্রযোজ্য হওয়ার সর্বনিম্ন ডিপোজিট (৳)</label>
-                    <input type="number" id="wallet-setting-bonus-min-deposit" class="form-control" value="100" min="0" step="1">
-                    <small style="color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; display: block;">এই পরিমাণের কম ডিপোজিট করলে বোনাস কার্যকর হবে না।</small>
-                  </div>
-
-                  <div class="form-group">
-                    <label style="font-weight: 700;">সর্বোচ্চ বোনাস লিমিট (৳)</label>
-                    <input type="number" id="wallet-setting-bonus-max" class="form-control" value="500" min="0" step="1">
-                    <small style="color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; display: block;">একটি ডিপোজিটে সর্বোচ্চ কত বোনাস (০ দিলে আনলিমিটেড)।</small>
-                  </div>
-
-                  <div class="form-group">
-                    <label style="font-weight: 700; color: #f59e0b;">উইথড্র টার্নওভার গুণক (Turnover Multiplier)</label>
-                    <select id="wallet-setting-turnover-multiplier" class="form-control" style="border-color: #f59e0b; font-weight: 700;" onchange="syncBonusFields(this.value, 'wallet-mult')">
-                      <option value="1">1x (১ গুণ)</option>
-                      <option value="2">2x (২ গুণ - স্ট্যান্ডার্ড)</option>
-                      <option value="3">3x (৩ গুণ)</option>
-                      <option value="5">5x (৫ গুণ)</option>
-                      <option value="10">10x (১০ গুণ)</option>
-                    </select>
-                    <small style="color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; display: block;">উইথড্র করার আগে ইউজারকে মোট কত টাকার ম্যাচ খেলতে হবে।</small>
-                  </div>
-
-                  <div class="form-group">
-                    <label style="font-weight: 700;">টার্নওভার হিসাবের ভিত্তি (Base)</label>
-                    <select id="wallet-setting-turnover-base" class="form-control">
-                      <option value="deposit_plus_bonus">(ডিপোজিট + বোনাস) × গুণক [জনপ্রিয়]</option>
-                      <option value="deposit_only">শুধু ডিপোজিট × গুণক</option>
-                      <option value="bonus_only">শুধু বোনাস × গুণক</option>
-                    </select>
-                    <small style="color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; display: block;">কোন টাকার উপর টার্নওভার গুণক কার্যকর হবে।</small>
-                  </div>
-                </div>
-
-                <!-- Multiple Deposit Promotion Tiers -->
-                <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;">
-                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 6px;">
-                    <b style="color: #a78bfa; font-size: 0.95rem;">🎯 একাধিক ডিপোজিট প্রমোশন ও টার্নওভার অপশন (Tiers)</b>
-                    <span class="badge" style="background:#8b5cf6; color:#fff; font-size:0.7rem;">নতুন ফিচার</span>
-                  </div>
-                  <div style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 8px;">
-                    ইউজার বিভিন্ন পরিমাণ ডিপোজিট করলে আলাদা বোনাস % ও আলাদা টার্নওভার গুণক প্রযোজ্য হবে।
-                    <br><span style="color:#f59e0b;">নিয়ম: প্রতি লাইনে <b>ডিপোজিট টাকা, বোনাস %, টার্নওভার গুণক</b> লিখুন (যেমন: 300, 3, 1 এবং 500, 10, 3)।</span>
-                  </div>
-                  <textarea id="wallet-setting-bonus-tiers" class="form-control" rows="3" style="font-family: monospace; font-size: 0.85rem;" placeholder="300, 3, 1&#10;500, 10, 3" oninput="syncBonusFields(this.value, 'wallet-tiers')"></textarea>
-                  <small style="color: var(--text-dim); font-size: 0.72rem; margin-top: 4px; display: block;">* ফাঁকা রাখলে উপরের সাধারণ ডিফল্ট বোনাস % ও টার্নওভার কার্যকর হবে। মাস্টার থেকে সেট করা থাকলে ডিফল্ট হিসেবে অটো আসবে, আপনি নিজের ইচ্ছেমতো পরিবর্তন করতে পারেন।</small>
-                </div>
-
-                <div style="background: rgba(245, 158, 11, 0.08); border: 1px dashed rgba(245, 158, 11, 0.35); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 14px;">
-                  <div>
-                    <div style="font-weight: 700; color: #F5EFE0; font-size: 0.95rem;">⚠️ উইথড্রল চেকিংয়ে টার্নওভার শর্ত আবশ্যিক রাখা</div>
-                    <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 2px;">
-                      টার্নওভার পূরণ না হওয়া পর্যন্ত ইউজার উইথড্র আবেদন করতে পারবে না এবং উইথড্রল লিস্টে সতর্কতা থাকবে।
-                    </div>
-                  </div>
-                  <div>
-                    <input type="checkbox" id="wallet-setting-turnover-enforce" style="width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;" checked>
-                  </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); border-color: #8b5cf6; color: #fff; font-weight: 700; width: 100%; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);">
-                  💾 বোনাস ও টার্নওভার সেটিংস সেভ করুন
-                </button>
-              </form>
-            </div>
-          </div>
         </section>
 
         <!-- ==================== FINANCIAL DASHBOARD & REPORTS (FEATURE 1) ==================== -->
@@ -3096,19 +2926,6 @@
                 </div>
               </div>
 
-              <!-- Multiple Deposit Promotion Tiers -->
-              <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;">
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 6px;">
-                  <b style="color: #a78bfa; font-size: 0.95rem;">🎯 একাধিক ডিপোজিট প্রমোশন ও টার্নওভার স্ল্যাব (Tiers)</b>
-                  <span class="badge" style="background:#8b5cf6; color:#fff; font-size:0.7rem;">নতুন ফিচার</span>
-                </div>
-                <div style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 8px;">
-                  ইউজার বিভিন্ন পরিমাণ ডিপোজিট করলে আলাদা বোনাস % ও আলাদা টার্নওভার প্রযোজ্য হবে।
-                  <br><span style="color:#f59e0b;">নিয়ম: প্রতি লাইনে <b>ডিপোজিট টাকা, বোনাস %, টার্নওভার গুণক</b> লিখুন (যেমন: 300, 3, 1 এবং 500, 10, 3)।</span>
-                </div>
-                <textarea id="setting-bonus-tiers" class="form-control" rows="3" style="font-family: monospace; font-size: 0.85rem;" placeholder="300, 3, 1&#10;500, 10, 3"></textarea>
-                <small style="color: var(--text-dim); font-size: 0.72rem; margin-top: 4px; display: block;">* ফাঁকা রাখলে উপরের সাধারণ ডিফল্ট বোনাস % ও টার্নওভার কার্যকর হবে। মাস্টার থেকে সেট করা থাকলে ডিফল্ট হিসেবে অটো আসবে, আপনি নিজের ইচ্ছেমতো পরিবর্তন করতে পারেন।</small>
-              </div>
 
               <!-- 7. Enforce Turnover on Withdrawal Checkbox -->
               <div style="background: rgba(245, 158, 11, 0.08); border: 1px dashed rgba(245, 158, 11, 0.35); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 14px;">
@@ -3170,120 +2987,6 @@
             </div>
           </div>
 
-          <!-- HTML Advertisement Code Card (Advanced Controls, Types, Sizes, Placements & Sandboxed Live Preview) -->
-          <div class="card" style="margin-top: 20px;">
-            <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
-              <div class="card-title">
-                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-                <span id="txt-ad-title">HTML Advertisement Code (এইচটিএমএল বিজ্ঞাপন কোড)</span>
-              </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 700; color: #fff;">
-                  <input type="checkbox" id="setting-ad-enabled" style="transform: scale(1.3); cursor: pointer;" checked onchange="updateAdStatusLabel()">
-                  <span id="lbl-ad-enabled-status" style="color: var(--success);">🟢 বিজ্ঞাপন সক্রিয় (Enabled)</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Security Warning Alert Box -->
-            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 14px; font-size: 0.82rem; line-height: 1.5; color: #fca5a5;">
-              <div style="font-weight: 700; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; color: #ef4444;" id="txt-ad-security-title">
-                <span>⚠️ নিরাপত্তা সতর্কতা ও নির্দেশিকা (Security Risk Notice):</span>
-              </div>
-              <span id="txt-ad-security-desc">
-                অপরিচিত বা অবিবেচিত তৃতীয় পক্ষের HTML / JavaScript কোড সরাসরি চালানো ব্রাউজার ও ব্যবহারকারীর জন্য ঝুঁকিপূর্ণ হতে পারে। কোনো বিজ্ঞাপন কোড পেস্ট করার আগে নিশ্চিত হন কোডটি বিশ্বস্ত সোর্স থেকে এসেছে। অ্যাডমিন প্যানেলের অভ্যন্তরীণ কোড সুরক্ষিত রাখতে নিচের প্রিভিউটি আইসোলেটেড স্যান্ডবক্সে (Sandboxed Iframe) রেন্ডার করা হয়।
-              </span>
-            </div>
-
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;" id="txt-ad-instructions">
-              এখানে আপনার বিজ্ঞাপনের ধরণ, সাইজ এবং প্রদর্শনের স্থান নির্বাচন করে সম্পূর্ণ HTML বিজ্ঞাপন কোডটি পেস্ট করুন। নতুন কোড সেভ করলে ইউজার প্যানেলের নির্ধারিত স্থানে নির্বাচিত সাইজে বিজ্ঞাপন প্রদর্শিত হবে।
-            </p>
-
-            <!-- Configuration Grid: Type, Size, Placement -->
-            <div class="form-row-3" style="margin-bottom: 12px;">
-              <div class="form-group">
-                <label id="lbl-ad-type">বিজ্ঞাপনের ধরন (Ad Type)</label>
-                <select class="form-control" id="setting-ad-type">
-                  <option value="BANNER">ব্যানার বিজ্ঞাপন (Banner Ad)</option>
-                  <option value="POPUP">পপ-আপ বিজ্ঞাপন (Popup / Interstitial)</option>
-                  <option value="CARD">কার্ড বিজ্ঞাপন (Native Card Ad)</option>
-                  <option value="CUSTOM">কাস্টম স্ক্রিপ্ট / কোড (Custom Script)</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label id="lbl-ad-size">বিজ্ঞাপন প্রদর্শনের সাইজ (Ad Display Size)</label>
-                <select class="form-control" id="setting-ad-size" onchange="onAdSizeSelectionChange(this.value)">
-                  <option value="SMALL">Small (ছোট - 300x50 px)</option>
-                  <option value="MEDIUM" selected>Medium (মাঝারি - 300x250 px)</option>
-                  <option value="LARGE">Large (বড় - 336x280 px)</option>
-                  <option value="FULL_WIDTH">Full Width (ফুল উইথ - 100% প্রস্থ)</option>
-                  <option value="FULL_SCREEN">Full Screen (ফুল স্ক্রিন - 100vw x 100vh)</option>
-                  <option value="CUSTOM">Custom (কাস্টম সাইজ)</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label id="lbl-ad-placement">বিজ্ঞাপন প্রদর্শনের স্থান (Ad Placement)</label>
-                <select class="form-control" id="setting-ad-placement">
-                  <option value="POPUP">ইউজার হোম পপ-আপ মডাল (Popup Modal)</option>
-                  <option value="BANNER">হোম পেজ ব্যানার সেকশন (Home Banner)</option>
-                  <option value="CARD">টুর্নামেন্ট কার্ড কন্টেইনার (Card Section)</option>
-                  <option value="CONTAINER">নির্দিষ্ট অ্যাড কন্টেইনার (Dedicated Container)</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Custom Size Inputs (Shown only if Custom selected) -->
-            <div id="ad-custom-size-row" class="form-row" style="display: none; margin-bottom: 12px; background: var(--bg-surface); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-              <div class="form-group">
-                <label id="lbl-ad-custom-w">কাস্টম প্রস্থ / Width (যেমন: 320px বা 100%)</label>
-                <input type="text" id="setting-ad-custom-width" class="form-control" placeholder="320px" value="320px" oninput="renderAdPreview()">
-              </div>
-              <div class="form-group">
-                <label id="lbl-ad-custom-h">কাস্টম উচ্চতা / Height (যেমন: 250px বা auto)</label>
-                <input type="text" id="setting-ad-custom-height" class="form-control" placeholder="250px" value="250px" oninput="renderAdPreview()">
-              </div>
-            </div>
-
-            <!-- HTML Code Textarea -->
-            <div class="form-group">
-              <label id="lbl-ad-code">HTML Advertisement Code</label>
-              <textarea id="setting-html-ad" class="form-control" rows="6" placeholder="<!-- Paste your full HTML / JS ad code here -->" style="font-family: monospace; font-size: 0.85rem;" oninput="onAdCodeInputChange()"></textarea>
-            </div>
-
-            <!-- Action Buttons -->
-            <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-              <div style="display: flex; gap: 8px;">
-                <button type="button" class="btn btn-secondary btn-sm" onclick="renderAdPreview()" id="btn-ad-preview">
-                  👁️ লাইভ প্রিভিউ দেখুন (Preview Ad)
-                </button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="handleDeleteHtmlAd()" id="btn-ad-delete" style="color: var(--accent); border-color: rgba(239, 68, 68, 0.4);">
-                  🗑️ বিজ্ঞাপন কোড মুছুন (Delete)
-                </button>
-              </div>
-              <button type="button" class="btn btn-primary" onclick="handleSaveHtmlAd()" id="btn-ad-save">
-                💾 HTML বিজ্ঞাপন সেটিংস সেভ করুন
-              </button>
-            </div>
-
-            <!-- Live Ad Preview Box -->
-            <div id="ad-preview-wrapper" style="margin-top: 18px; border-top: 1px solid var(--border-subtle); padding-top: 14px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 700; font-size: 0.88rem; color: #fff; display: flex; align-items: center; gap: 6px;">
-                  <span>📱</span>
-                  <span id="txt-ad-preview-title">বিজ্ঞাপন প্রিভিউ (Live Sandbox Preview)</span>
-                </div>
-                <span class="badge badge-upcoming" id="ad-preview-size-badge" style="font-size: 0.72rem;">300x250 (Medium)</span>
-              </div>
-              <div id="ad-preview-device-frame" style="background: #090d16; border: 1px dashed var(--border-color); border-radius: var(--radius-sm); padding: 12px; display: flex; justify-content: center; align-items: center; overflow: hidden; min-height: 120px; width: 100%; box-sizing: border-box;">
-                <iframe id="ad-preview-iframe" sandbox="allow-scripts allow-popups allow-forms" style="border: none; background: #fff; border-radius: 6px; max-width: 100%; transition: all 0.25s ease;" width="300" height="250"></iframe>
-              </div>
-              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 6px; text-align: center;" id="txt-ad-preview-note">
-                💡 Android Mobile Browser এবং HopWeb WebView-এর উপযোগী রেসপনসিভ প্রদর্শনী।
-              </div>
-            </div>
-          </div>
         </section>
 
         <!-- ==================== 7. AUDIT LOGS & REPORTS ==================== -->
@@ -7395,7 +7098,7 @@
       const turnoverMultiplier = elMult ? (parseFloat(elMult.value) || 1) : 1;
       const turnoverBase = elBase ? elBase.value : 'deposit_plus_bonus';
       const enforceTurnover = elEnf ? elEnf.checked : true;
-      const parsedTiers = elTiers ? parseAdminTiers(elTiers.value) : [];
+      const parsedTiers = elTiers ? parseAdminTiers(elTiers.value) : (Array.isArray(STATE.settings.depositBonusTiers) ? STATE.settings.depositBonusTiers : []);
 
       try {
         const adminUid = STATE.adminUser ? STATE.adminUser.uid : (auth.currentUser ? auth.currentUser.uid : null);
@@ -9712,12 +9415,77 @@ await db.ref('notices/not_2').set({
       showToast(off ? 'অফারটি আপনার প্লেয়ারদের জন্য বন্ধ হয়েছে' : 'অফারটি আপনার প্লেয়ারদের জন্য চালু হয়েছে', 'success');
     } catch (e) { showToast('ব্যর্থ: ' + e.message, 'error'); }
   };
+  function toLocalInput(ms) {
+    if (!ms) return '';
+    var d = new Date(+ms); if (isNaN(d)) return '';
+    var z = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + 'T' + z(d.getHours()) + ':' + z(d.getMinutes());
+  }
+  window.npPromoClose = function () { var m = document.getElementById('modal-promo-edit'); if (m) m.remove(); };
+  window.npPromoEdit = function (id) {
+    var p = FP[id]; if (!p) { showToast('অফারটি পাওয়া যায়নি', 'error'); return; }
+    npPromoClose();
+    var isFixed = p.bonusType === 'fixed';
+    var m = document.createElement('div');
+    m.className = 'modal-backdrop active'; m.id = 'modal-promo-edit';
+    m.innerHTML =
+      '<div class="modal-card" style="max-width:560px">' +
+        '<div class="modal-header"><h3 class="modal-title">✏️ প্রোমোশন অফার এডিট</h3><button type="button" class="modal-close" onclick="npPromoClose()">✕</button></div>' +
+        '<form onsubmit="npPromoSave(event,\'' + id + '\')"><div class="modal-body" style="padding:20px;overflow-y:auto">' +
+          '<div class="form-group"><label>অফারের নাম</label><input type="text" id="pe-name" class="form-control" required></div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">' +
+            '<div class="form-group"><label>ন্যূনতম ডিপোজিট (৳)</label><input type="number" id="pe-min" class="form-control" min="0" step="any" required></div>' +
+            '<div class="form-group"><label>সর্বোচ্চ ডিপোজিট (৳)</label><input type="number" id="pe-max" class="form-control" min="0" step="any" required></div>' +
+            '<div class="form-group"><label>বোনাসের ধরন</label><select id="pe-type" class="form-control"><option value="percent">শতকরা (%)</option><option value="fixed">নির্দিষ্ট টাকা (৳)</option></select></div>' +
+            '<div class="form-group"><label>বোনাসের পরিমাণ</label><input type="number" id="pe-bonus" class="form-control" min="0.01" step="any" required></div>' +
+            '<div class="form-group"><label>টার্নওভার গুণক (x)</label><input type="number" id="pe-turn" class="form-control" min="0" step="any" required></div>' +
+            '<div></div>' +
+            '<div class="form-group"><label>শুরুর সময় (ফাঁকা = সীমাহীন)</label><input type="datetime-local" id="pe-start" class="form-control"></div>' +
+            '<div class="form-group"><label>শেষের সময় (ফাঁকা = সীমাহীন)</label><input type="datetime-local" id="pe-end" class="form-control"></div>' +
+          '</div>' +
+          '<small style="display:block;margin-top:10px;color:var(--text-dim)">⚠️ এই অফারটি Master থেকে আসা, পরিবর্তন সেভ করলে অফারের মূল তথ্যই বদলে যাবে।</small>' +
+        '</div>' +
+        '<div class="modal-footer" style="padding:14px 20px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border-subtle)">' +
+          '<button type="button" class="btn btn-secondary" onclick="npPromoClose()">বাতিল</button>' +
+          '<button type="submit" class="btn btn-primary">💾 সেভ করুন</button>' +
+        '</div></form></div>';
+    document.body.appendChild(m);
+    document.getElementById('pe-name').value = p.name || '';
+    document.getElementById('pe-min').value = p.minDeposit != null ? p.minDeposit : '';
+    document.getElementById('pe-max').value = p.maxDeposit != null ? p.maxDeposit : '';
+    document.getElementById('pe-type').value = isFixed ? 'fixed' : 'percent';
+    document.getElementById('pe-bonus').value = p.bonusValue != null ? p.bonusValue : '';
+    document.getElementById('pe-turn').value = p.turnoverMultiplier != null ? p.turnoverMultiplier : '';
+    document.getElementById('pe-start').value = toLocalInput(p.startAt);
+    document.getElementById('pe-end').value = toLocalInput(p.endAt);
+  };
+  window.npPromoSave = async function (e, id) {
+    e.preventDefault();
+    var name = document.getElementById('pe-name').value.trim();
+    var mn = parseFloat(document.getElementById('pe-min').value), mx = parseFloat(document.getElementById('pe-max').value);
+    var bt = document.getElementById('pe-type').value, bv = parseFloat(document.getElementById('pe-bonus').value), tm = parseFloat(document.getElementById('pe-turn').value);
+    var sv = document.getElementById('pe-start').value, ev = document.getElementById('pe-end').value;
+    var sa = sv ? new Date(sv).getTime() : null, ea = ev ? new Date(ev).getTime() : null;
+    if (!name) { showToast('অফারের নাম দিন', 'error'); return; }
+    if (isNaN(mn) || isNaN(mx) || isNaN(bv) || isNaN(tm) || mn < 0 || mx < 0 || bv <= 0 || tm < 0) { showToast('সব সংখ্যা সঠিকভাবে দিন (বোনাস ০-এর বেশি হতে হবে)', 'error'); return; }
+    if (mn > mx) { showToast('ন্যূনতম ডিপোজিট সর্বোচ্চের চেয়ে বেশি হতে পারে না', 'error'); return; }
+    if (sa && ea && ea <= sa) { showToast('শেষের সময় শুরুর সময়ের পরে হতে হবে', 'error'); return; }
+    try {
+      await db.ref('depositPromotions/' + id).update({
+        name: name, minDeposit: mn, maxDeposit: mx, bonusType: bt, bonusValue: bv, turnoverMultiplier: tm,
+        startAt: sa, endAt: ea, updatedBy: me(), updatedAt: Date.now()
+      });
+      recordAuditLog('PROMO_ADMIN_EDIT', id, name + ' | ' + mn + '-' + mx + ' | ' + (bt === 'fixed' ? '৳' + bv : bv + '%') + ' | ' + tm + 'x');
+      showToast('অফার সফলভাবে আপডেট হয়েছে', 'success');
+      npPromoClose();
+    } catch (err) { showToast('সেভ ব্যর্থ: ' + err.message, 'error'); }
+  };
   function render() {
     var el = document.getElementById('promo-admin-root'); if (!el) return;
     var uid = me();
     var offers = Object.keys(FP).sort(function (a, b) { return (+FP[b].createdAt || 0) - (+FP[a].createdAt || 0); }).map(function (k) {
       var p = FP[k], off = !!(p.adminOff && p.adminOff[uid] === true), can = p.adminCanToggle === true;
-      return '<tr><td><b>' + escapeHtml(p.name) + '</b></td><td>৳' + p.minDeposit + ' – ৳' + p.maxDeposit + '</td><td>' + (p.bonusType === 'fixed' ? '৳' + p.bonusValue : p.bonusValue + '%') + '</td><td>' + p.turnoverMultiplier + 'x</td><td>' + dt(p.startAt) + '<br>' + dt(p.endAt) + '</td><td><span class="badge ' + (p.active ? 'badge-approved' : 'badge-pending') + '">Master: ' + (p.active ? 'Active' : 'Inactive') + '</span></td><td>' + (can ? '<button class="btn btn-sm ' + (off ? 'btn-success' : 'btn-outline') + '" onclick="npPromoToggle(\'' + k + '\',' + (off ? 'false' : 'true') + ')">' + (off ? 'চালু করুন' : 'বন্ধ করুন') + '</button> <small>' + (off ? 'এখন বন্ধ' : 'এখন চালু') + '</small>' : '<small>🔒 শুধু Master নিয়ন্ত্রণ করে</small>') + '</td></tr>';
+      return '<tr><td><b>' + escapeHtml(p.name) + '</b></td><td>৳' + p.minDeposit + ' – ৳' + p.maxDeposit + '</td><td>' + (p.bonusType === 'fixed' ? '৳' + p.bonusValue : p.bonusValue + '%') + '</td><td>' + p.turnoverMultiplier + 'x</td><td>' + dt(p.startAt) + '<br>' + dt(p.endAt) + '</td><td><span class="badge ' + (p.active ? 'badge-approved' : 'badge-pending') + '">Master: ' + (p.active ? 'Active' : 'Inactive') + '</span></td><td>' + (can ? '<button class="btn btn-sm ' + (off ? 'btn-success' : 'btn-outline') + '" onclick="npPromoToggle(\'' + k + '\',' + (off ? 'false' : 'true') + ')">' + (off ? 'চালু করুন' : 'বন্ধ করুন') + '</button> <small>' + (off ? 'এখন বন্ধ' : 'এখন চালু') + '</small>' : '') + ' <button class="btn btn-sm btn-primary" onclick="npPromoEdit(\'' + k + '\')">✏️ এডিট</button></td></tr>';
     }).join('') || '<tr><td colspan="7">কোনো অফার নেই</td></tr>';
     var deps = DEPS.map(function (d) {
       var p = FP[d.promoId], c = CLM[d.id], st = String(d.status || ''), pend = st.toLowerCase() === 'pending', amt = parseFloat(d.amount) || 0, x = p ? calc(p, amt) : null;

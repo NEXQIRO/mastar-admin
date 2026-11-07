@@ -2884,6 +2884,100 @@
 
           </div>
 
+          
+          <!-- ==================== DEPOSIT BONUS & TURNOVER SETTINGS ==================== -->
+          <div class="card" style="margin-top: 20px; border: 1px solid rgba(139, 92, 246, 0.4); background: linear-gradient(135deg, rgba(139, 92, 246, 0.06), rgba(21, 19, 16, 0.95));">
+            <div class="card-header">
+              <div class="card-title" style="color: #a78bfa;">
+                <svg viewBox="0 0 24 24" style="fill: #a78bfa;"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.65-.5-.65C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/></svg>
+                <span>🎁 ডিপোজিট বোনাস ও টার্নওভার সেটিংস (Deposit Bonus & Turnover)</span>
+              </div>
+              <div style="font-size: 0.8rem; color: var(--text-dim);">
+                ইউজার ডিপোজিট করলে স্বয়ংক্রিয় ডিপোজিট বোনাস এবং উইথড্রল শর্তের জন্য টার্নওভার নিয়মাবলী
+              </div>
+            </div>
+
+            <form id="bonus-turnover-settings-form" onsubmit="handleSaveBonusTurnoverSettings(event)">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                <!-- 1. Bonus Enable/Disable -->
+                <div class="form-group">
+                  <label style="font-weight: 700; color: #a78bfa;">ডিপোজিট বোনাস সিস্টেম</label>
+                  <select id="setting-bonus-enabled" class="form-control" style="border-color: #a78bfa; font-weight: 700;">
+                    <option value="false">❌ নিষ্ক্রিয় (Disabled)</option>
+                    <option value="true">✅ সক্রিয় (Active / Enabled)</option>
+                  </select>
+                  <small style="color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; display: block;">সক্রিয় থাকলে ডিপোজিট অনুমোদনের সাথে সাথে বোনাস যোগ হবে।</small>
+                </div>
+
+                <!-- 2. Bonus Percentage -->
+                <div class="form-group">
+                  <label style="font-weight: 700;">ডিপোজিট বোনাস শতকরা হার (%)</label>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="number" id="setting-bonus-percent" class="form-control" value="10" min="0" max="500" step="1" required>
+                    <span style="font-weight: 700; color: var(--primary);">%</span>
+                  </div>
+                  <small style="color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; display: block;">যেমন: 10% দিলে ৳১০০ ডিপোজিটে ৳১০ বোনাস।</small>
+                </div>
+
+                <!-- 3. Minimum Deposit for Bonus -->
+                <div class="form-group">
+                  <label style="font-weight: 700;">বোনাস প্রযোজ্য হওয়ার সর্বনিম্ন ডিপোজিট (৳)</label>
+                  <input type="number" id="setting-bonus-min-deposit" class="form-control" value="100" min="0" step="1">
+                  <small style="color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; display: block;">এই পরিমাণের কম ডিপোজিট করলে বোনাস কার্যকর হবে না।</small>
+                </div>
+
+                <!-- 4. Max Bonus Cap -->
+                <div class="form-group">
+                  <label style="font-weight: 700;">সর্বোচ্চ বোনাস লিমিট (৳)</label>
+                  <input type="number" id="setting-bonus-max" class="form-control" value="500" min="0" step="1">
+                  <small style="color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; display: block;">একটি ডিপোজিটে সর্বোচ্চ কত বোনাস পেতে পারে (০ দিলে আনলিমিটেড)।</small>
+                </div>
+
+                <!-- 5. Turnover Multiplier -->
+                <div class="form-group">
+                  <label style="font-weight: 700; color: #f59e0b;">উইথড্র টার্নওভার গুণক (Turnover Multiplier)</label>
+                  <select id="setting-turnover-multiplier" class="form-control" style="border-color: #f59e0b; font-weight: 700;">
+                    <option value="1">1x (১ গুণ)</option>
+                    <option value="2">2x (২ গুণ - স্ট্যান্ডার্ড)</option>
+                    <option value="3">3x (৩ গুণ)</option>
+                    <option value="5">5x (৫ গুণ)</option>
+                    <option value="10">10x (১০ গুণ)</option>
+                  </select>
+                  <small style="color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; display: block;">উইথড্র করার আগে ইউজারকে মোট কত টাকার ম্যাচ খেলতে হবে।</small>
+                </div>
+
+                <!-- 6. Turnover Calculation Base -->
+                <div class="form-group">
+                  <label style="font-weight: 700;">টার্নওভার হিসাবের ভিত্তি (Base)</label>
+                  <select id="setting-turnover-base" class="form-control">
+                    <option value="deposit_plus_bonus">(ডিপোজিট + বোনাস) × গুণক [জনপ্রিয়]</option>
+                    <option value="deposit_only">শুধু ডিপোজিট × গুণক</option>
+                    <option value="bonus_only">শুধু বোনাস × গুণক</option>
+                  </select>
+                  <small style="color: var(--text-dim); font-size: 0.75rem; margin-top: 4px; display: block;">কোন টাকার উপর টার্নওভার গুণক কার্যকর হবে।</small>
+                </div>
+              </div>
+
+              <!-- 7. Enforce Turnover on Withdrawal Checkbox -->
+              <div style="background: rgba(245, 158, 11, 0.08); border: 1px dashed rgba(245, 158, 11, 0.35); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+                <div>
+                  <div style="font-weight: 700; color: #F5EFE0; font-size: 0.95rem;">⚠️ উইথড্রল চেকিংয়ে টার্নওভার শর্ত আবশ্যিক রাখা</div>
+                  <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 2px;">
+                    টার্নওভার অসম্পূর্ণ থাকলে উইথড্র অনুমোদন করার সময় অ্যাডমিনকে লাল সতর্কবার্তা ও কনফার্মেশন জিজ্ঞাসা করবে।
+                  </div>
+                </div>
+                <div>
+                  <input type="checkbox" id="setting-turnover-enforce" style="width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;" checked>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); border-color: #8b5cf6; color: #fff; font-weight: 700; width: 100%; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);">
+                💾 বোনাস ও টার্নওভার সেটিংস সেভ করুন
+              </button>
+            </form>
+          </div>
+
+
           <!-- Slider Banners Management -->
           <div class="card" style="margin-top: 20px;">
             <div class="card-header">
@@ -3874,6 +3968,9 @@
           <button class="btn btn-sm btn-primary" id="psec-btn-notify" onclick="quickNotifyFromSecModal()">
             🔔 সতর্ক নোটিশ পাঠান
           </button>
+          <button type="button" class="btn btn-sm btn-outline" style="border-color:#8b5cf6; color:#a78bfa;" onclick="openTurnoverBonusModal(currentSecurityPlayerUid)">
+            🎁 বোনাস ও টার্নওভার
+          </button>
                   </div>
         <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('modal-player-security')">বন্ধ করুন</button>
       </div>
@@ -3881,6 +3978,100 @@
   </div>
 
   <div class="toast-container" id="toast-container"></div>
+
+  
+  <!-- ==================== MODAL: PLAYER TURNOVER & BONUS MANAGEMENT ==================== -->
+  <div class="modal-backdrop" id="modal-turnover-bonus">
+    <div class="modal-card" style="max-width: 580px;">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(139, 92, 246, 0.3);">
+        <h3 class="modal-title" style="color: #a78bfa; display: flex; align-items: center; gap: 8px;">
+          <span>🎁</span>
+          <span>প্লেয়ার টার্নওভার ও বোনাস কন্ট্রোল</span>
+        </h3>
+        <button class="modal-close" onclick="closeModal('modal-turnover-bonus')">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        <!-- Player Info Header -->
+        <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px;">
+          <div style="font-size: 1.1rem; font-weight: 700; color: #fff;" id="tb-player-name">Player Name</div>
+          <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 2px;">
+            UID: <code id="tb-player-uid" style="color: #a78bfa;">—</code> | মূল ব্যালেন্স: <b id="tb-player-bal" style="color: var(--primary);">৳ 0</b>
+          </div>
+        </div>
+
+        <!-- 3 Stats Grid -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; text-align: center;">
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px;">
+            <div style="font-size: 0.75rem; color: var(--text-dim);">মোট বোনাস ওয়ালেট</div>
+            <div style="font-size: 1.15rem; font-weight: 800; color: #a78bfa; margin-top: 4px;" id="tb-stat-bonus">৳ 0</div>
+          </div>
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px;">
+            <div style="font-size: 0.75rem; color: var(--text-dim);">টার্নওভার অগ্রগতি</div>
+            <div style="font-size: 1.15rem; font-weight: 800; color: #10b981; margin-top: 4px;" id="tb-stat-progress">0%</div>
+            <small style="font-size: 0.7rem; color: var(--text-muted);" id="tb-stat-ratio">৳0 / ৳0</small>
+          </div>
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px;">
+            <div style="font-size: 0.75rem; color: var(--text-dim);">টার্নওভার বাকি</div>
+            <div style="font-size: 1.15rem; font-weight: 800; color: #ef4444; margin-top: 4px;" id="tb-stat-remaining">৳ 0</div>
+          </div>
+        </div>
+
+        <!-- Section A: Manual Promo Bonus Credit -->
+        <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 16px; background: rgba(139, 92, 246, 0.04);">
+          <div style="font-weight: 700; color: #F5EFE0; font-size: 0.9rem; margin-bottom: 8px;">
+            🎁 সরাসরি প্রমোশনাল বোনাস যোগ করুন
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-dim);">বোনাসের পরিমাণ (৳)</label>
+              <input type="number" id="tb-input-bonus-amt" class="form-control" placeholder="যেমন: 50" min="1">
+            </div>
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-dim);">অতিরিক্ত টার্নওভার (৳)</label>
+              <input type="number" id="tb-input-bonus-turnover" class="form-control" placeholder="যেমন: 100" min="0">
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-primary" onclick="submitManualBonusCredit()" style="width: 100%; background: linear-gradient(135deg, #8b5cf6, #6d28d9); border-color: #8b5cf6;">
+            🎁 প্লেয়ারকে বোনাস প্রদান ও ব্যালেন্সে যুক্ত করুন
+          </button>
+        </div>
+
+        <!-- Section B: Direct Turnover Override -->
+        <div style="border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; background: var(--bg-card);">
+          <div style="font-weight: 700; color: #F5EFE0; font-size: 0.9rem; margin-bottom: 8px;">
+            ⚙️ টার্নওভার সমন্বয় ও সম্পন্ন মার্ক
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-dim);">প্রয়োজনীয় টার্নওভার (৳)</label>
+              <input type="number" id="tb-input-req-turnover" class="form-control" min="0">
+            </div>
+            <div>
+              <label style="font-size: 0.75rem; color: var(--text-dim);">সম্পন্ন টার্নওভার (৳)</label>
+              <input type="number" id="tb-input-comp-turnover" class="form-control" min="0">
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-sm btn-success" onclick="markUserTurnoverCompleted()" style="flex: 1; min-width: 130px;" title="টার্নওভার মওকুফ / সম্পন্ন মার্ক করুন">
+              ✓ টার্নওভার সম্পন্ন (Clear)
+            </button>
+            <button type="button" class="btn btn-sm btn-primary" onclick="saveDirectTurnoverValues()" style="flex: 1; min-width: 110px;">
+              💾 সেভ করুন
+            </button>
+            <button type="button" class="btn btn-sm btn-accent" onclick="resetUserBonusAndTurnover()" title="রিসেট" style="min-width: 80px;">
+              🔄 রিসেট
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('modal-turnover-bonus')">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- ==================== JAVASCRIPT APPLICATION CODE ==================== -->
   <script src="./firebase-config.js"></script>
@@ -5751,7 +5942,17 @@
               <div style="font-size:0.85rem;">${escapeHtml(u.email || '')}</div>
               ${u.phone ? `<small style="color:var(--text-dim); font-size:0.75rem;">📞 ${escapeHtml(u.phone)}</small>` : ''}
             </td>
-            <td><b style="color:var(--primary); font-family:var(--font-display); font-size:1.1rem;">৳ ${u.balance || 0}</b></td>
+            <td>
+              <b style="color:var(--primary); font-family:var(--font-display); font-size:1.1rem;">৳ ${u.balance || 0}</b>
+              ${(u.bonusBalance > 0 || u.turnoverRequired > 0) ? `
+                <div style="margin-top:3px; display:flex; flex-direction:column; gap:2px;">
+                  ${u.bonusBalance > 0 ? `<small style="color:#a78bfa; font-weight:700; font-size:0.75rem;">🎁 বোনাস: ৳${u.bonusBalance}</small>` : ''}
+                  <small style="color:${(u.turnoverRequired || 0) <= (u.turnoverCompleted || 0) ? '#10b981' : '#f59e0b'}; font-size:0.72rem; font-weight:700;">
+                    🎯 ৳${u.turnoverCompleted || 0} / ৳${u.turnoverRequired || 0}
+                  </small>
+                </div>
+              ` : ''}
+            </td>
             <td><b style="color:#10b981; font-family:var(--font-display); font-size:1rem;">৳ ${depTotal.toLocaleString('bn-BD')}</b></td>
             <td><b style="color:#ef4444; font-family:var(--font-display); font-size:1rem;">৳ ${withTotal.toLocaleString('bn-BD')}</b></td>
             <td>
@@ -5770,6 +5971,9 @@
             </td>
             <td style="color:var(--text-dim); font-size:0.8rem;">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('bn-BD') : 'নিবন্ধিত'}</td>
             <td style="text-align: right; white-space: nowrap;">
+              <button class="btn btn-outline btn-sm" onclick="openTurnoverBonusModal('${escapeHtml(String(u.uid))}')" title="টার্নওভার ও বোনাস সমন্বয়" style="border-color:#8b5cf6; color:#a78bfa;">
+                🎁 বোনাস/টার্ন
+              </button>
               <button class="btn btn-outline btn-sm" onclick="openPlayerSecurityModal('${escapeHtml(String(u.uid))}')" title="আইপি, ডিভাইস ও গেম খেলার সম্পূর্ণ অডিট" style="border-color:var(--primary); color:var(--primary);">
                 🛡️ ট্র্যাকিং
               </button>
@@ -5871,6 +6075,15 @@
       document.getElementById('psec-ign').innerText = u.ffIgn || u.ign || 'N/A';
       document.getElementById('psec-uid').innerText = u.uid;
       document.getElementById('psec-balance').innerText = `৳ ${(parseFloat(u.balance) || 0).toLocaleString('bn-BD')}`;
+      if (document.getElementById('psec-bonus-balance')) {
+        document.getElementById('psec-bonus-balance').innerText = `৳ ${(parseFloat(u.bonusBalance) || 0).toLocaleString('bn-BD')}`;
+      }
+      if (document.getElementById('psec-turnover-stat')) {
+        const _reqT = parseFloat(u.turnoverRequired) || 0;
+        const _compT = parseFloat(u.turnoverCompleted) || 0;
+        const _pct = _reqT > 0 ? Math.min(100, Math.round((_compT / _reqT) * 100)) : 100;
+        document.getElementById('psec-turnover-stat').innerText = `${_pct}% (৳${_compT}/৳${_reqT})`;
+      }
 
       // Total Deposits and Total Withdrawals
       const depTotal = (STATE.deposits || [])
@@ -6060,7 +6273,11 @@
           <td><span class="badge badge-upcoming">${d.method}</span></td>
           <td style="font-family:monospace;">${escapeHtml(d.senderNumber)}</td>
           <td><b style="color:var(--primary); font-family:monospace;">${escapeHtml(d.trxId)}</b></td>
-          <td><b style="font-size:1.05rem; font-family:var(--font-display);">৳ ${d.amount}</b></td>
+          <td>
+            <b style="font-size:1.05rem; font-family:var(--font-display);">৳ ${d.amount}</b>
+            ${d.bonusAmount > 0 ? `<div style="margin-top:2px;"><span class="badge" style="background:linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff; font-size:0.7rem; font-weight:700;">🎁 +৳${d.bonusAmount} বোনাস</span></div>` : ''}
+            ${d.turnoverAdded > 0 ? `<div style="font-size:0.72rem; color:var(--text-dim); margin-top:1px;">🎯 টার্নওভার: ৳${d.turnoverAdded}</div>` : ''}
+          </td>
           <td style="color:var(--text-dim); font-size:0.8rem;">${d.createdAt ? new Date(d.createdAt).toLocaleTimeString('bn-BD') : 'সম্প্রতি'}</td>
           <td><span class="badge ${d.status === 'Pending' ? 'badge-pending' : d.status === 'Approved' ? 'badge-approved' : 'badge-rejected'}">${d.status}</span></td>
           <td style="text-align: right; white-space: nowrap;">
@@ -6084,7 +6301,18 @@
           <td><span class="badge badge-upcoming">${w.method}</span></td>
           <td style="font-family:monospace;">${escapeHtml(w.receiverNumber)}</td>
           <td><b style="color:var(--accent); font-size:1.05rem; font-family:var(--font-display);">৳ ${w.amount}</b></td>
-          <td>৳ ${w.currentBalance || 0}</td>
+          <td>
+            <div>৳ ${w.currentBalance || 0}</div>
+            ${(() => {
+              const u = (STATE.users || []).find(x => x.uid === w.uid);
+              const req = parseFloat(u?.turnoverRequired) || 0;
+              const comp = parseFloat(u?.turnoverCompleted) || 0;
+              const rem = Math.max(0, req - comp);
+              if (req === 0) return `<span class="badge" style="background:rgba(255,255,255,0.06); color:var(--text-dim); font-size:0.68rem;">টার্নওভার নেই</span>`;
+              if (rem <= 0) return `<span class="badge badge-approved" style="font-size:0.68rem;">✓ টার্নওভার ওকে</span>`;
+              return `<span class="badge" style="background:#ef4444; color:#fff; font-size:0.68rem; cursor:pointer;" onclick="openTurnoverBonusModal('${w.uid}')" title="প্রয়োজন ৳${req}, সম্পন্ন ৳${comp}">⚠️ বাকি ৳${rem}</span>`;
+            })()}
+          </td>
           <td style="color:var(--text-dim); font-size:0.8rem;">${w.createdAt ? new Date(w.createdAt).toLocaleTimeString('bn-BD') : 'সম্প্রতি'}</td>
           <td><span class="badge ${wdStatusMeta(w.status).cls}">${wdStatusMeta(w.status).label}</span></td>
           <td style="text-align: right; white-space: nowrap;">
@@ -6185,52 +6413,105 @@
       const dep = STATE.deposits.find(d => d.id === depId);
       if (!dep || !db) return;
 
-      // Admin balance check FIRST: if not enough, notify the admin clearly
+      const depAmt = parseFloat(dep.amount) || 0;
+
+      // 1. Calculate Deposit Bonus & Turnover Rules
+      const isBonusActive = STATE.settings.depositBonusEnabled === true || String(STATE.settings.depositBonusEnabled) === 'true';
+      const minDepForBonus = parseFloat(STATE.settings.minDepositForBonus) || 0;
+      const bonusPct = parseFloat(STATE.settings.depositBonusPercent) || 0;
+      const maxBonus = parseFloat(STATE.settings.maxBonusAmount) || 0;
+      const mult = parseFloat(STATE.settings.turnoverMultiplier) || 1;
+      const tBase = STATE.settings.turnoverBase || 'deposit_plus_bonus';
+
+      let bonusAmt = 0;
+      if (isBonusActive && depAmt >= minDepForBonus) {
+        let calc = Math.round((depAmt * bonusPct) / 100);
+        if (maxBonus > 0 && calc > maxBonus) calc = maxBonus;
+        bonusAmt = calc;
+      }
+
+      let turnoverAdded = 0;
+      if (tBase === 'deposit_plus_bonus') {
+        turnoverAdded = Math.round((depAmt + bonusAmt) * mult);
+      } else if (tBase === 'bonus_only') {
+        turnoverAdded = Math.round(bonusAmt * mult);
+      } else {
+        turnoverAdded = Math.round(depAmt * mult);
+      }
+
+      const totalCredited = depAmt + bonusAmt;
+
+      // Admin balance check FIRST: checks base deposit amount
       const _myBal = STATE.adminBalance || 0;
-      const _need = parseFloat(dep.amount) || 0;
-      if (_myBal < _need) {
-        const _short = Math.ceil(_need - _myBal);
-        showToast(`⚠️ আপনার ব্যালেন্স পর্যাপ্ত নয়! দরকার ৳${_need}, আছে ৳${_myBal}`, 'error');
-        if (confirm(`⚠️ এই ডিপোজিট অনুমোদন করা যাচ্ছে না, কারণ আপনার ব্যালেন্স পর্যাপ্ত নয়।\n\nপ্লেয়ার: ${dep.userName}\nডিপোজিট: ৳${_need}\nআপনার ব্যালেন্স: ৳${_myBal}\nঘাটতি: ৳${_short}\n\nMaster-এর কাছে ব্যালেন্সের রিকোয়েস্ট পাঠাতে চান?`)) {
+      if (_myBal < depAmt) {
+        const _short = Math.ceil(depAmt - _myBal);
+        showToast(`⚠️ আপনার ব্যালেন্স পর্যাপ্ত নয়! দরকার ৳${depAmt}, আছে ৳${_myBal}`, 'error');
+        if (confirm(`⚠️ এই ডিপোজিট অনুমোদন করা যাচ্ছে না, কারণ আপনার ব্যালেন্স পর্যাপ্ত নয়।\n\nপ্লেয়ার: ${dep.userName}\nডিপোজিট: ৳${depAmt}\nআপনার ব্যালেন্স: ৳${_myBal}\nঘাটতি: ৳${_short}\n\nMaster-এর কাছে ব্যালেন্সের রিকোয়েস্ট পাঠাতে চান?`)) {
           openAdminFundModal(_short);
         }
         return;
       }
 
-      if (!confirm(`৳${dep.amount} ডিপোজিট নিশ্চিতভাবে অনুমোদন করতে চান? (প্লেয়ার: ${dep.userName})`)) return;
+      let confirmMsg = `৳${depAmt} ডিপোজিট নিশ্চিতভাবে অনুমোদন করতে চান?\n(প্লেয়ার: ${dep.userName || dep.uid})`;
+      if (bonusAmt > 0) {
+        confirmMsg += `\n\n🎁 ডিপোজিট বোনাস: +৳${bonusAmt} (${bonusPct}%)\n💰 মোট জমা হবে: ৳${totalCredited}\n🎯 টার্নওভার যোগ হবে: ৳${turnoverAdded} (${mult}x)`;
+      } else {
+        confirmMsg += `\n🎯 টার্নওভার যোগ হবে: ৳${turnoverAdded} (${mult}x)`;
+      }
+
+      if (!confirm(confirmMsg)) return;
 
       try {
-        const uSnap = await db.ref(`users/${dep.uid}/balance`).once('value');
-        const curBal = parseFloat(uSnap.val()) || 0;
-        const newBal = curBal + dep.amount;
-        const trxKey = db.ref('transactions').push().key;
+        const userRef = db.ref(`users/${dep.uid}`);
+        const uSnap = await userRef.once('value');
+        const uData = uSnap.val() || {};
+        const curBal = parseFloat(uData.balance) || 0;
+        const curBonusBal = parseFloat(uData.bonusBalance) || 0;
+        const curTurnoverReq = parseFloat(uData.turnoverRequired) || 0;
 
+        const newBal = curBal + totalCredited;
+        const newBonusBal = curBonusBal + bonusAmt;
+        const newTurnoverReq = curTurnoverReq + turnoverAdded;
+
+        const trxKey = db.ref('transactions').push().key;
         const curAdminBal = STATE.adminBalance || 0;
-        if (curAdminBal < dep.amount) { showToast(`আপনার ব্যালেন্স পর্যাপ্ত নয় (৳${curAdminBal})। Master-এর কাছে রিকোয়েস্ট করুন।`, 'error'); return; }
-        const newAdminBal = curAdminBal - dep.amount;
+        if (curAdminBal < depAmt) { showToast(`আপনার ব্যালেন্স পর্যাপ্ত নয় (৳${curAdminBal})। Master-এর কাছে রিকোয়েস্ট করুন।`, 'error'); return; }
+        const newAdminBal = curAdminBal - depAmt;
 
         const updates = {};
         updates[`depositRequests/${depId}/status`] = 'Approved';
         updates[`depositRequests/${depId}/approvedAt`] = firebase.database.ServerValue.TIMESTAMP;
+        updates[`depositRequests/${depId}/bonusAmount`] = bonusAmt;
+        updates[`depositRequests/${depId}/totalCredited`] = totalCredited;
+        updates[`depositRequests/${depId}/turnoverAdded`] = turnoverAdded;
+        updates[`depositRequests/${depId}/turnoverMultiplier`] = mult;
+
         updates[`users/${dep.uid}/balance`] = newBal;
+        updates[`users/${dep.uid}/bonusBalance`] = newBonusBal;
+        updates[`users/${dep.uid}/turnoverRequired`] = newTurnoverReq;
         updates[`users/${dep.uid}/adminUid`] = STATE.adminUser.uid;
         updates[`admins/${STATE.adminUser.uid}/balance`] = newAdminBal;
+
+        const noteText = `${dep.method} TrxID: ${dep.trxId} Approved. Credited: ৳${totalCredited} (Deposit: ৳${depAmt}${bonusAmt > 0 ? ` + ৳${bonusAmt} Bonus` : ''}, Turnover: ৳${turnoverAdded})`;
         updates[`transactions/${trxKey}`] = {
           trxId: trxKey,
           uid: dep.uid,
           type: 'DEPOSIT_CREDIT',
-          amount: dep.amount,
+          amount: totalCredited,
+          depositAmount: depAmt,
+          bonusAmount: bonusAmt,
+          turnoverAdded: turnoverAdded,
           beforeBal: curBal,
           afterBal: newBal,
           date: new Date().toLocaleString('bn-BD'),
           timestamp: firebase.database.ServerValue.TIMESTAMP,
-          note: `${dep.method} TrxID: ${dep.trxId} Approved (Admin Balance -৳${dep.amount})`
+          note: noteText
         };
 
         await db.ref().update(updates);
-        setAdminBalance(newAdminBal, `Deposit Approved -৳${dep.amount} for ${dep.userName}`);
-        recordAuditLog('DEPOSIT_APPROVED', depId, `৳${dep.amount} credited to ${dep.uid}, Admin Pool: ৳${newAdminBal}`);
-        showToast(`ডিপোজিট ৳${dep.amount} অনুমোদিত! এডমিন তহবিলে যুক্ত হয়েছে (নতুন ব্যালেন্স: ৳${newAdminBal})`, 'success');
+        setAdminBalance(newAdminBal, `Deposit Approved -৳${depAmt} for ${dep.userName}`);
+        recordAuditLog('DEPOSIT_APPROVED', depId, `৳${depAmt} + ৳${bonusAmt} Bonus credited to ${dep.uid}, Turnover Req: ৳${newTurnoverReq}`);
+        showToast(`ডিপোজিট ৳${depAmt}${bonusAmt > 0 ? ` + বোনাস ৳${bonusAmt}` : ''} অনুমোদিত! প্লেয়ার ওয়ালেটে ৳${totalCredited} যোগ হয়েছে।`, 'success');
       } catch (err) {
         showToast('অনুমোদনে সমস্যা: ' + err.message, 'error');
       }
@@ -6755,6 +7036,68 @@
       document.getElementById('setting-telegram').value = STATE.settings.telegram || 'https://t.me/nptournamentbd';
       document.getElementById('setting-youtube').value = STATE.settings.youtube || 'https://youtube.com/@nptournamentbd';
       document.getElementById('setting-facebook').value = STATE.settings.facebook || 'https://facebook.com/nptournamentbd';
+
+      // Load Bonus & Turnover Settings
+      if (document.getElementById('setting-bonus-enabled')) {
+        document.getElementById('setting-bonus-enabled').value = String(STATE.settings.depositBonusEnabled === true || STATE.settings.depositBonusEnabled === 'true');
+      }
+      if (document.getElementById('setting-bonus-percent')) {
+        document.getElementById('setting-bonus-percent').value = (typeof STATE.settings.depositBonusPercent !== 'undefined') ? STATE.settings.depositBonusPercent : 10;
+      }
+      if (document.getElementById('setting-bonus-min-deposit')) {
+        document.getElementById('setting-bonus-min-deposit').value = (typeof STATE.settings.minDepositForBonus !== 'undefined') ? STATE.settings.minDepositForBonus : 100;
+      }
+      if (document.getElementById('setting-bonus-max')) {
+        document.getElementById('setting-bonus-max').value = (typeof STATE.settings.maxBonusAmount !== 'undefined') ? STATE.settings.maxBonusAmount : 500;
+      }
+      if (document.getElementById('setting-turnover-multiplier')) {
+        document.getElementById('setting-turnover-multiplier').value = STATE.settings.turnoverMultiplier || 1;
+      }
+      if (document.getElementById('setting-turnover-base')) {
+        document.getElementById('setting-turnover-base').value = STATE.settings.turnoverBase || 'deposit_plus_bonus';
+      }
+      if (document.getElementById('setting-turnover-enforce')) {
+        document.getElementById('setting-turnover-enforce').checked = STATE.settings.enforceTurnover !== false;
+      }
+    }
+
+    async function handleSaveBonusTurnoverSettings(e) {
+      e.preventDefault();
+      if (!db) return;
+
+      const depositBonusEnabled = document.getElementById('setting-bonus-enabled').value === 'true';
+      const depositBonusPercent = parseFloat(document.getElementById('setting-bonus-percent').value) || 0;
+      const minDepositForBonus = parseFloat(document.getElementById('setting-bonus-min-deposit').value) || 0;
+      const maxBonusAmount = parseFloat(document.getElementById('setting-bonus-max').value) || 0;
+      const turnoverMultiplier = parseFloat(document.getElementById('setting-turnover-multiplier').value) || 1;
+      const turnoverBase = document.getElementById('setting-turnover-base').value || 'deposit_plus_bonus';
+      const enforceTurnover = document.getElementById('setting-turnover-enforce').checked;
+
+      try {
+        await db.ref('settings').update({
+          depositBonusEnabled,
+          depositBonusPercent,
+          minDepositForBonus,
+          maxBonusAmount,
+          turnoverMultiplier,
+          turnoverBase,
+          enforceTurnover
+        });
+        STATE.settings = {
+          ...STATE.settings,
+          depositBonusEnabled,
+          depositBonusPercent,
+          minDepositForBonus,
+          maxBonusAmount,
+          turnoverMultiplier,
+          turnoverBase,
+          enforceTurnover
+        };
+        recordAuditLog('SETTINGS_BONUS_UPDATE', 'SETTINGS', `Bonus: ${depositBonusEnabled ? 'ON' : 'OFF'} (${depositBonusPercent}%), Turnover: ${turnoverMultiplier}x`);
+        showToast('🎁 ডিপোজিট বোনাস ও টার্নওভার সেটিংস সফলভাবে সেভ হয়েছে!', 'success');
+      } catch (err) {
+        showToast('সেটিংস সেভ করতে ব্যর্থ: ' + err.message, 'error');
+      }
     }
 
     async function handleSavePaymentSettings(e) {
@@ -8683,7 +9026,160 @@ await db.ref('notices/not_2').set({
     function openModal(id) { const m = document.getElementById(id); if (m) m.classList.add('active'); }
     function closeModal(id) { const m = document.getElementById(id); if (m) m.classList.remove('active'); }
 
-    window.addEventListener('DOMContentLoaded', () => {
+
+    // ==================== TURNOVER & BONUS CONTROLLER ====================
+    let currentTurnoverPlayerUid = null;
+
+    function openTurnoverBonusModal(uid) {
+      if (!uid) return;
+      currentTurnoverPlayerUid = uid;
+      const u = (STATE.users || []).find(x => x.uid === uid);
+      if (!u) {
+        showToast('ইউজার পাওয়া যায়নি', 'error');
+        return;
+      }
+
+      document.getElementById('tb-player-name').innerText = u.name || 'Player';
+      document.getElementById('tb-player-uid').innerText = u.uid;
+      document.getElementById('tb-player-bal').innerText = `৳ ${(parseFloat(u.balance) || 0).toLocaleString('bn-BD')}`;
+
+      const bonusBal = parseFloat(u.bonusBalance) || 0;
+      const reqTurnover = parseFloat(u.turnoverRequired) || 0;
+      const compTurnover = parseFloat(u.turnoverCompleted) || 0;
+      const remainingTurnover = Math.max(0, reqTurnover - compTurnover);
+      const pct = reqTurnover > 0 ? Math.min(100, Math.round((compTurnover / reqTurnover) * 100)) : 100;
+
+      document.getElementById('tb-stat-bonus').innerText = `৳ ${bonusBal.toLocaleString('bn-BD')}`;
+      document.getElementById('tb-stat-progress').innerText = `${pct}%`;
+      document.getElementById('tb-stat-ratio').innerText = `৳${compTurnover} / ৳${reqTurnover}`;
+      document.getElementById('tb-stat-remaining').innerText = `৳ ${remainingTurnover.toLocaleString('bn-BD')}`;
+
+      document.getElementById('tb-input-bonus-amt').value = '';
+      document.getElementById('tb-input-bonus-turnover').value = '';
+      document.getElementById('tb-input-req-turnover').value = reqTurnover;
+      document.getElementById('tb-input-comp-turnover').value = compTurnover;
+
+      openModal('modal-turnover-bonus');
+    }
+
+    async function submitManualBonusCredit() {
+      if (!currentTurnoverPlayerUid || !db) return;
+      const u = (STATE.users || []).find(x => x.uid === currentTurnoverPlayerUid);
+      if (!u) return;
+
+      const bonusAmt = parseFloat(document.getElementById('tb-input-bonus-amt').value);
+      if (isNaN(bonusAmt) || bonusAmt <= 0) {
+        showToast('দয়া করে সঠিক বোনাস পরিমাণ লিখুন', 'error');
+        return;
+      }
+
+      const extraTurnover = parseFloat(document.getElementById('tb-input-bonus-turnover').value) || 0;
+
+      if (!confirm(`ইউজার ${u.name}-কে ৳${bonusAmt} প্রমোশনাল বোনাস দিতে চান?\n(অতিরিক্ত টার্নওভার: ৳${extraTurnover})`)) return;
+
+      try {
+        const curBal = parseFloat(u.balance) || 0;
+        const curBonus = parseFloat(u.bonusBalance) || 0;
+        const curReq = parseFloat(u.turnoverRequired) || 0;
+
+        const newBal = curBal + bonusAmt;
+        const newBonus = curBonus + bonusAmt;
+        const newReq = curReq + extraTurnover;
+
+        const trxKey = db.ref('transactions').push().key;
+        const updates = {};
+        updates[`users/${u.uid}/balance`] = newBal;
+        updates[`users/${u.uid}/bonusBalance`] = newBonus;
+        updates[`users/${u.uid}/turnoverRequired`] = newReq;
+        updates[`transactions/${trxKey}`] = {
+          trxId: trxKey,
+          uid: u.uid,
+          type: 'PROMO_BONUS',
+          amount: bonusAmt,
+          beforeBal: curBal,
+          afterBal: newBal,
+          date: new Date().toLocaleString('bn-BD'),
+          timestamp: firebase.database.ServerValue.TIMESTAMP,
+          note: `Manual Promo Bonus credited by Admin (+৳${extraTurnover} turnover required)`
+        };
+
+        await db.ref().update(updates);
+        recordAuditLog('MANUAL_BONUS_CREDIT', u.uid, `Bonus: ৳${bonusAmt}, Turnover +৳${extraTurnover}`);
+        showToast(`🎉 ৳${bonusAmt} প্রমোশনাল বোনাস সফলভাবে অ্যাকাউন্টে যোগ করা হয়েছে!`, 'success');
+        openTurnoverBonusModal(u.uid);
+      } catch (err) {
+        showToast('বোনাস যোগ করতে ব্যর্থ: ' + err.message, 'error');
+      }
+    }
+
+    async function markUserTurnoverCompleted() {
+      if (!currentTurnoverPlayerUid || !db) return;
+      const u = (STATE.users || []).find(x => x.uid === currentTurnoverPlayerUid);
+      if (!u) return;
+
+      const reqTurnover = parseFloat(u.turnoverRequired) || 0;
+      if (!confirm(`ইউজার ${u.name}-এর সম্পূর্ণ টার্নওভার সম্পন্ন (Clear / Waive) হিসেবে চিহ্নিত করতে চান?\nএখন ইউজার কোনো শর্ত ছাড়াই উইথড্র করতে পারবেন।`)) return;
+
+      try {
+        await db.ref(`users/${u.uid}`).update({
+          turnoverCompleted: reqTurnover
+        });
+        recordAuditLog('TURNOVER_CLEARED', u.uid, `Marked turnover completed (Req: ৳${reqTurnover})`);
+        showToast('✓ ইউজারের টার্নওভার সম্পন্ন হিসেবে মার্ক করা হয়েছে!', 'success');
+        openTurnoverBonusModal(u.uid);
+      } catch (err) {
+        showToast('টার্নওভার আপডেট ব্যর্থ: ' + err.message, 'error');
+      }
+    }
+
+    async function saveDirectTurnoverValues() {
+      if (!currentTurnoverPlayerUid || !db) return;
+      const u = (STATE.users || []).find(x => x.uid === currentTurnoverPlayerUid);
+      if (!u) return;
+
+      const req = parseFloat(document.getElementById('tb-input-req-turnover').value);
+      const comp = parseFloat(document.getElementById('tb-input-comp-turnover').value);
+
+      if (isNaN(req) || isNaN(comp) || req < 0 || comp < 0) {
+        showToast('দয়া করে সঠিক সংখ্যা প্রদান করুন', 'error');
+        return;
+      }
+
+      try {
+        await db.ref(`users/${u.uid}`).update({
+          turnoverRequired: req,
+          turnoverCompleted: comp
+        });
+        recordAuditLog('TURNOVER_MANUAL_ADJUST', u.uid, `Required: ৳${req}, Completed: ৳${comp}`);
+        showToast('টার্নওভার সেটিংস সফলভাবে আপডেট হয়েছে!', 'success');
+        openTurnoverBonusModal(u.uid);
+      } catch (err) {
+        showToast('আপডেট ব্যর্থ: ' + err.message, 'error');
+      }
+    }
+
+    async function resetUserBonusAndTurnover() {
+      if (!currentTurnoverPlayerUid || !db) return;
+      const u = (STATE.users || []).find(x => x.uid === currentTurnoverPlayerUid);
+      if (!u) return;
+
+      if (!confirm(`ইউজার ${u.name}-এর বোনাস ওয়ালেট ও টার্নওভার হিসেব শূন্য (০) রিসেট করতে চান?`)) return;
+
+      try {
+        await db.ref(`users/${u.uid}`).update({
+          bonusBalance: 0,
+          turnoverRequired: 0,
+          turnoverCompleted: 0
+        });
+        recordAuditLog('TURNOVER_BONUS_RESET', u.uid, 'Reset bonus and turnover to 0');
+        showToast('ইউজারের বোনাস ও টার্নওভার রিসেট করা হয়েছে', 'info');
+        openTurnoverBonusModal(u.uid);
+      } catch (err) {
+        showToast('রিসেট ব্যর্থ: ' + err.message, 'error');
+      }
+    }
+
+        window.addEventListener('DOMContentLoaded', () => {
       try {
         const savedLang = localStorage.getItem('admin_panel_lang') || 'bn';
         applyLanguage(savedLang);

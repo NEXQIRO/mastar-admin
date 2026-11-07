@@ -42,8 +42,8 @@ input{height:42px;background:var(--in);border:1px solid var(--bd);border-radius:
 const MAINCFG=window.NP_FIREBASE_CONFIG,MAINAPP=firebase.initializeApp(MAINCFG),TS=firebase.database.ServerValue.TIMESTAMP;
 let auth=MAINAPP.auth(),db=MAINAPP.database(),TID='main',TCFG=MAINCFG,TNAME='মূল প্রজেক্ট',LST=[],AUTHUNSUB=null;
 const $=i=>document.getElementById(i),fmt=n=>'৳ '+Math.round(n||0).toLocaleString('en-US'),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let ADM={},REQ={},LED={},GAMES={},USERS={},ACT={},MB=0,cur='admins',started=false,Q='',FEAT={},SEL='',GV='',UAON=true;
-const FL=[["tournaments", "পেজ", "টুর্নামেন্টসমূহ (পেজ)"], ["users", "পেজ", "প্লেয়ার / ইউজার (পেজ)"], ["wallet", "পেজ", "ওয়ালেট ও রিকোয়েস্ট (পেজ)"], ["finance", "পেজ", "আর্থিক রিপোর্ট / Finance (পেজ)"], ["notices", "পেজ", "নোটিশ ও ঘোষণা (পেজ)"], ["notifications", "পেজ", "ইউজার নোটিফিকেশন (পেজ)"], ["settings", "পেজ", "অ্যাপ সেটিংস (পেজ)"], ["audit", "পেজ", "রিপোর্ট ও অডিট লগ (পেজ)"], ["t_create", "টুর্নামেন্ট", "টুর্নামেন্ট তৈরি ও এডিট"], ["t_room", "টুর্নামেন্ট", "রুম আইডি/পাসওয়ার্ড দেওয়া ও পাবলিশ"], ["t_results", "টুর্নামেন্ট", "রেজাল্ট ও প্রাইজ বিতরণ"], ["t_delete", "টুর্নামেন্ট", "টুর্নামেন্ট ডিলিট"], ["u_ban", "প্লেয়ার", "প্লেয়ার ব্যান / সক্রিয় করা"], ["u_track", "প্লেয়ার", "প্লেয়ার ট্র্যাকিং (IP, ডিভাইস, অডিট)"], ["u_report", "প্লেয়ার", "প্লেয়ার আর্থিক রিপোর্ট ও CSV"], ["dep", "ওয়ালেট", "ডিপোজিট অনুমোদন / বাতিল"], ["wd", "ওয়ালেট", "উইথড্র সম্পন্ন / বাতিল"], ["bal_req", "ওয়ালেট", "Master-এর কাছে ব্যালেন্স রিকোয়েস্ট"], ["notice_pub", "নোটিশ", "নোটিশ পাবলিশ ও ডিলিট"], ["notif_send", "নোটিফিকেশন", "নোটিফিকেশন পাঠানো ও ডিলিট"], ["set_pay", "সেটিংস", "পেমেন্ট ও সোশ্যাল লিংক সেটিংস"], ["banners", "সেটিংস", "ব্যানার যোগ ও ডিলিট"]];
+let ADM={},REQ={},LED={},GAMES={},USERS={},ACT={},MB=0,cur='admins',started=false,Q='',FEAT={},SEL='',GV='',UAON=true,BON={};
+const FL=[["tournaments", "পেজ", "টুর্নামেন্টসমূহ (পেজ)"], ["users", "পেজ", "প্লেয়ার / ইউজার (পেজ)"], ["wallet", "পেজ", "ওয়ালেট ও রিকোয়েস্ট (পেজ)"], ["finance", "পেজ", "আর্থিক রিপোর্ট / Finance (পেজ)"], ["notices", "পেজ", "নোটিশ ও ঘোষণা (পেজ)"], ["notifications", "পেজ", "ইউজার নোটিফিকেশন (পেজ)"], ["settings", "পেজ", "অ্যাপ সেটিংস (পেজ)"], ["audit", "পেজ", "রিপোর্ট ও অডিট লগ (পেজ)"], ["t_create", "টুর্নামেন্ট", "টুর্নামেন্ট তৈরি ও এডিট"], ["t_room", "টুর্নামেন্ট", "রুম আইডি/পাসওয়ার্ড দেওয়া ও পাবলিশ"], ["t_results", "টুর্নামেন্ট", "রেজাল্ট ও প্রাইজ বিতরণ"], ["t_delete", "টুর্নামেন্ট", "টুর্নামেন্ট ডিলিট"], ["u_ban", "প্লেয়ার", "প্লেয়ার ব্যান / সক্রিয় করা"], ["u_track", "প্লেয়ার", "প্লেয়ার ট্র্যাকিং (IP, ডিভাইস, অডিট)"], ["u_report", "প্লেয়ার", "প্লেয়ার আর্থিক রিপোর্ট ও CSV"], ["dep", "ওয়ালেট", "ডিপোজিট অনুমোদন / বাতিল"], ["wd", "ওয়ালেট", "উইথড্র সম্পন্ন / বাতিল"], ["bal_req", "ওয়ালেট", "Master-এর কাছে ব্যালেন্স রিকোয়েস্ট"], ["dep_bonus", "ওয়ালেট", "ডিপোজিটে বোনাস ও টার্নওভার সেট করা"], ["notice_pub", "নোটিশ", "নোটিশ পাবলিশ ও ডিলিট"], ["notif_send", "নোটিফিকেশন", "নোটিফিকেশন পাঠানো ও ডিলিট"], ["set_pay", "সেটিংস", "পেমেন্ট ও সোশ্যাল লিংক সেটিংস"], ["banners", "সেটিংস", "ব্যানার যোগ ও ডিলিট"]];
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3500)}
 async function login(){try{await auth.signInWithEmailAndPassword($('em').value.trim(),$('pw').value)}catch(e){toast('লগইন ব্যর্থ: '+e.message)}}
 const on=(r,cb)=>{r.on('value',cb);LST.push(r)};
@@ -52,11 +52,12 @@ function attachAll(){
  on(db.ref('admins'),s=>{ADM=s.val()||{};draw()});
  on(db.ref('balanceRequests').limitToLast(100),s=>{REQ=s.val()||{};draw()});
  on(db.ref('adminFeatures'),s=>{FEAT=s.val()||{};draw()});
+on(db.ref('adminSettings/depositBonus'),s=>{BON=s.val()||{};draw()});
  on(db.ref('adminSettings/userAdminOn'),s=>{UAON=s.val()!==false;draw()});
  on(db.ref('games'),s=>{GAMES=s.val()||{};draw()});
  on(db.ref('users'),s=>{USERS=s.val()||{};draw()});
  on(db.ref('balanceLedger').limitToLast(100),s=>{LED=s.val()||{};draw()})}
-function detachAll(){LST.forEach(r=>{try{r.off()}catch(e){}});LST=[];started=false;ADM={};REQ={};LED={};GAMES={};USERS={};ACT={};MB=0;FEAT={};SEL='';UAON=true}
+function detachAll(){LST.forEach(r=>{try{r.off()}catch(e){}});LST=[];started=false;ADM={};REQ={};LED={};GAMES={};USERS={};ACT={};MB=0;FEAT={};SEL='';UAON=true;BON={}}
 function bindAuth(){if(AUTHUNSUB)AUTHUNSUB();const my=TID;
  AUTHUNSUB=auth.onAuthStateChanged(async u=>{if(my!==TID)return;
   if(!u){$('lt').textContent=TID==='main'?'MASTER ADMINISTRATOR':'লগইন: '+TNAME;$('lback').style.display=TID==='main'?'none':'block';$('login').style.display='flex';$('app').style.display='none';return}
@@ -125,6 +126,23 @@ function openAdmin(u){SEL=u;cur='admin';draw();window.scrollTo(0,0)}
 async function aSet(u,k,v){try{await db.ref(`admins/${u}/features/${k}`).set(v)}catch(e){toast('ব্যর্থ: '+e.message)}}
 async function aAll(u,v){const o={};FL.forEach(([k])=>o[k]=v);try{await db.ref(`admins/${u}/features`).set(o);toast(v?'এই অ্যাডমিনের সব ফিচার চালু ✅':'এই অ্যাডমিনের সব ফিচার বন্ধ ⛔')}catch(e){toast('ব্যর্থ: '+e.message)}}
 async function uStatus(uid){const n=(USERS[uid].status||'ACTIVE')==='ACTIVE'?'SUSPENDED':'ACTIVE';if(confirm('স্ট্যাটাস '+n+' করবেন?'))await db.ref(`users/${uid}/status`).set(n)}
+function bonusCard(){const b=BON||{},on=b.enabled===true;
+return `<div class="cd" style="margin-bottom:10px"><b style="font-size:16px">🎁 ডিপোজিট বোনাস ও টার্নওভার</b><span>ডিপোজিটে অ্যাডমিন যে % বোনাস দেবে তা অ্যাডমিনের ওয়ালেট থেকে কাটবে। টার্নওভার শেষ না হলে প্লেয়ার উইথড্র করতে পারবে না। এখানকার সীমা সব অ্যাডমিনের ওপর খাটবে; কোনো একজনের জন্য বন্ধ করতে নিচের তালিকায় "ডিপোজিটে বোনাস ও টার্নওভার সেট করা" বন্ধ করুন।</span></div><div class="row"><select id="bnOn" style="height:42px;background:var(--in);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:0 10px"><option value="1"${on?' selected':''}>বোনাস ফিচার: ON</option><option value="0"${on?'':' selected'}>বোনাস ফিচার: OFF</option></select><input id="bnMax" type="number" min="0" max="100" placeholder="সর্বোচ্চ বোনাস %" value="${esc(b.maxPercent??'')}"><input id="bnMinT" type="number" min="0" max="1000" placeholder="ন্যূনতম টার্নওভার %" value="${esc(b.minTurnoverPercent??'')}"><button class="p" onclick="saveBonus()">সেভ</button></div>`}
+function admBonRow(u){const a=ADM[u]||{};return `<div class="cd" style="margin-bottom:10px"><b style="font-size:16px">এই অ্যাডমিনের বোনাস ও টার্নওভার</b><span>সীমা: বোনাস সর্বোচ্চ ${esc(BON.maxPercent??'—')}%, টার্নওভার ন্যূনতম ${esc(BON.minTurnoverPercent??'—')}%। অ্যাডমিন নিজের প্যানেল থেকেও এগুলো বদলাতে পারবে।</span></div><div class="row"><input id="abp" type="number" min="0" placeholder="বোনাস %" value="${esc(a.bonusPercent??'')}"><input id="atp" type="number" min="0" placeholder="টার্নওভার %" value="${esc(a.turnoverPercent??'')}"><button class="p" onclick="setAdminBon('${u}')">সেভ</button></div>`}
+async function saveBonus(){const on=$('bnOn').value==='1',mx=parseFloat($('bnMax').value),mt=parseFloat($('bnMinT').value);
+ if(isNaN(mx)||mx<0||mx>100){toast('সর্বোচ্চ বোনাস ০–১০০ এর মধ্যে দিন');return}
+ if(isNaN(mt)||mt<0||mt>1000){toast('ন্যূনতম টার্নওভার ০–১০০০ এর মধ্যে দিন');return}
+ try{await db.ref('adminSettings/depositBonus').set({enabled:on,maxPercent:mx,minTurnoverPercent:mt,updatedAt:TS});
+  try{await db.ref('adminAuditLogs').push({admin:auth.currentUser.email,action:'BONUS_SETTINGS',target:TNAME,details:`on=${on}, maxBonus=${mx}%, minTurnover=${mt}%`,timestamp:Date.now()})}catch(e){}
+  toast('বোনাস সেটিংস সেভ হয়েছে ✅')}catch(e){toast('ব্যর্থ: '+e.message)}}
+async function setAdminBon(u){const bp=parseFloat($('abp').value),tp=parseFloat($('atp').value);
+ if(isNaN(bp)||isNaN(tp)||bp<0||tp<0){toast('বোনাস % ও টার্নওভার % দুটোই দিন');return}
+ if(BON.maxPercent==null||BON.minTurnoverPercent==null){toast('আগে উপরে "ফিচার কন্ট্রোল" ট্যাবে সীমা সেভ করুন');return}
+ if(bp>BON.maxPercent){toast('বোনাস সর্বোচ্চ '+BON.maxPercent+'% এর বেশি হবে না');return}
+ if(tp<BON.minTurnoverPercent){toast('টার্নওভার ন্যূনতম '+BON.minTurnoverPercent+'% এর কম হবে না');return}
+ try{await db.ref('admins/'+u).update({bonusPercent:bp,turnoverPercent:tp});
+  try{await db.ref('adminAuditLogs').push({admin:auth.currentUser.email,action:'ADMIN_BONUS_SET',target:u,details:`bonus=${bp}%, turnover=${tp}%`,timestamp:Date.now()})}catch(e){}
+  toast('সেভ হয়েছে ✅')}catch(e){toast('ব্যর্থ: '+e.message)}}
 async function tx(p,f){return(await db.ref(p).transaction(f)).committed}
 const dec=a=>b=>b===null?0:(b>=a?b-a:undefined),inc=a=>b=>(b||0)+a;
 async function log(o){await db.ref('balanceLedger').push({...o,time:TS})}
@@ -202,13 +220,14 @@ function draw(){if(!started)return;
   Object.entries(USERS).filter(([k,u])=>!q||[u.name,u.email,u.phone,u.username].join(' ').toLowerCase().includes(q)).slice(0,200).map(([k,u])=>`<tr><td>${esc(u.name||u.username||k)}<br><small>${esc(u.email||u.phone||'')}</small></td><td>${fmt(u.balance)}</td><td><span class="pl ${(u.status||'ACTIVE')==='ACTIVE'?'':'b'}">${esc(u.status||'ACTIVE')}</span></td><td><button onclick="uAdjust('${k}')">৳ সমন্বয়</button> <button class="d" onclick="uStatus('${k}')">${(u.status||'ACTIVE')==='ACTIVE'?'ব্যান':'সক্রিয়'}</button></td></tr>`).join('')+`</table></div>`}
  if(cur==='act'){h=`<div class="sc"><table><tr><th>প্লেয়ার</th><th>গেম</th><th>শুরু</th><th>এন্ট্রি</th><th>এক্সিট</th><th>নেট</th><th>IP/ডিভাইস</th><th>স্ট্যাটাস</th></tr>`+
   Object.values(ACT).reverse().map(s=>{const n=typeof s.netWinLoss==='number'?s.netWinLoss:(+s.exitBalance||0)-(+s.entryBalance||0);return`<tr><td>${esc(s.userName||(USERS[s.uid]||{}).name||s.uid)}</td><td>${esc(s.gameName||'-')}</td><td>${s.startTime?new Date(s.startTime).toLocaleString('bn-BD'):''}</td><td>${fmt(s.entryBalance)}</td><td>${fmt(s.exitBalance)}</td><td style="color:${n>=0?'var(--ok)':'var(--er)'}">${fmt(n)}</td><td><small>${esc(s.ip||'-')}<br>${esc(s.device||'')}</small></td><td>${esc(s.status||'')}</td></tr>`}).join('')+`</table></div>`}
- if(cur==='feat'){let g='';h=`<div class="row"><button class="p" onclick="fAll(true)">সব চালু</button><button class="d" onclick="fAll(false)">সব বন্ধ</button></div><div class="cd" style="margin-bottom:10px"><span>এখানে বন্ধ করা ফিচার User Admin প্যানেলে লুকিয়ে যাবে ও কাজ করবে না। চালু করলে আবার দেখা যাবে ও কাজ করবে।</span></div><div class="sc"><table>`+
+ if(cur==='feat'){let g='';h=bonusCard()+`<div class="row"><button class="p" onclick="fAll(true)">সব চালু</button><button class="d" onclick="fAll(false)">সব বন্ধ</button></div><div class="cd" style="margin-bottom:10px"><span>এখানে বন্ধ করা ফিচার User Admin প্যানেলে লুকিয়ে যাবে ও কাজ করবে না। চালু করলে আবার দেখা যাবে ও কাজ করবে।</span></div><div class="sc"><table>`+
   FL.map(([k,gr,l])=>{const on=FEAT[k]!==false,hd=gr!==g?`<tr><th colspan="3" style="color:var(--gold)">${esc(gr)}</th></tr>`:'';g=gr;return hd+`<tr><td>${esc(l)}</td><td><span class="pl ${on?'':'b'}">${on?'চালু':'বন্ধ'}</span></td><td><button class="${on?'d':'p'}" onclick="fSet('${k}',${!on})">${on?'বন্ধ করুন':'চালু করুন'}</button></td></tr>`}).join('')+`</table></div>`}
 
  if(cur==='admin'){const a=ADM[SEL];if(!a){cur='admins';return draw()}
   const MF=a.features||{},my=Object.entries(USERS).filter(([k,u])=>u.adminUid===SEL),rq=Object.entries(REQ).filter(([k,r])=>r.uid===SEL).reverse(),lg=Object.values(LED).filter(l=>l.uid===SEL).reverse().slice(0,20);let g='';
   h=`<div class="row"><button onclick="tab('admins')">← সব অ্যাডমিন</button></div>
 <div class="g"><div class="cd"><span>অ্যাডমিন</span><b style="font-size:18px">${esc(a.name||'-')}</b><small>${esc(a.email)}</small></div><div class="cd"><span>ব্যালেন্স</span><b>${fmt(a.balance)}</b></div><div class="cd"><span>অবস্থা</span><b style="font-size:16px">${a.active===false?'বন্ধ':'সক্রিয়'} · ${a.emailVerified?'ইমেইল ভেরিফাইড':'ইমেইল পেন্ডিং'}</b></div><div class="cd"><span>এই অ্যাডমিনের প্লেয়ার</span><b>${my.length}</b></div></div>
+${admBonRow(SEL)}
 <div class="row"><button class="p" onclick="send('${SEL}')">টাকা পাঠান</button><button onclick="reclaim('${SEL}')">টাকা ফেরত নিন</button><button class="d" onclick="toggle('${SEL}')">${a.active===false?'অ্যাডমিন চালু করুন':'অ্যাডমিন বন্ধ করুন'}</button><button class="d" onclick="delAdmin('${SEL}')">অ্যাডমিন মুছুন</button></div>
 <div class="cd" style="margin-bottom:10px"><b style="font-size:16px">ফিচার কন্ট্রোল (শুধু এই অ্যাডমিনের জন্য)</b><span>এখানে বন্ধ করলে শুধু এই অ্যাডমিনের প্যানেল থেকে ফিচার লুকাবে ও কাজ করবে না। "ফিচার কন্ট্রোল" ট্যাবে সবার জন্য বন্ধ থাকলে এই অ্যাডমিনের জন্যও বন্ধ থাকবে।</span></div>
 <div class="row"><button class="p" onclick="aAll('${SEL}',true)">সব চালু</button><button class="d" onclick="aAll('${SEL}',false)">সব বন্ধ</button></div>

@@ -7,7 +7,14 @@
 (function(){var de=document.documentElement;function apply(){try{var vm=document.querySelector('meta[name="viewport"]');if(vm&&vm.getAttribute('content').indexOf('width=980')===-1){vm.setAttribute('content','width=980, viewport-fit=cover');}}catch(e){}}
 apply();window.addEventListener('load',function(){setTimeout(apply,150)});window.addEventListener('pageshow',apply);})();
 </script>
+<link rel="manifest" href="master-manifest.json">
 <meta name="theme-color" content="#0A0A0A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NEXQIRO">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="master-icon-192.png">
+<link rel="icon" type="image/png" href="master-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -216,12 +223,44 @@ apply();window.addEventListener('load',function(){setTimeout(apply,150)});window
     .stat-card, .cd { border-radius:10px; }
     .nav-item button.on { box-shadow:inset 3px 0 0 var(--primary) !important; }
     .login-box { box-shadow:0 20px 50px rgba(0,0,0,.85) !important; }
-</style></head>
+</style><style>
+/* ---------- Notification (bell / sound / drawer) ---------- */
+.notif-btn{position:relative}
+.notif-badge{position:absolute;top:-5px;right:-5px;background:var(--accent);color:#fff;font-size:.68rem;font-weight:800;border-radius:10px;padding:1px 6px;display:none;line-height:1.3}
+#btn-sound{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;background:var(--c-inner);border:1px solid var(--border-subtle);color:var(--text-main)}
+#btn-sound:hover{border-color:var(--border-color);color:var(--primary);background:var(--c-inner)}
+#btn-sound.off{border-color:var(--border-color);color:var(--primary)}
+#notif-drawer{position:fixed;top:calc(var(--header-height) + 8px);right:16px;width:360px;max-width:calc(100vw - 24px);max-height:70vh;display:none;flex-direction:column;background:var(--c-surface);border:1px solid var(--border-color);border-radius:var(--radius-lg);z-index:1000;overflow:hidden}
+#notif-drawer.open{display:flex}
+.nd-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border-subtle);background:var(--c-inner)}
+.nd-title{font:700 1rem var(--font-display);color:var(--c-text)}
+.nd-list{overflow-y:auto;flex:1}
+.nd-item{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-bottom:1px solid var(--border-subtle);cursor:pointer}
+.nd-item:hover{background:var(--c-inner)}
+.nd-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);margin-top:7px;flex-shrink:0}
+.nd-dot.rd{background:transparent;border:1px solid var(--border-subtle)}
+.nd-main{flex:1;min-width:0}
+.nd-main b{display:block;font-size:.9rem;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nd-main span{font-size:.78rem;color:var(--text-muted)}
+.nd-amt{font:700 1rem var(--font-display);color:var(--primary);white-space:nowrap}
+.nd-empty{padding:26px 14px;text-align:center;color:var(--text-muted);font-size:.85rem}
+.nd-foot{padding:10px 14px;border-top:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:6px;background:var(--c-inner)}
+.nd-foot small{color:var(--text-muted);font-size:.74rem}
+@media (max-width:900px){.topbar-actions{gap:6px}}
+</style>
+<style>
+/* logo = NEXQIRO emblem (image) */
+.brand-logo{background:transparent !important;width:54px;height:54px;border-radius:0;overflow:visible}
+.brand-logo img{width:54px;height:54px;display:block;object-fit:contain}
+.login-logo{background:transparent !important;width:96px;height:96px;margin:0 auto 14px;border-radius:0}
+.login-logo img{width:96px;height:96px;display:block;object-fit:contain}
+</style>
+</head>
 <body data-theme="dark">
 <script>try{var __t=localStorage.getItem("np_admin_theme");if(__t==="light"||__t==="dark")document.body.setAttribute("data-theme",__t);}catch(e){}</script>
 
 <div id="login"><div class="login-box">
-  <div class="login-logo"><svg viewBox="0 0 24 24"><path d="M6 19V5h2.6l6.8 9.2V5H18v14h-2.6L8.6 9.8V19z"/></svg></div>
+  <div class="login-logo"><img src="master-logo.png" alt="NEXQIRO" width="96" height="96" decoding="async"></div>
   <h2 class="login-title" id="lt">NEXQIRO</h2>
   <p class="login-sub">মাস্টার কন্ট্রোল প্যানেল</p>
   <div class="login-form">
@@ -233,7 +272,7 @@ apply();window.addEventListener('load',function(){setTimeout(apply,150)});window
 <div id="app">
   <aside class="sidebar" id="sidebar">
     <div class="brand-header">
-      <div class="brand-logo"><svg viewBox="0 0 24 24"><path d="M6 19V5h2.6l6.8 9.2V5H18v14h-2.6L8.6 9.8V19z"/></svg></div>
+      <div class="brand-logo"><img src="master-logo.png" alt="NEXQIRO" width="54" height="54" decoding="async"></div>
       <div><div class="brand-title">NEXQIRO</div><div class="brand-sub">MASTER ADMINISTRATOR</div></div>
     </div>
     <ul class="nav-list">
@@ -265,6 +304,8 @@ apply();window.addEventListener('load',function(){setTimeout(apply,150)});window
         <select id="tn" onchange="switchTenant(this.value)" title="প্রজেক্ট বদলান"></select>
       </div>
       <div class="topbar-actions">
+        <button class="btn-icon notif-btn" onclick="toggleNotifDrawer()" id="btn-notif-bell" title="ব্যালেন্স রিকোয়েস্ট নোটিফিকেশন"><svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg><span class="notif-badge" id="notif-badge">0</span></button>
+        <button id="btn-sound" onclick="toggleMasterSound()" title="নতুন রিকোয়েস্টে সাউন্ড অন/অফ"><span id="snd-ic">🔊</span><span id="snd-lb">সাউন্ড অন</span></button>
         <div class="bal" id="mb">৳ 0</div>
         <button onclick="setMaster()">ব্যালেন্স সেট</button>
       </div>
@@ -281,6 +322,11 @@ apply();window.addEventListener('load',function(){setTimeout(apply,150)});window
   </div>
 </div>
 <div id="toast"></div>
+<div id="notif-drawer">
+  <div class="nd-head"><span class="nd-title">🔔 নতুন রিকোয়েস্ট</span><button onclick="markAllNotifRead()" style="padding:4px 10px;font-size:12px">সব পড়া হয়েছে</button></div>
+  <div class="nd-list" id="nd-list"></div>
+  <div class="nd-foot"><button id="btn-enable-notif" class="p" onclick="enableNotifications()">🔔 ফোন/ব্রাউজার নোটিফিকেশন চালু করুন</button><small id="nd-note"></small></div>
+</div>
 <script>
 const MAINCFG=window.NP_FIREBASE_CONFIG,MAINAPP=firebase.initializeApp(MAINCFG),TS=firebase.database.ServerValue.TIMESTAMP;
 let auth=MAINAPP.auth(),db=MAINAPP.database(),TID='main',TCFG=MAINCFG,TNAME='মূল প্রজেক্ট',LST=[],AUTHUNSUB=null;
@@ -843,4 +889,83 @@ async function pDel(k){const p=PROMO[k];if(!p||!confirm('"'+p.name+'" অফা�
   };
 })();
 </script>
+<script>
+/* ===== নোটিফিকেশন + সাউন্ড (নতুন ব্যালেন্স রিকোয়েস্ট এলে) ===== */
+(function(){
+  var soundOn=true,read=new Set(),seen=new Set(),seenTid=null,t0=0,swReg=null,ac=null;
+  var hasNotif=('Notification' in window);
+  try{soundOn=localStorage.getItem('masterSoundOn')!=='false';read=new Set(JSON.parse(localStorage.getItem('master_read_notif_ids')||'[]'))}catch(e){}
+  function $$(i){return document.getElementById(i)}
+  function getAC(){try{if(!ac){var C=window.AudioContext||window.webkitAudioContext;if(C)ac=new C()}if(ac&&ac.state==='suspended')ac.resume().catch(function(){})}catch(e){}return ac}
+  ['click','touchstart','keydown'].forEach(function(ev){window.addEventListener(ev,getAC,{once:true,passive:true})});
+  function beep(){
+    if(!soundOn)return;
+    try{var c=getAC();if(!c)return;var now=c.currentTime;
+      [523.25,659.25,783.99].forEach(function(f,i){var o=c.createOscillator(),g=c.createGain();
+        o.type='sine';o.frequency.setValueAtTime(f,now+i*.12);
+        g.gain.setValueAtTime(0,now+i*.12);g.gain.linearRampToValueAtTime(.35,now+i*.12+.02);g.gain.exponentialRampToValueAtTime(.001,now+i*.12+.3);
+        o.connect(g);g.connect(c.destination);o.start(now+i*.12);o.stop(now+i*.12+.32)})}catch(e){}
+  }
+  function updSound(){var ic=$$('snd-ic'),lb=$$('snd-lb'),b=$$('btn-sound');if(!ic)return;
+    ic.textContent=soundOn?'🔊':'🔇';lb.textContent=soundOn?'সাউন্ড অন':'সাউন্ড অফ';b.className=soundOn?'':'off'}
+  window.toggleMasterSound=function(){soundOn=!soundOn;try{localStorage.setItem('masterSoundOn',soundOn?'true':'false')}catch(e){}updSound();if(soundOn){beep();toast('🔊 সাউন্ড নোটিফিকেশন চালু')}else toast('🔇 সাউন্ড নোটিফিকেশন বন্ধ')};
+  updSound();
+
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.ready.then(function(r){swReg=r}).catch(function(){});
+    navigator.serviceWorker.addEventListener('message',function(e){if(e.data&&e.data.view==='reqs'){try{tab('reqs')}catch(x){}}});
+  }
+  function showNotif(title,body,tag){
+    var o={body:body,icon:'./master-icon-192.png',badge:'./master-icon-192.png',tag:tag,renotify:true,requireInteraction:true,vibrate:[300,120,300,120,300],data:{view:'reqs'}};
+    if(swReg&&swReg.showNotification)swReg.showNotification(title,o);else{try{new Notification(title,o)}catch(e){}}
+  }
+  window.enableNotifications=async function(){
+    if(!hasNotif){toast('এই ব্রাউজারে নোটিফিকেশন সাপোর্ট নেই');return}
+    try{var r=await Notification.requestPermission();
+      if(r==='granted'){showNotif('✅ নোটিফিকেশন চালু হয়েছে','নতুন ব্যালেন্স রিকোয়েস্ট এলে এভাবে জানানো হবে।','master-test')}
+      else toast('নোটিফিকেশন Allow করা হয়নি')}catch(e){}
+    drawerNote();
+  };
+  function drawerNote(){
+    var b=$$('btn-enable-notif'),n=$$('nd-note');if(!b)return;
+    var p=hasNotif?Notification.permission:'unsupported';
+    if(p==='granted'){b.style.display='none';n.textContent='নোটিফিকেশন চালু আছে (অ্যাপ/ব্রাউজার খোলা থাকলে ব্যাকগ্রাউন্ডেও জানাবে)।'}
+    else if(p==='denied'){b.style.display='none';n.textContent='নোটিফিকেশন বন্ধ করা আছে। ফোন/ব্রাউজার সেটিংস থেকে এই সাইটের নোটিফিকেশন Allow করুন।'}
+    else if(p==='unsupported'){b.style.display='none';n.textContent='এই ব্রাউজারে নোটিফিকেশন সাপোর্ট নেই।'}
+    else{b.style.display='block';n.textContent='iPhone এ আগে "Add to Home Screen" করে অ্যাপ খুলুন।'}
+  }
+  function pend(){return Object.entries(REQ).filter(function(x){return x[1].status==='pending'}).reverse()}
+  function saveRead(){try{localStorage.setItem('master_read_notif_ids',JSON.stringify(Array.from(read).slice(-500)))}catch(e){}}
+  function badge(){var n=pend().filter(function(x){return !read.has(x[0])}).length,b=$$('notif-badge');if(!b)return;
+    b.style.display=n?'block':'none';b.textContent=n>99?'99+':n}
+  function renderDrawer(){
+    var L=$$('nd-list');if(!L)return;var P=pend();
+    L.innerHTML=P.length?P.map(function(x){var k=x[0],r=x[1];
+      return '<div class="nd-item" onclick="goReqs(\''+k+'\')"><span class="nd-dot'+(read.has(k)?' rd':'')+'"></span><div class="nd-main"><b>'+esc(r.email||'অ্যাডমিন')+'</b><span>'+esc(r.note||'ব্যালেন্স রিকোয়েস্ট')+(r.createdAt?' • '+new Date(r.createdAt).toLocaleString('bn-BD'):'')+'</span></div><div class="nd-amt">'+fmt(r.amount)+'</div></div>'}).join('')
+      :'<div class="nd-empty">কোনো পেন্ডিং রিকোয়েস্ট নেই ✅</div>';
+    drawerNote();
+  }
+  window.toggleNotifDrawer=function(){var d=$$('notif-drawer');d.classList.toggle('open');if(d.classList.contains('open'))renderDrawer()};
+  window.goReqs=function(k){read.add(k);saveRead();badge();$$('notif-drawer').classList.remove('open');tab('reqs')};
+  window.markAllNotifRead=function(){pend().forEach(function(x){read.add(x[0])});saveRead();badge();renderDrawer()};
+  document.addEventListener('click',function(e){var d=$$('notif-drawer');if(d&&d.classList.contains('open')&&!d.contains(e.target)&&!e.target.closest('#btn-notif-bell'))d.classList.remove('open')});
+
+  function check(){
+    if(!started)return;
+    if(seenTid!==TID){seenTid=TID;seen=new Set();t0=Date.now()}
+    var fresh=[];
+    pend().forEach(function(x){if(!seen.has(x[0])){seen.add(x[0]);if(Date.now()-t0>2500)fresh.push(x)}});
+    if(fresh.length){
+      beep();
+      fresh.forEach(function(x){var r=x[1];toast('🔔 নতুন ব্যালেন্স রিকোয়েস্ট: '+(r.email||'অ্যাডমিন')+' — '+fmt(r.amount));
+        if(hasNotif&&Notification.permission==='granted'&&!(document.visibilityState==='visible'&&document.hasFocus()))
+          showNotif('💰 নতুন ব্যালেন্স রিকোয়েস্ট',(r.email||'অ্যাডমিন')+' — '+fmt(r.amount),'req-'+x[0])});
+    }
+  }
+  var _d3=draw;
+  draw=function(){_d3();try{check();badge();if($$('notif-drawer').classList.contains('open'))renderDrawer()}catch(e){}};
+  drawerNote();
+})();
+</script>
+<script>if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){window.addEventListener('load',function(){navigator.serviceWorker.register('./master-sw.js').catch(function(){})})}</script>
 </body></html>

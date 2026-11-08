@@ -5819,6 +5819,11 @@
             <td>
               <div style="font-weight:700;">${escapeHtml(u.name || 'Player')}</div>
               <small style="font-family:monospace; color:var(--text-dim); font-size:0.75rem;">${escapeHtml(String(u.uid || ''))}</small>
+              <div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;">
+                <button type="button" class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:0.68rem; border-color:#8b5cf6; color:#a78bfa;" onclick="openTurnoverBonusModal('${escapeHtml(String(u.uid))}')" title="বোনাস ও টার্নওভার">🎁 BONUS / TURNOVER</button>
+                <button type="button" class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:0.68rem; border-color:#38bdf8; color:#38bdf8;" onclick="openPlayerSecurityModal('${escapeHtml(String(u.uid))}')" title="প্লেয়ার ট্র্যাকিং ও সিকিউরিটি">🛡️ TRACKING</button>
+                <button type="button" class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:0.68rem; border-color:#4ade80; color:#4ade80;" onclick="openPlayerFinancialReport('${escapeHtml(String(u.uid))}')" title="আর্থিক রিপোর্ট ও অডিট">📊 REPORT</button>
+              </div>
             </td>
             <td>
               <span class="badge badge-upcoming">${escapeHtml(u.ffIgn || u.ign || 'N/A')}</span>
@@ -6204,7 +6209,16 @@
             })()}
           </td>
           <td style="color:var(--text-dim); font-size:0.8rem;">${w.createdAt ? new Date(w.createdAt).toLocaleTimeString('bn-BD') : 'সম্প্রতি'}</td>
-          <td><span class="badge ${wdStatusMeta(w.status).cls}">${wdStatusMeta(w.status).label}</span></td>
+          <td>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <div><span class="badge ${wdStatusMeta(w.status).cls}">${wdStatusMeta(w.status).label}</span></div>
+              <div style="display:inline-flex; gap:4px; flex-wrap:wrap; margin-top:2px;">
+                <button type="button" class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:0.68rem; border-color:#8b5cf6; color:#a78bfa;" onclick="openTurnoverBonusModal('${w.uid}')" title="বোনাস ও টার্নওভার">🎁 BONUS / TURNOVER</button>
+                <button type="button" class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:0.68rem; border-color:#38bdf8; color:#38bdf8;" onclick="openPlayerSecurityModal('${w.uid}')" title="প্লেয়ার ট্র্যাকিং ও সিকিউরিটি">🛡️ TRACKING</button>
+                <button type="button" class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:0.68rem; border-color:#4ade80; color:#4ade80;" onclick="openPlayerFinancialReport('${w.uid}')" title="আর্থিক রিপোর্ট ও অডিট">📊 REPORT</button>
+              </div>
+            </div>
+          </td>
           <td style="text-align: right; white-space: nowrap;">
             ${isWithdrawalOpen(w.status) ? `
               <select class="action-dropdown-select" onchange="handleWithdrawalActionDropdown(this, '${w.id}')" title="অ্যাকশন নির্বাচন করুন">
@@ -9237,7 +9251,7 @@ await db.ref('notices/not_2').set({
     });
   
     // ===== MASTER-controlled feature switches (Firebase node: adminFeatures) =====
-    var FEATURE_MAP = {"tournaments": {"view": "view-tournaments"}, "users": {"view": "view-users"}, "wallet": {"view": "view-wallet"}, "finance": {"view": "view-finance"}, "notices": {"view": "view-notices"}, "notifications": {"view": "view-notifications"}, "settings": {"view": "view-settings"}, "audit": {"view": "view-audit"}, "t_create": {"fns": ["openCreateTournamentModal", "openEditTournamentModal", "handleSaveTournament"]}, "t_room": {"fns": ["openRoomModal", "handleSaveRoomDetails", "togglePublishRoom", "editRoomCreds"]}, "t_results": {"fns": ["openResultsModal", "handleDistributePrizes"]}, "t_delete": {"fns": ["deleteTournament"]}, "u_ban": {"fns": ["toggleUserStatus", "toggleUserStatusFromSecModal"]}, "u_track": {"fns": ["openPlayerSecurityModal"]}, "u_report": {"fns": ["openPlayerFinancialReport", "exportSinglePlayerCSV"]}, "dep": {"fns": ["approveDeposit", "rejectDeposit", "handleDepositActionDropdown"]}, "wd": {"fns": ["completeWithdrawal", "rejectWithdrawal", "setWithdrawalStatus", "handleWithdrawalActionDropdown"]}, "bal_req": {"fns": ["openAdminFundModal"]}, "notice_pub": {"fns": ["handlePublishNotice", "deleteNotice"]}, "notif_send": {"fns": ["handleSendNotification", "deleteNotification", "quickSendNotificationToUser", "quickNotifyFromSecModal"]}, "set_pay": {"fns": ["handleSavePaymentSettings", "handleSaveSocialSettings"]}, "banners": {"fns": ["handleAddBanner", "handleDeleteBanner"]}};
+    var FEATURE_MAP = {"tournaments": {"view": "view-tournaments"}, "users": {"view": "view-users"}, "wallet": {"view": "view-wallet"}, "promotions": {"view": "view-promotions"}, "finance": {"view": "view-finance"}, "notices": {"view": "view-notices"}, "notifications": {"view": "view-notifications"}, "settings": {"view": "view-settings"}, "audit": {"view": "view-audit"}, "t_create": {"fns": ["openCreateTournamentModal", "openEditTournamentModal", "handleSaveTournament"]}, "t_room": {"fns": ["openRoomModal", "handleSaveRoomDetails", "togglePublishRoom", "editRoomCreds"]}, "t_results": {"fns": ["openResultsModal", "handleDistributePrizes"]}, "t_delete": {"fns": ["deleteTournament"]}, "u_ban": {"fns": ["toggleUserStatus", "toggleUserStatusFromSecModal"]}, "u_track": {"fns": ["openPlayerSecurityModal"]}, "u_report": {"fns": ["openPlayerFinancialReport", "exportSinglePlayerCSV"]}, "u_adjust": {"fns": ["adjustUserBalance", "adjustBalanceFromSecModal"]}, "u_bonus": {"fns": ["openTurnoverBonusModal", "submitManualBonusCredit", "saveDirectTurnoverValues", "markUserTurnoverCompleted", "resetUserBonusAndTurnover"]}, "dep": {"fns": ["approveDeposit", "rejectDeposit", "handleDepositActionDropdown"]}, "wd": {"fns": ["completeWithdrawal", "rejectWithdrawal", "setWithdrawalStatus", "handleWithdrawalActionDropdown"]}, "bal_req": {"fns": ["openAdminFundModal"]}, "dep_bonus": {"fns": ["handleSaveBonusTurnoverSettings", "handleSaveAdminDepositBonusSettings"]}, "notice_pub": {"fns": ["handlePublishNotice", "deleteNotice"]}, "notif_send": {"fns": ["handleSendNotification", "deleteNotification", "quickSendNotificationToUser", "quickNotifyFromSecModal"]}, "set_pay": {"fns": ["handleSavePaymentSettings", "handleSaveSocialSettings"]}, "banners": {"fns": ["handleAddBanner", "handleDeleteBanner"]}};
     var FEATURES = {}, MY_FEATURES = {};
     // A feature is ON only if it is on for everyone (adminFeatures) AND on for this admin (admins/{uid}/features)
     function featureOn(k) { return FEATURES[k] !== false && MY_FEATURES[k] !== false; }

@@ -282,6 +282,7 @@ apply();window.addEventListener('load',function(){setTimeout(apply,150)});window
         <li class="nav-item"><button id="t-players" onclick="tab('players')"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span class="nav-label">প্লেয়ার</span></button></li>
         <li class="nav-item"><button id="t-act" onclick="tab('act')"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg><span class="nav-label">গেম অ্যাক্টিভিটি</span></button></li>
         <li class="nav-item"><button id="t-feat" onclick="tab('feat')"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg><span class="nav-label">ফিচার কন্ট্রোল</span></button></li>
+        <li class="nav-item"><button id="t-chat" onclick="tab('chat')"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg><span class="nav-label">অ্যাডমিন চ্যাট</span><span class="nav-badge" id="nav-chat-unread" style="display:none;background:var(--red,#ef4444);color:#fff">0</span></button></li>
         <li class="nav-item"><button id="t-promo" onclick="tab('promo')"><svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/></svg><span class="nav-label">ডিপোজিট প্রোমো</span></button></li>
         <li class="nav-item"><button id="t-tenants" onclick="tab('tenants')"><svg viewBox="0 0 24 24"><path d="M12 2L1 7l11 5 9-4.09V17h2V7L12 2zm0 13.09L4.27 11.5 2 12.53l10 4.55 10-4.55-2.27-1.03L12 15.09zm0 4.54l-7.73-3.51L2 17.16l10 4.55 10-4.55-2.27-1.04L12 19.63z"/></svg><span class="nav-label">প্রজেক্টসমূহ</span></button></li>
         <li class="nav-item"><button id="t-guide" onclick="tab('guide')"><svg viewBox="0 0 24 24"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg><span class="nav-label">গাইড</span></button></li>
@@ -327,15 +328,115 @@ apply();window.addEventListener('load',function(){setTimeout(apply,150)});window
   <div class="nd-foot"><button id="btn-enable-notif" class="p" onclick="enableNotifications()">🔔 ফোন/ব্রাউজার নোটিফিকেশন চালু করুন</button><small id="nd-note"></small></div>
 </div>
 <script>
-const MAINCFG=window.NP_FIREBASE_CONFIG,MAINAPP=firebase.initializeApp(MAINCFG),TS=firebase.database.ServerValue.TIMESTAMP;
-let auth=MAINAPP.auth(),db=MAINAPP.database(),TID='main',TCFG=MAINCFG,TNAME='মূল প্রজেক্ট',LST=[],AUTHUNSUB=null;
+const MAINCFG=window.NP_FIREBASE_CONFIG||{apiKey:"AIzaSyBFaoU_cDws6YVAXFMWBnogGAQHhjfC23Q",authDomain:"np-trunament-bd.firebaseapp.com",databaseURL:"https://np-trunament-bd-default-rtdb.firebaseio.com",projectId:"np-trunament-bd",storageBucket:"np-trunament-bd.firebasestorage.app",messagingSenderId:"324972484501",appId:"1:324972484501:web:38598aa922e983990b889c"},MAINAPP=firebase.initializeApp(MAINCFG),TS=firebase.database.ServerValue.TIMESTAMP;
+let auth=MAINAPP.auth(),db=MAINAPP.database();try{auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{})}catch(e){},TID='main',TCFG=MAINCFG,TNAME='মূল প্রজেক্ট',LST=[],AUTHUNSUB=null;
 const $=i=>document.getElementById(i),fmt=n=>'৳ '+Math.round(n||0).toLocaleString('en-US'),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let ADM={},REQ={},LED={},GAMES={},USERS={},ACT={},MB=0,cur='admins',started=false,Q='',FEAT={},SEL='',GV='',UAON=true,BON={};
 const FL=[["tournaments", "পেজ", "টুর্নামেন্টসমূহ (পেজ)"], ["users", "পেজ", "প্লেয়ার / ইউজার (পেজ)"], ["wallet", "পেজ", "ওয়ালেট ও রিকোয়েস্ট (পেজ)"], ["promotions", "পেজ", "ডিপোজিট প্রোমোশন (পেজ)"], ["finance", "পেজ", "আর্থিক রিপোর্ট / Finance (পেজ)"], ["notices", "পেজ", "নোটিশ ও ঘোষণা (পেজ)"], ["notifications", "পেজ", "ইউজার নোটিফিকেশন (পেজ)"], ["settings", "পেজ", "অ্যাপ সেটিংস (পেজ)"], ["audit", "পেজ", "রিপোর্ট ও অডিট লগ (পেজ)"], ["t_create", "টুর্নামেন্ট", "টুর্নামেন্ট তৈরি ও এডিট"], ["t_room", "টুর্নামেন্ট", "রুম আইডি/পাসওয়ার্ড দেওয়া ও পাবলিশ"], ["t_results", "টুর্নামেন্ট", "রেজাল্ট ও প্রাইজ বিতরণ"], ["t_delete", "টুর্নামেন্ট", "টুর্নামেন্ট ডিলিট"], ["u_ban", "প্লেয়ার", "প্লেয়ার ব্যান / সক্রিয় করা"], ["u_track", "প্লেয়ার", "প্লেয়ার ট্র্যাকিং (IP, ডিভাইস, অডিট)"], ["u_report", "প্লেয়ার", "প্লেয়ার আর্থিক রিপোর্ট ও CSV"], ["u_adjust", "প্লেয়ার", "প্লেয়ার ব্যালেন্স সমন্বয় (Adjust Balance)"], ["u_bonus", "প্লেয়ার", "প্লেয়ার বোনাস ও টার্নওভার সমন্বয়"], ["dep", "ওয়ালেট", "ডিপোজিট অনুমোদন / বাতিল"], ["wd", "ওয়ালেট", "উইথড্র সম্পন্ন / বাতিল"], ["bal_req", "ওয়ালেট", "Master-এর কাছে ব্যালেন্স রিকোয়েস্ট"], ["dep_bonus", "ওয়ালেট", "ডিপোজিটে বোনাস ও টার্নওভার সেট করা"], ["notice_pub", "নোটিশ", "নোটিশ পাবলিশ ও ডিলিট"], ["notif_send", "নোটিফিকেশন", "নোটিফিকেশন পাঠানো ও ডিলিট"], ["set_pay", "সেটিংস", "পেমেন্ট ও সোশ্যাল লিংক সেটিংস"], ["banners", "সেটিংস", "ব্যানার যোগ ও ডিলিট"]];
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3500)}
 async function login(){try{await auth.signInWithEmailAndPassword($('em').value.trim(),$('pw').value)}catch(e){toast('লগইন ব্যর্থ: '+e.message)}}
 const on=(r,cb)=>{r.on('value',cb);LST.push(r)};
+
+let SEL_CHAT_ADMIN = '';
+let CHAT_METAS = {};
+let ACTIVE_CHAT_MSGS = [];
+let ACTIVE_CHAT_UNSUB = null;
+let GLOBAL_CHAT_LISTENERS = {};
+
+function selectChatAdmin(uid) {
+  SEL_CHAT_ADMIN = uid;
+  attachActiveAdminChat(uid);
+  draw();
+  setTimeout(() => {
+    const b = $('master-chat-body');
+    if (b) b.scrollTop = b.scrollHeight;
+    const inp = $('master-chat-reply-input');
+    if (inp) inp.focus();
+  }, 100);
+}
+
+function openChatWithAdmin(uid) {
+  SEL_CHAT_ADMIN = uid;
+  cur = 'chat';
+  attachActiveAdminChat(uid);
+  draw();
+}
+
+function attachActiveAdminChat(uid) {
+  if (ACTIVE_CHAT_UNSUB) {
+    try { ACTIVE_CHAT_UNSUB.off(); } catch (e) {}
+    ACTIVE_CHAT_UNSUB = null;
+  }
+  if (!uid) return;
+  // Mark read for master
+  db.ref('master_admin_chats/' + uid + '/meta/unreadForMaster').set(false).catch(() => {});
+  
+  ACTIVE_CHAT_UNSUB = db.ref('master_admin_chats/' + uid + '/messages').limitToLast(120);
+  ACTIVE_CHAT_UNSUB.on('value', snap => {
+    const val = snap.val() || {};
+    ACTIVE_CHAT_MSGS = Object.entries(val).map(([id, d]) => ({ id, ...d })).sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
+    if (cur === 'chat' && SEL_CHAT_ADMIN === uid) {
+      draw();
+      setTimeout(() => {
+        const b = $('master-chat-body');
+        if (b) b.scrollTop = b.scrollHeight;
+      }, 50);
+    }
+  });
+}
+
+async function sendMasterChatReply(e) {
+  if (e) e.preventDefault();
+  const inp = $('master-chat-reply-input');
+  if (!inp) return;
+  const text = inp.value.trim();
+  if (!text || !SEL_CHAT_ADMIN) return;
+
+  const uid = SEL_CHAT_ADMIN;
+  try {
+    await db.ref('master_admin_chats/' + uid + '/messages').push({
+      sender: 'MASTER',
+      senderName: 'Master Administrator',
+      senderEmail: (auth.currentUser && auth.currentUser.email) || 'Master',
+      text: text,
+      timestamp: TS,
+      read: false
+    });
+    await db.ref('master_admin_chats/' + uid + '/meta').update({
+      lastMessage: text,
+      lastTimestamp: TS,
+      lastSender: 'MASTER',
+      unreadForMaster: false,
+      unreadForAdmin: true
+    });
+    inp.value = '';
+    inp.focus();
+  } catch (err) {
+    toast('মেসেজ পাঠানো ব্যর্থ: ' + err.message);
+  }
+}
+
+function initMasterChatGlobalListener() {
+  db.ref('master_admin_chats').on('value', snap => {
+    const val = snap.val() || {};
+    let totalUnread = 0;
+    CHAT_METAS = {};
+    Object.entries(val).forEach(([uid, data]) => {
+      const meta = data.meta || {};
+      CHAT_METAS[uid] = meta;
+      if (meta.unreadForMaster === true) totalUnread++;
+    });
+    const unreadEl = $('nav-chat-unread');
+    if (unreadEl) {
+      unreadEl.textContent = totalUnread > 9 ? '9+' : totalUnread;
+      unreadEl.style.display = totalUnread > 0 ? 'inline-block' : 'none';
+    }
+    if (cur === 'chat') draw();
+  });
+}
+
 function attachAll(){
+ initMasterChatGlobalListener();
  on(db.ref('master/balance'),s=>{if(s.val()===null)db.ref('master/balance').set(0);MB=+s.val()||0;draw()});
  on(db.ref('admins'),s=>{ADM=s.val()||{};draw()});
  on(db.ref('balanceRequests').limitToLast(100),s=>{REQ=s.val()||{};draw()});
@@ -663,7 +764,7 @@ function copyTxt(t){
 function draw(){if(!started)return;
  const A=Object.entries(ADM),P=Object.entries(REQ).filter(([k,r])=>r.status==='pending');
  $('mb').textContent=$('s1').textContent=fmt(MB);$('s2').textContent=fmt(A.reduce((s,[k,a])=>s+(+a.balance||0),0));$('s3').textContent=A.length;$('s4').textContent=P.length;
- drawTn();['admins','reqs','led','games','players','act','feat','tenants','guide'].forEach(t=>$('t-'+t).className=(t===cur||(t==='admins'&&cur==='admin'))?'on':'');let h='';
+ drawTn();['admins','reqs','led','games','players','act','feat','promo','chat','tenants','guide'].forEach(t=>$('t-'+t).className=(t===cur||(t==='admins'&&cur==='admin'))?'on':'');let h='';
  if(cur==='admins'){
   h=`<div class="cd" style="margin-bottom:12px;background:var(--in);border:1px solid var(--bg2)">
    <b style="font-size:16px;color:var(--gold);display:flex;align-items:center;gap:6px">👑 ১) সরাসরি নতুন ইউজার অ্যাডমিন তৈরি করুন</b>

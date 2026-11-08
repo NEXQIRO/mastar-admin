@@ -6244,11 +6244,12 @@
           <td>
             <div style="display:flex; flex-direction:column; gap:4px;">
               <div><span class="badge ${wdStatusMeta(w.status).cls}">${wdStatusMeta(w.status).label}</span></div>
-              <div style="display:inline-flex; gap:4px; flex-wrap:wrap; margin-top:2px;">
-                <button type="button" class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:0.68rem; border-color:#8b5cf6; color:#a78bfa;" onclick="openTurnoverBonusModal('${w.uid}')" title="বোনাস ও টার্নওভার">🎁 BONUS / TURNOVER</button>
-                <button type="button" class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:0.68rem; border-color:#38bdf8; color:#38bdf8;" onclick="openPlayerSecurityModal('${w.uid}')" title="প্লেয়ার ট্র্যাকিং ও সিকিউরিটি">🛡️ TRACKING</button>
-                <button type="button" class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:0.68rem; border-color:#4ade80; color:#4ade80;" onclick="openPlayerFinancialReport('${w.uid}')" title="আর্থিক রিপোর্ট ও অডিট">📊 REPORT</button>
-              </div>
+              <select class="action-dropdown-select" onchange="npWdExtraMenu(this, '${w.uid}')" title="আরও অপশন" style="font-size:0.72rem; padding:3px 6px; max-width:150px;">
+                <option value="" disabled selected>⋯ আরও অপশন ▾</option>
+                <option value="bonus">🎁 BONUS / TURNOVER</option>
+                <option value="tracking">🛡️ TRACKING</option>
+                <option value="report">📊 REPORT</option>
+              </select>
             </div>
           </td>
           <td style="text-align: right; white-space: nowrap;">
@@ -6306,6 +6307,14 @@
         case 'Rejected':   return { label: '✕ বাতিল', cls: 'badge-rejected' };
         default:           return { label: status || '—', cls: 'badge-rejected' };
       }
+    }
+
+    function npWdExtraMenu(sel, uid) {
+      var v = sel.value;
+      sel.selectedIndex = 0;
+      if (v === 'bonus') openTurnoverBonusModal(uid);
+      else if (v === 'tracking') openPlayerSecurityModal(uid);
+      else if (v === 'report') openPlayerFinancialReport(uid);
     }
 
     function handleWithdrawalActionDropdown(sel, withId) {

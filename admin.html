@@ -3989,12 +3989,11 @@
 
     try {
       if (typeof firebase !== 'undefined') {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(FIREBASE_CONFIG);
-        }
-        firebaseApp = firebase.app();
-        auth = firebase.auth();
-        db = firebase.database();
+        // ইউজার অ্যাডমিনের জন্য আলাদা নামের Firebase অ্যাপ: master.html-এর লগইন সেশনের সাথে মিশে যাবে না
+        // (আগে দুই প্যানেলের সেশন এক ছিল, তাই একটাতে লগইন করলে অন্যটা লগআউট করে দিত)
+        firebaseApp = firebase.apps.find(function (a) { return a.name === 'npUserAdmin'; }) || firebase.initializeApp(FIREBASE_CONFIG, 'npUserAdmin');
+        auth = firebaseApp.auth();
+        db = firebaseApp.database();
       }
     } catch (e) {
       console.warn("Firebase Init Exception in Admin:", e);
@@ -9386,9 +9385,9 @@ await db.ref('notices/not_2').set({
     async function registerFcm() {
       try {
         if (!FCM_VAPID_KEY || !swReg || !window.firebase || !firebase.messaging || !firebase.messaging.isSupported()) return;
-        var u = firebase.auth().currentUser; if (!u) return;
-        var token = await firebase.messaging().getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
-        if (token) await firebase.database().ref('adminFcmTokens/' + u.uid + '/' + token).set({ t: Date.now(), ua: (navigator.userAgent || '').slice(0, 90) });
+        var u = auth.currentUser; if (!u) return;
+        var token = await firebase.messaging(firebaseApp).getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
+        if (token) await db.ref('adminFcmTokens/' + u.uid + '/' + token).set({ t: Date.now(), ua: (navigator.userAgent || '').slice(0, 90) });
       } catch (e) { console.warn('FCM token error:', e); }
     }
 
@@ -9401,7 +9400,7 @@ await db.ref('notices/not_2').set({
       });
     }
     try {
-      firebase.auth().onAuthStateChanged(function (u) {
+      auth.onAuthStateChanged(function (u) {
         if (!u) return;
         if (hasNotif && Notification.permission === 'granted') registerFcm();
         var v = new URLSearchParams(location.search).get('view');
@@ -9579,144 +9578,175 @@ await db.ref('notices/not_2').set({
 })();
 </script>
 
-  <!-- ==================== MASTER ADMIN DIRECT CHAT MODAL (Requirement 5) ==================== -->
-  <div id="modal-master-chat" class="modal-backdrop" style="display:none; z-index:99999;">
-    <div class="modal-card" style="max-width: 520px; width: 95vw; height: 600px; max-height: 85vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; background: #151310; border: 1px solid #B97800; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
-      <div style="padding: 14px 18px; background: linear-gradient(135deg, #1D1A14, #2A2418); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #F59E0B, #B97800); display: grid; place-items: center; color: #000; font-weight: 800; font-size: 1.1rem;">👑</div>
-          <div>
-            <div style="font-weight: 700; color: #F5EFE0; font-size: 1rem;">NEXQIRO Master Administrator</div>
-            <div style="font-size: 0.75rem; color: #4ADE80; display: flex; align-items: center; gap: 5px;">
-              <span style="width: 7px; height: 7px; border-radius: 50%; background: #4ADE80; display: inline-block;"></span> লাইভ অ্যাডমিন সাপোর্ট ও চ্যাট
-            </div>
-          </div>
+  <!-- ==================== MASTER ADMIN CHAT (Support Center theme) ==================== -->
+  <style>
+    #npc-overlay { position: fixed; inset: 0; z-index: 2147483000; display: none; background: rgba(15, 10, 20, 0.55); font-family: "Noto Sans Bengali", "Hind Siliguri", "Segoe UI", Arial, sans-serif; color: #202436; }
+    #npc-overlay.npc-open { display: block; }
+    #npc-overlay, #npc-overlay * { box-sizing: border-box; min-width: 0; }
+    #npc-overlay .npc-app { width: 100%; max-width: 620px; height: 100vh; height: 100dvh; margin: 0 auto; background: #fff; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    @media (min-width: 700px) { #npc-overlay { padding: 18px 0; } #npc-overlay .npc-app { height: calc(100dvh - 36px); border-radius: 18px; box-shadow: 0 8px 28px rgba(25, 30, 55, 0.25); } }
+    #npc-overlay .npc-header { flex: 0 0 auto; min-height: 78px; padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top, 0px)); display: flex; align-items: center; gap: 12px; color: #fff; background: linear-gradient(135deg, #f06292, #c2185b); }
+    #npc-overlay .npc-logo { width: 44px; height: 44px; flex: 0 0 44px; display: grid; place-items: center; border-radius: 13px; background: rgba(255, 255, 255, 0.17); border: 1px solid rgba(255, 255, 255, 0.4); font-size: 13px; font-weight: 900; color: #fff; }
+    #npc-overlay .npc-hinfo { flex: 1; }
+    #npc-overlay .npc-hinfo h1 { margin: 0 0 5px; font-size: 15px; line-height: 1.5; font-weight: 850; color: #fff; font-family: inherit; letter-spacing: 0; text-transform: none; }
+    #npc-overlay .npc-hinfo p { margin: 0; font-size: 11px; line-height: 1.5; opacity: 0.92; color: #fff; }
+    #npc-overlay .npc-x { flex: 0 0 auto; width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 50%; background: rgba(255, 255, 255, 0.15); color: #fff; font-size: 16px; line-height: 1; cursor: pointer; }
+    #npc-overlay .npc-officer { flex: 0 0 auto; padding: 12px 16px; display: flex; align-items: center; gap: 11px; border-bottom: 1px solid #e8eaf1; background: #fff; }
+    #npc-overlay .npc-avwrap { position: relative; width: 49px; height: 49px; flex: 0 0 49px; }
+    #npc-overlay .npc-avatar { display: block; width: 49px; height: 49px; border-radius: 50%; object-fit: cover; border: 2px solid #f3b4cc; background: #fff0f6; }
+    #npc-overlay .npc-avfb { display: none; width: 49px; height: 49px; border-radius: 50%; place-items: center; border: 2px solid #f3b4cc; background: #fff0f6; font-size: 22px; }
+    #npc-overlay .npc-dot { position: absolute; right: 0; bottom: 0; width: 13px; height: 13px; background: #18a968; border: 2px solid #fff; border-radius: 50%; }
+    #npc-overlay .npc-oinfo { flex: 1; }
+    #npc-overlay .npc-oinfo h2 { margin: 0 0 4px; font-size: 13px; color: #202436; font-family: inherit; letter-spacing: 0; text-transform: none; }
+    #npc-overlay .npc-ver { color: #168bd2; }
+    #npc-overlay .npc-oinfo p { color: #18a968; margin: 0; font-size: 11px; }
+    #npc-overlay .npc-olabel { flex: 0 0 auto; font-size: 10px; line-height: 1.7; color: #7b8194; text-align: right; }
+    #npc-overlay .npc-olabel strong { display: block; font-size: 11px; color: #202436; margin-bottom: 3px; }
+    #npc-overlay .npc-chat { flex: 1 1 0; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; padding: 0 12px 14px; background: radial-gradient(circle at 5% 5%, #fceaf1, transparent 32%), #fafbfe; }
+    #npc-overlay .npc-div { text-align: center; margin: 16px 0 18px; }
+    #npc-overlay .npc-div span { display: inline-block; max-width: 100%; padding: 5px 12px; font-size: 10px; color: #7b8194; border: 1px solid #e8eaf1; background: #fff; border-radius: 20px; }
+    #npc-overlay .npc-msg { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px; }
+    #npc-overlay .npc-msg.npc-me { justify-content: flex-end; }
+    #npc-overlay .npc-mav { width: 28px; height: 28px; flex: 0 0 28px; display: grid; place-items: center; border-radius: 50%; border: 1px solid #f1c5d6; background: #fff0f6; font-size: 14px; }
+    #npc-overlay .npc-bub { max-width: 86%; padding: 10px 12px; border-radius: 15px 15px 15px 4px; background: #fff; color: #202436; border: 1px solid #e8eaf1; font-size: 13px; line-height: 1.75; overflow-wrap: anywhere; white-space: pre-wrap; }
+    #npc-overlay .npc-me .npc-bub { color: #fff; background: #e91e63; border-color: #e91e63; border-radius: 15px 15px 4px 15px; }
+    #npc-overlay .npc-time { display: block; text-align: right; font-size: 9px; opacity: 0.62; margin-top: 4px; }
+    #npc-overlay .npc-bar { flex: 0 0 auto; display: flex; align-items: flex-end; gap: 9px; padding: 9px 12px; padding-bottom: max(9px, env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 1px solid #e8eaf1; margin: 0; }
+    #npc-overlay .npc-bar textarea { flex: 1; display: block; width: auto; min-height: 44px; max-height: 120px; padding: 11px 12px; margin: 0; border: 1px solid #dfe2eb; border-radius: 22px; background: #fff; color: #202436; outline: none; resize: none; font: inherit; font-size: 16px; line-height: 1.4; box-shadow: none; }
+    #npc-overlay .npc-bar textarea:focus { border-color: #e91e63; box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.08); }
+    #npc-overlay .npc-bar button { flex: 0 0 44px; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: #e91e63; color: #fff; font-size: 18px; line-height: 1; cursor: pointer; }
+    #npc-overlay .npc-bar button:active { background: #c2185b; }
+    #npc-overlay .npc-bar button:disabled { opacity: 0.6; cursor: not-allowed; }
+  </style>
+  <div id="npc-overlay" role="dialog" aria-modal="true" aria-label="Master Admin Chat">
+    <div class="npc-app">
+      <header class="npc-header">
+        <div class="npc-logo">NP</div>
+        <div class="npc-hinfo"><h1>NP TOURNAMENT BD</h1><p>Master Admin Support</p></div>
+        <button type="button" class="npc-x" onclick="closeMasterChatModal()" aria-label="বন্ধ করুন">✕</button>
+      </header>
+      <section class="npc-officer">
+        <div class="npc-avwrap">
+          <img class="npc-avatar" alt="" width="49" height="49" decoding="async" src="https://i.postimg.cc/wMzTy1DT/portrait-of-a-woman-working-in-customer-service-at-a-call-center-white-backgroud-generative-ai-free.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+          <span class="npc-avfb">👑</span>
+          <span class="npc-dot"></span>
         </div>
-        <button type="button" class="modal-close" onclick="closeMasterChatModal()" style="background:transparent; border:none; color:var(--text-muted); font-size:22px; cursor:pointer; padding: 4px 8px;">✕</button>
-      </div>
-
-      <div id="master-chat-messages" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: rgba(0,0,0,0.3);">
-        <div style="text-align: center; color: var(--text-dim); font-size: 0.8rem; margin: auto;">লোড হচ্ছে...</div>
-      </div>
-
-      <form id="master-chat-form" onsubmit="handleSendMasterChatMessage(event)" style="padding: 12px 14px; background: #1D1A14; border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center;">
-        <input type="text" id="master-chat-input" placeholder="মাস্টার অ্যাডমিনকে মেসেজ লিখুন..." maxlength="1000" autocomplete="off" style="flex: 1; background: #0F0E0C; border: 1px solid var(--border-color); color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; font-family: inherit;">
-        <button type="submit" id="master-chat-send-btn" class="btn btn-primary" style="background: linear-gradient(135deg, #F59E0B, #B97800); color: #000; font-weight: 700; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-          <span>পাঠান</span>
-          <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; fill: currentColor;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-        </button>
+        <div class="npc-oinfo"><h2>Master Administrator <span class="npc-ver">✓</span></h2><p>● Online Support</p></div>
+        <div class="npc-olabel"><strong>Support Desk</strong>আমরা পাশে আছি</div>
+      </section>
+      <main class="npc-chat" id="npc-msgs"></main>
+      <form class="npc-bar" id="master-chat-form" onsubmit="handleSendMasterChatMessage(event)">
+        <textarea id="master-chat-input" rows="1" maxlength="1000" autocomplete="off" placeholder="মেসেজ লিখুন..."></textarea>
+        <button type="submit" id="master-chat-send-btn" aria-label="পাঠান">➤</button>
       </form>
     </div>
   </div>
 
 <script>
+  // ==================== MASTER ADMIN CHAT CLIENT LOGIC ====================
+  // পেজের আগের কোনো খোলা <div> (যেমন modal-game) এর ভেতরে আটকে থাকলে চ্যাট দেখা যেত না, তাই সরাসরি body-তে সরানো হলো
+  (function moveChatToBody() {
+    var o = document.getElementById('npc-overlay');
+    if (o && o.parentElement !== document.body) document.body.appendChild(o);
+  })();
 
-  // ==================== MASTER ADMIN DIRECT CHAT CLIENT LOGIC ====================
   var _masterChatRef = null;
   var _masterChatModalOpen = false;
   var _masterChatUnreadCount = 0;
+
+  function npcEsc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function npcUid() {
+    try {
+      return (STATE && STATE.adminUser && STATE.adminUser.uid) || (auth && auth.currentUser && auth.currentUser.uid) || '';
+    } catch (e) { return ''; }
+  }
 
   function openMasterChatModal() {
     _masterChatModalOpen = true;
     _masterChatUnreadCount = 0;
     updateMasterChatBadges();
-    var m = document.getElementById('modal-master-chat');
-    if (m) m.style.display = 'flex';
-    initMasterChatListener();
+    var m = document.getElementById('npc-overlay');
+    if (m) { m.classList.add('npc-open'); m.style.display = 'block'; }
+    try { initMasterChatListener(); } catch (e) { console.warn('chat listener', e); }
     markMasterChatRead();
-    setTimeout(function() {
+    setTimeout(function () {
       var inp = document.getElementById('master-chat-input');
       if (inp) inp.focus();
       scrollMasterChatToBottom();
-    }, 200);
+    }, 150);
   }
 
   function closeMasterChatModal() {
     _masterChatModalOpen = false;
-    var m = document.getElementById('modal-master-chat');
-    if (m) m.style.display = 'none';
+    var m = document.getElementById('npc-overlay');
+    if (m) { m.classList.remove('npc-open'); m.style.display = 'none'; }
   }
 
   function updateMasterChatBadges() {
     var dot = document.getElementById('master-chat-badge-dot');
     var sBadge = document.getElementById('sidebar-master-chat-badge');
-    if (dot) {
-      dot.innerText = _masterChatUnreadCount > 9 ? '9+' : _masterChatUnreadCount;
-      dot.style.display = _masterChatUnreadCount > 0 ? 'inline-block' : 'none';
-    }
-    if (sBadge) {
-      sBadge.innerText = _masterChatUnreadCount > 9 ? '9+' : _masterChatUnreadCount;
-      sBadge.style.display = _masterChatUnreadCount > 0 ? 'inline-block' : 'none';
-    }
+    var txt = _masterChatUnreadCount > 9 ? '9+' : String(_masterChatUnreadCount);
+    if (dot) { dot.innerText = txt; dot.style.display = _masterChatUnreadCount > 0 ? 'inline-block' : 'none'; }
+    if (sBadge) { sBadge.innerText = txt; sBadge.style.display = _masterChatUnreadCount > 0 ? 'inline-block' : 'none'; }
   }
 
   function scrollMasterChatToBottom() {
-    var c = document.getElementById('master-chat-messages');
+    var c = document.getElementById('npc-msgs');
     if (c) c.scrollTop = c.scrollHeight;
+  }
+
+  function npcRender(entries) {
+    var c = document.getElementById('npc-msgs');
+    if (!c) return;
+    var html = '<div class="npc-div"><span>NP TOURNAMENT BD • SUPPORT</span></div>';
+    entries.forEach(function (it) {
+      var m = it[1] || {};
+      var mine = (m.sender === 'USER_ADMIN' || m.sender === 'ADMIN');
+      var t = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' }) : '';
+      var bub = '<div class="npc-bub">' + npcEsc(m.text) + '<span class="npc-time">' + t + '</span></div>';
+      html += mine
+        ? '<div class="npc-msg npc-me">' + bub + '</div>'
+        : '<div class="npc-msg"><span class="npc-mav">👑</span>' + bub + '</div>';
+    });
+    c.innerHTML = html;
+    scrollMasterChatToBottom();
   }
 
   function initMasterChatListener() {
     if (!db) return;
-    var uid = (STATE.adminUser && STATE.adminUser.uid) || (auth.currentUser && auth.currentUser.uid);
+    var uid = npcUid();
     if (!uid) return;
     if (_masterChatRef) return; // already listening
 
     _masterChatRef = db.ref('master_admin_chats/' + uid + '/messages').limitToLast(120);
-    _masterChatRef.on('value', function(snapshot) {
+    _masterChatRef.on('value', function (snapshot) {
       var val = snapshot.val() || {};
-      var entries = Object.entries(val).sort(function(a, b) { return (a[1].timestamp || 0) - (b[1].timestamp || 0); });
-      var container = document.getElementById('master-chat-messages');
-      if (!container) return;
+      var entries = Object.entries(val).sort(function (a, b) { return (a[1].timestamp || 0) - (b[1].timestamp || 0); });
+      npcRender(entries);
 
-      if (entries.length === 0) {
-        container.innerHTML = '<div style="text-align: center; color: var(--text-dim); font-size: 0.85rem; margin: auto; padding: 20px;">' +
-          '<div style="font-size: 2rem; margin-bottom: 8px;">👑</div>' +
-          'মাস্টার অ্যাডমিনের সাথে আপনার সরাসরি যোগাযোগ চ্যানেল।<br>যেকোনো সমস্যা, ব্যালেন্স অথবা সিস্টেম সংক্রান্ত সাহায্য চাইতে নিচে মেসেজ লিখুন।' +
-          '</div>';
-        return;
-      }
-
-      var html = '';
       var newIncoming = false;
-
-      entries.forEach(function(item) {
-        var msg = item[1];
+      entries.forEach(function (item) {
+        var msg = item[1] || {};
         var isMe = (msg.sender === 'USER_ADMIN' || msg.sender === 'ADMIN');
-        var timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' }) : '';
-
-        if (!isMe && !_masterChatModalOpen && msg.read !== true) {
-          newIncoming = true;
-        }
-
-        if (isMe) {
-          html += '<div style="display: flex; flex-direction: column; align-items: flex-end; margin-bottom: 6px;">' +
-            '<div style="max-width: 80%; background: linear-gradient(135deg, #F59E0B, #D97706); color: #000; font-weight: 600; padding: 9px 13px; border-radius: 12px 12px 2px 12px; font-size: 0.88rem; word-break: break-word; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">' +
-            escapeHtml(msg.text || '') +
-            '</div>' +
-            '<div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 3px;">' + timeStr + ' · আপনি</div>' +
-            '</div>';
-        } else {
-          html += '<div style="display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 6px;">' +
-            '<div style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.68rem; color: #a78bfa; margin-bottom: 2px;">' +
-            '<span>👑 Master Administrator</span>' +
-            '</div>' +
-            '<div style="max-width: 80%; background: #26211A; color: #F5EFE0; border: 1px solid rgba(245, 158, 11, 0.3); padding: 9px 13px; border-radius: 12px 12px 12px 2px; font-size: 0.88rem; word-break: break-word; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">' +
-            escapeHtml(msg.text || '') +
-            '</div>' +
-            '<div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 3px;">' + timeStr + '</div>' +
-            '</div>';
-        }
+        if (!isMe && msg.read !== true) newIncoming = true;
       });
 
-      container.innerHTML = html;
-      scrollMasterChatToBottom();
-
-      if (newIncoming) {
+      if (_masterChatModalOpen) {
+        if (newIncoming) markMasterChatRead();
+      } else if (newIncoming) {
         _masterChatUnreadCount++;
         updateMasterChatBadges();
-        playNotificationSound();
-        showToast('💬 মাস্টার অ্যাডমিন থেকে নতুন মেসেজ এসেছে!', 'info');
+        try { playNotificationSound(); } catch (e) {}
+        try { showToast('💬 মাস্টার অ্যাডমিন থেকে নতুন মেসেজ এসেছে!', 'info'); } catch (e) {}
       }
+    }, function (err) {
+      try { showToast('চ্যাট লোড ব্যর্থ: ' + err.message, 'error'); } catch (e) {}
+      _masterChatRef = null;
     });
   }
 
@@ -9728,17 +9758,16 @@ await db.ref('notices/not_2').set({
     var text = inp.value.trim();
     if (!text) return;
 
-    var uid = (STATE.adminUser && STATE.adminUser.uid) || (auth.currentUser && auth.currentUser.uid);
+    var uid = npcUid();
     var email = (STATE.adminUser && STATE.adminUser.email) || (auth.currentUser && auth.currentUser.email) || 'User Admin';
     var name = (STATE.adminUser && STATE.adminUser.name) || email;
-    if (!uid) { showToast('লগইন তথ্য পাওয়া যায়নি', 'error'); return; }
+    if (!uid) { showToast('লগইন তথ্য পাওয়া যায়নি', 'error'); return; }
 
     var btn = document.getElementById('master-chat-send-btn');
     if (btn) btn.disabled = true;
 
     try {
-      var newMsgRef = db.ref('master_admin_chats/' + uid + '/messages').push();
-      await newMsgRef.set({
+      await db.ref('master_admin_chats/' + uid + '/messages').push({
         sender: 'USER_ADMIN',
         senderName: name,
         senderEmail: email,
@@ -9746,8 +9775,6 @@ await db.ref('notices/not_2').set({
         timestamp: firebase.database.ServerValue.TIMESTAMP,
         read: false
       });
-
-      // Update chat meta
       await db.ref('master_admin_chats/' + uid + '/meta').update({
         adminUid: uid,
         adminName: name,
@@ -9758,10 +9785,11 @@ await db.ref('notices/not_2').set({
         unreadForMaster: true,
         unreadForAdmin: false
       });
-
       inp.value = '';
+      inp.style.height = '';
       inp.focus();
       scrollMasterChatToBottom();
+      try { initMasterChatListener(); } catch (e2) {}
     } catch (err) {
       showToast('মেসেজ পাঠানো ব্যর্থ: ' + err.message, 'error');
     } finally {
@@ -9771,17 +9799,17 @@ await db.ref('notices/not_2').set({
 
   function markMasterChatRead() {
     try {
-      var uid = (STATE.adminUser && STATE.adminUser.uid) || (auth.currentUser && auth.currentUser.uid);
+      var uid = npcUid();
       if (!db || !uid) return;
       var base = 'master_admin_chats/' + uid;
-      db.ref(base + '/messages').limitToLast(120).once('value').then(function(s) {
+      db.ref(base + '/messages').limitToLast(120).once('value').then(function (s) {
         var u = {};
-        s.forEach(function(c) { var m = c.val(); if (m && m.sender === 'MASTER' && m.read !== true) u[c.key + '/read'] = true; });
+        s.forEach(function (c) { var m = c.val(); if (m && m.sender === 'MASTER' && m.read !== true) u[c.key + '/read'] = true; });
         if (Object.keys(u).length) {
-          db.ref(base + '/messages').update(u).catch(function() {});
-          db.ref(base + '/meta/unreadForAdmin').set(false).catch(function() {});
+          db.ref(base + '/messages').update(u).catch(function () {});
+          db.ref(base + '/meta/unreadForAdmin').set(false).catch(function () {});
         }
-      }).catch(function() {});
+      }).catch(function () {});
     } catch (e) {}
   }
 
@@ -9789,11 +9817,12 @@ await db.ref('notices/not_2').set({
     try { if (_masterChatRef) _masterChatRef.off(); } catch (e) {}
     _masterChatRef = null;
     _masterChatUnreadCount = 0;
+    closeMasterChatModal();
     updateMasterChatBadges();
   }
 
   if (typeof window.playNotificationSound !== 'function') {
-    window.playNotificationSound = function() {
+    window.playNotificationSound = function () {
       try { if (typeof playRequestAlertSound === 'function') playRequestAlertSound('deposit'); } catch (e) {}
     };
   }
@@ -9801,18 +9830,31 @@ await db.ref('notices/not_2').set({
   // লগইন হলে চ্যাট লিসেনার চালু (নতুন মেসেজ এলে ব্যাজ/সাউন্ড)
   (function waitChatLogin() {
     var tries = 0;
-    var t = setInterval(function() {
+    var t = setInterval(function () {
       tries++;
-      if (STATE && STATE.adminUser && STATE.adminUser.uid && db) { clearInterval(t); try { initMasterChatListener(); } catch (e) {} }
+      if (npcUid() && db) { clearInterval(t); try { initMasterChatListener(); } catch (e) {} }
       else if (tries > 120) clearInterval(t);
     }, 1000);
   })();
 
-  window.npTriggerInstall = function() {
+  // Enter = পাঠান, Shift+Enter = নতুন লাইন; বক্স নিজে বড় হবে
+  (function bindChatInput() {
+    var inp = document.getElementById('master-chat-input');
+    if (!inp) return;
+    inp.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); handleSendMasterChatMessage(); }
+    });
+    inp.addEventListener('input', function () {
+      inp.style.height = 'auto';
+      inp.style.height = Math.min(inp.scrollHeight, 120) + 'px';
+    });
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && _masterChatModalOpen) closeMasterChatModal(); });
+  })();
+
+  window.npTriggerInstall = function () {
     var btn = document.getElementById('np-install-btn');
     if (btn) btn.click();
   };
-
 </script>
 </body>
 </html>

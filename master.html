@@ -872,7 +872,7 @@ function draw(){if(!started)return;
     </td>
    </tr>`}).join('')+`</table></div>`}
  if(cur==='act'){h=actView()}
- if(cur==='feat'){let g='';h=bonusCard()+`<div class="row"><button class="p" onclick="fAll(true)">সব চালু</button><button class="d" onclick="fAll(false)">সব বন্ধ</button></div><div class="cd" style="margin-bottom:10px"><span>এখানে বন্ধ করা ফিচার User Admin প্যানেলে লুকিয়ে যাবে ও কাজ করবে না। চালু করলে আবার দেখা যাবে ও কাজ করবে।</span></div><div class="sc"><table>`+
+ if(cur==='feat'){let g='';h=`<div class="row"><button class="p" onclick="fAll(true)">সব চালু</button><button class="d" onclick="fAll(false)">সব বন্ধ</button></div><div class="cd" style="margin-bottom:10px"><span>এখানে বন্ধ করা ফিচার User Admin প্যানেলে লুকিয়ে যাবে ও কাজ করবে না। চালু করলে আবার দেখা যাবে ও কাজ করবে।</span></div><div class="sc"><table>`+
   FL.map(([k,gr,l])=>{const on=FEAT[k]!==false,hd=gr!==g?`<tr><th colspan="3" style="color:var(--gold)">${esc(gr)}</th></tr>`:'';g=gr;return hd+`<tr><td>${esc(l)}</td><td><span class="pl ${on?'':'b'}">${on?'চালু':'বন্ধ'}</span></td><td><button class="${on?'d':'p'}" onclick="fSet('${k}',${!on})">${on?'বন্ধ করুন':'চালু করুন'}</button></td></tr>`}).join('')+`</table></div>`}
 
  if(cur==='admin'){const a=ADM[SEL];if(!a){cur='admins';return draw()}

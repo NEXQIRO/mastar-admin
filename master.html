@@ -446,7 +446,7 @@ on(db.ref('adminSettings/depositBonus'),s=>{BON=s.val()||{};draw()});
  on(db.ref('games'),s=>{GAMES=s.val()||{};draw()});
  on(db.ref('users'),s=>{USERS=s.val()||{};draw()});
  on(db.ref('balanceLedger').limitToLast(100),s=>{LED=s.val()||{};draw()})}
-function detachAll(){LST.forEach(r=>{try{r.off()}catch(e){}});LST=[];started=false;ADM={};REQ={};LED={};GAMES={};USERS={};ACT={};MB=0;FEAT={};SEL='';UAON=true;BON={}}
+function detachAll(){LST.forEach(r=>{try{r.off()}catch(e){}});LST=[];started=false;ADM={};REQ={};LED={};GAMES={};USERS={};ACT={};MB=0;FEAT={};SEL='';UAON=true;BON={};AQ='';AFULL={}}
 function bindAuth(){if(AUTHUNSUB)AUTHUNSUB();const my=TID;
  AUTHUNSUB=auth.onAuthStateChanged(async u=>{if(my!==TID)return;
   if(!u){$('lt').textContent=TID==='main'?'NEXQIRO':'লগইন: '+TNAME;$('lback').style.display=TID==='main'?'none':'block';$('login').style.display='flex';$('app').style.display='none';return}
@@ -482,6 +482,39 @@ function delTenant(id){if(!confirm('এই প্রজেক্ট তালি
 bindAuth();
 function tab(t){cur=t;if(t==='act')loadAct();draw()}
 async function loadAct(){try{const s=await db.ref('game_sessions').limitToLast(200).once('value');ACT=s.val()||{}}catch(e){toast('অ্যাক্টিভিটি লোড ব্যর্থ: '+e.message)}draw()}
+let AQ='',AFULL={},AT=null;
+function actKey(s){const x=USERS[s.uid]||{};return [s.userName,s.uid,x.name,x.username,x.email,x.phone].map(v=>String(v||'').toLowerCase()).join(' ')}
+function actFocus(){const p=$('aq');if(p){p.focus();p.setSelectionRange(AQ.length,AQ.length)}}
+function actSearch(v){AQ=v;draw();actFocus();clearTimeout(AT);AT=setTimeout(actFetch,400)}
+async function actFetch(){const q=AQ.trim().toLowerCase();if(!q)return;
+ const ids=Object.keys(USERS).filter(u=>{const x=USERS[u]||{};return [u,x.name,x.username,x.email,x.phone].some(f=>String(f||'').toLowerCase().includes(q))}).slice(0,5).filter(u=>!AFULL[u]);
+ if(!ids.length)return;
+ try{await Promise.all(ids.map(async u=>{const r=await db.ref('game_sessions').orderByChild('uid').equalTo(u).limitToLast(500).once('value');AFULL[u]=r.val()||{}}))}catch(e){toast('ইউজারের হিস্ট্রি লোড ব্যর্থ: '+e.message);return}
+ if(cur==='act'&&AQ.trim().toLowerCase()===q){const had=document.activeElement&&document.activeElement.id==='aq';draw();if(had)actFocus()}}
+function actView(){
+ const q=AQ.trim().toLowerCase();
+ const src=Object.assign({},ACT);
+ if(q)Object.values(AFULL).forEach(o=>Object.assign(src,o));
+ let L=Object.entries(src).map(([k,x])=>Object.assign({_k:k},x));
+ if(q)L=L.filter(x=>actKey(x).includes(q));
+ L.sort((a,b)=>(+b.startTime||0)-(+a.startTime||0));
+ const net=x=>typeof x.netWinLoss==='number'?x.netWinLoss:(+x.exitBalance||0)-(+x.entryBalance||0);
+ let top=`<div class="row"><input id="aq" placeholder="ইউজারের নাম/ইউজারনেম/ইমেইল/ফোন/UID লিখে খুঁজুন" value="${esc(AQ)}" oninput="actSearch(this.value)"></div>`;
+ if(q){
+  const uids=[...new Set(L.map(x=>x.uid).filter(Boolean))];
+  let tn=0,w=0,l=0,by={};
+  L.forEach(x=>{const n=net(x);tn+=n;if(n>0)w++;else if(n<0)l++;const g=x.gameName||'-';by[g]=by[g]||{c:0,n:0};by[g].c++;by[g].n+=n});
+  const col=v=>v>=0?'var(--ok)':'var(--er)';
+  let who='<div class="cd"><span>ফলাফল</span><b style="font-size:16px">'+(uids.length?uids.length+' জন ইউজার মিলেছে':'কিছু পাওয়া যায়নি')+'</b></div>',bal='';
+  if(uids.length===1){const u=USERS[uids[0]]||{};
+   who=`<div class="cd"><span>ইউজার</span><b style="font-size:18px">${esc(u.name||(L[0]||{}).userName||'-')}</b><small>${esc(u.email||'-')}<br>${esc(u.phone||'-')} · @${esc(u.username||'-')}<br>UID: ${esc(uids[0])}</small></div>`;
+   bal=`<div class="cd"><span>বর্তমান ব্যালেন্স</span><b>${fmt(u.balance)}</b><small>${esc(u.status||'')}</small></div>`}
+  top+=`<div class="g">${who}${bal}<div class="cd"><span>মোট সেশন</span><b>${L.length}</b></div><div class="cd"><span>মোট নেট (জয়/হার)</span><b style="color:${col(tn)}">${fmt(tn)}</b></div><div class="cd"><span>জয় / হার</span><b>${w} / ${l}</b></div></div>`;
+  const gk=Object.keys(by);
+  if(gk.length)top+=`<div class="sc" style="margin-bottom:10px"><table><tr><th>গেম</th><th>সেশন</th><th>নেট</th></tr>`+gk.map(g=>`<tr><td>${esc(g)}</td><td>${by[g].c}</td><td style="color:${col(by[g].n)}">${fmt(by[g].n)}</td></tr>`).join('')+`</table></div>`;
+ }else top+=`<div class="cd" style="margin-bottom:10px"><span>এখন সর্বশেষ ২০০টি সেশন দেখানো হচ্ছে। কোনো ইউজারের নাম লিখলে তার সব হিস্ট্রি ও হিসাব এখানে আসবে।</span></div>`;
+ const rows=L.map(x=>{const n=net(x);return`<tr><td>${esc(x.userName||(USERS[x.uid]||{}).name||x.uid)}</td><td>${esc(x.gameName||'-')}</td><td>${x.startTime?new Date(x.startTime).toLocaleString('bn-BD'):''}</td><td>${fmt(x.entryBalance)}</td><td>${fmt(x.exitBalance)}</td><td style="color:${n>=0?'var(--ok)':'var(--er)'}">${fmt(n)}</td><td><small>${esc(x.ip||'-')}<br>${esc(x.device||'')}</small></td><td>${esc(x.status||'')}</td></tr>`}).join('');
+ return top+`<div class="sc"><table><tr><th>প্লেয়ার</th><th>গেম</th><th>শুরু</th><th>এন্ট্রি</th><th>এক্সিট</th><th>নেট</th><th>IP/ডিভাইস</th><th>স্ট্যাটাস</th></tr>`+(rows||`<tr><td colspan="8" style="text-align:center;color:var(--mu)">কোনো রেকর্ড পাওয়া যায়নি</td></tr>`)+`</table></div>`}
 async function saveGame(id){const g=id?GAMES[id]:{};
  const name=id?prompt('গেমের নাম:',g.name||''):$('gn').value.trim(),cat=id?prompt('ক্যাটাগরি (Popular Games / Crash Games):',g.category||'Popular Games'):$('gc').value,
  img=id?prompt('ছবির লিংক:',g.image||''):$('gi').value.trim(),url=id?prompt('গেমের লিংক:',g.url||''):$('gu').value.trim();
@@ -838,8 +871,7 @@ function draw(){if(!started)return;
      ${!isAlreadyAdmin?`<button style="background:var(--gold);color:var(--on);font-weight:700;margin-left:4px" onclick="makeAdminFromPlayer('${k}')">👑 অ্যাডমিন বানান</button>`:`<button style="background:var(--in);margin-left:4px" onclick="openAdmin('${k}')">ভিউ অ্যাডমিন</button>`}
     </td>
    </tr>`}).join('')+`</table></div>`}
- if(cur==='act'){h=`<div class="sc"><table><tr><th>প্লেয়ার</th><th>গেম</th><th>শুরু</th><th>এন্ট্রি</th><th>এক্সিট</th><th>নেট</th><th>IP/ডিভাইস</th><th>স্ট্যাটাস</th></tr>`+
-  Object.values(ACT).reverse().map(s=>{const n=typeof s.netWinLoss==='number'?s.netWinLoss:(+s.exitBalance||0)-(+s.entryBalance||0);return`<tr><td>${esc(s.userName||(USERS[s.uid]||{}).name||s.uid)}</td><td>${esc(s.gameName||'-')}</td><td>${s.startTime?new Date(s.startTime).toLocaleString('bn-BD'):''}</td><td>${fmt(s.entryBalance)}</td><td>${fmt(s.exitBalance)}</td><td style="color:${n>=0?'var(--ok)':'var(--er)'}">${fmt(n)}</td><td><small>${esc(s.ip||'-')}<br>${esc(s.device||'')}</small></td><td>${esc(s.status||'')}</td></tr>`}).join('')+`</table></div>`}
+ if(cur==='act'){h=actView()}
  if(cur==='feat'){let g='';h=bonusCard()+`<div class="row"><button class="p" onclick="fAll(true)">সব চালু</button><button class="d" onclick="fAll(false)">সব বন্ধ</button></div><div class="cd" style="margin-bottom:10px"><span>এখানে বন্ধ করা ফিচার User Admin প্যানেলে লুকিয়ে যাবে ও কাজ করবে না। চালু করলে আবার দেখা যাবে ও কাজ করবে।</span></div><div class="sc"><table>`+
   FL.map(([k,gr,l])=>{const on=FEAT[k]!==false,hd=gr!==g?`<tr><th colspan="3" style="color:var(--gold)">${esc(gr)}</th></tr>`:'';g=gr;return hd+`<tr><td>${esc(l)}</td><td><span class="pl ${on?'':'b'}">${on?'চালু':'বন্ধ'}</span></td><td><button class="${on?'d':'p'}" onclick="fSet('${k}',${!on})">${on?'বন্ধ করুন':'চালু করুন'}</button></td></tr>`}).join('')+`</table></div>`}
 

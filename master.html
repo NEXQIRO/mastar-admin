@@ -222,6 +222,57 @@ apply();window.addEventListener('load',function(){setTimeout(apply,150)});window
     .stat-card, .cd { border-radius:10px; }
     .nav-item button.on { box-shadow:inset 3px 0 0 var(--primary) !important; }
     .login-box { box-shadow:0 20px 50px rgba(0,0,0,.85) !important; }
+
+/* ===== Support Center theme: অ্যাডমিন চ্যাট ===== */
+.npm{display:grid;grid-template-columns:320px minmax(0,1fr);height:calc(100vh - 230px);height:calc(100dvh - 230px);min-height:480px;border-radius:16px;overflow:hidden;background:#fff;color:#202436;border:1px solid #e8eaf1;font-family:"Noto Sans Bengali","Hind Siliguri","Segoe UI",Arial,sans-serif}
+.npm,.npm *{box-sizing:border-box;min-width:0}
+.npm-list{display:flex;flex-direction:column;border-right:1px solid #e8eaf1;background:#fff;min-height:0}
+.npm-head{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:78px;color:#fff;background:linear-gradient(135deg,#f06292,#c2185b)}
+.npm-logo{width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border-radius:13px;background:rgba(255,255,255,.17);border:1px solid rgba(255,255,255,.4);font-size:13px;font-weight:900;color:#fff}
+.npm-hi{flex:1}
+.npm-hi b{display:block;margin:0 0 5px;font-size:15px;line-height:1.5;font-weight:850;color:#fff}
+.npm-hi small{display:block;font-size:11px;line-height:1.5;opacity:.92;color:#fff}
+.npm-rows{flex:1 1 0;min-height:0;overflow-y:auto}
+.npm button{font:inherit;cursor:pointer}
+.npm-row{display:flex;align-items:center;gap:11px;width:100%;padding:12px 14px;border:0;border-bottom:1px solid #f0f1f6;background:#fff;color:#202436;text-align:left}
+.npm-row:hover{background:#fff7fa}
+.npm-row.sel{background:#fff0f6}
+.npm-av{width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border-radius:50%;border:2px solid #f3b4cc;background:#fff0f6;color:#c2185b;font-size:17px;font-weight:800}
+.npm-av.sm{width:28px;height:28px;flex:0 0 28px;border-width:1px;font-size:12px}
+.npm-ri{flex:1}
+.npm-ri b{display:block;font-size:13px;color:#202436;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.npm-ri small{display:block;margin-top:3px;font-size:11px;color:#7b8194;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.npm-rm{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px;font-size:10px;color:#7b8194}
+.npm-unread{display:block;width:10px;height:10px;border-radius:50%;background:#e91e63}
+.npm-empty{padding:24px;text-align:center;color:#7b8194;font-size:12px}
+.npm-conv{display:flex;flex-direction:column;min-height:0;background:#fff}
+.npm-back{flex:0 0 auto;display:none;width:36px;height:36px;place-items:center;padding:0;border:1px solid rgba(255,255,255,.5);border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:18px;line-height:1}
+.npm-officer{flex:0 0 auto;display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:1px solid #e8eaf1;background:#fff}
+.npm-officer .npm-av{position:relative}
+.npm-oi{flex:1}
+.npm-oi b{display:block;margin:0 0 4px;font-size:13px;color:#202436;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.npm-oi small{display:block;font-size:11px;color:#18a968;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.npm-body{flex:1 1 0;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;padding:0 12px 14px;background:radial-gradient(circle at 5% 5%,#fceaf1,transparent 32%),#fafbfe}
+.npm-div{text-align:center;margin:16px 0 18px}
+.npm-div span{display:inline-block;max-width:100%;padding:5px 12px;font-size:10px;color:#7b8194;border:1px solid #e8eaf1;background:#fff;border-radius:20px}
+.npm-m{display:flex;gap:8px;align-items:flex-end;margin-bottom:12px}
+.npm-m.me{justify-content:flex-end}
+.npm-b{max-width:86%;padding:10px 12px;border-radius:15px 15px 15px 4px;background:#fff;color:#202436;border:1px solid #e8eaf1;font-size:13px;line-height:1.75;overflow-wrap:anywhere;white-space:pre-wrap}
+.npm-m.me .npm-b{color:#fff;background:#e91e63;border-color:#e91e63;border-radius:15px 15px 4px 15px}
+.npm-t{display:block;text-align:right;font-size:9px;opacity:.62;margin-top:4px}
+.npm-bar{flex:0 0 auto;display:flex;align-items:flex-end;gap:9px;margin:0;padding:9px 12px;background:#fff;border-top:1px solid #e8eaf1}
+.npm-bar textarea{flex:1;display:block;width:auto;min-height:44px;max-height:120px;padding:11px 12px;margin:0;border:1px solid #dfe2eb;border-radius:22px;background:#fff;color:#202436;outline:none;resize:none;font:inherit;font-size:16px;line-height:1.4;box-shadow:none}
+.npm-bar textarea:focus{border-color:#e91e63;box-shadow:0 0 0 3px rgba(233,30,99,.08)}
+.npm-bar button{flex:0 0 44px;width:44px;height:44px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:#e91e63;color:#fff;font-size:18px;line-height:1}
+.npm-bar button:active{background:#c2185b}
+.npm-ph{flex:1;display:flex;flex-direction:column;min-height:0}
+.npm-phb{flex:1;display:grid;place-items:center;background:radial-gradient(circle at 5% 5%,#fceaf1,transparent 32%),#fafbfe;color:#7b8194;font-size:12px;padding:20px;text-align:center}
+@media(max-width:760px){
+ .npm{grid-template-columns:minmax(0,1fr);height:calc(100dvh - 250px)}
+ .npm.has-sel .npm-list{display:none}
+ .npm:not(.has-sel) .npm-conv{display:none}
+ .npm-back{display:grid}
+}
 </style><style>
 /* ---------- Notification (bell / sound / drawer) ---------- */
 .notif-btn{position:relative}
@@ -994,6 +1045,53 @@ function pEdit(k){const p=PROMO[k];if(!p)return;PEDIT=k;PF={name:p.name,min:p.mi
 function pCancel(){PF={};PEDIT='';draw()}
 async function pToggle(k){const p=PROMO[k];if(!p)return;try{await db.ref('depositPromotions/'+k+'/active').set(!p.active);pLog('PROMO_TOGGLE',k,(!p.active)?'ON':'OFF')}catch(e){toast('ব্যর্থ: '+e.message)}}
 async function pDel(k){const p=PROMO[k];if(!p||!confirm('"'+p.name+'" অফারটি ডিলিট করবেন? (আগে দেওয়া বোনাস/টার্নওভার অপরিবর্তিত থাকবে)'))return;try{await db.ref('depositPromotions/'+k).remove();pLog('PROMO_DELETE',k,p.name);toast('অফার ডিলিট হয়েছে')}catch(e){toast('ব্যর্থ: '+e.message)}}
+
+/* ===== অ্যাডমিন চ্যাট (Support Center theme): মাস্টার ↔ ইউজার অ্যাডমিন ===== */
+function npmTime(ts){return ts?new Date(+ts).toLocaleTimeString('bn-BD',{hour:'2-digit',minute:'2-digit'}):''}
+function npmInit(n){return esc((String(n||'?').trim().charAt(0)||'?').toUpperCase())}
+function npmRows(){
+ const rows=[],seen={};
+ Object.keys(ADM).forEach(u=>{const a=ADM[u]||{},m=CHAT_METAS[u]||{};seen[u]=1;rows.push({u,name:a.name||m.adminName||a.email||u,email:a.email||m.adminEmail||'',last:m.lastMessage||'',ts:+m.lastTimestamp||0,unread:m.unreadForMaster===true})});
+ Object.keys(CHAT_METAS).forEach(u=>{if(seen[u])return;const m=CHAT_METAS[u]||{};rows.push({u,name:m.adminName||m.adminEmail||u,email:m.adminEmail||'',last:m.lastMessage||'',ts:+m.lastTimestamp||0,unread:m.unreadForMaster===true})});
+ rows.sort((a,b)=>(b.unread-a.unread)||(b.ts-a.ts)||String(a.name).localeCompare(String(b.name)));
+ return rows}
+function npmBack(){
+ SEL_CHAT_ADMIN='';
+ if(ACTIVE_CHAT_UNSUB){try{ACTIVE_CHAT_UNSUB.off()}catch(e){}ACTIVE_CHAT_UNSUB=null}
+ ACTIVE_CHAT_MSGS=[];draw()}
+function npmChatHtml(){
+ const rows=npmRows(),sel=SEL_CHAT_ADMIN,row=rows.find(r=>r.u===sel);
+ const list=rows.length?rows.map(r=>`<button type="button" class="npm-row${r.u===sel?' sel':''}" onclick="selectChatAdmin('${esc(r.u)}')"><span class="npm-av">${npmInit(r.name)}</span><span class="npm-ri"><b>${esc(r.name)}</b><small>${esc(r.last||r.email||'')}</small></span><span class="npm-rm">${r.ts?esc(npmTime(r.ts)):''}${r.unread?'<i class="npm-unread"></i>':''}</span></button>`).join(''):`<div class="npm-empty">কোনো অ্যাডমিন নেই</div>`;
+ let conv;
+ if(sel&&row){
+  const msgs=ACTIVE_CHAT_MSGS.map(m=>{const t=esc(npmTime(m.timestamp)),b=`<div class="npm-b">${esc(m.text)}<span class="npm-t">${t}</span></div>`;return m.sender==='MASTER'?`<div class="npm-m me">${b}</div>`:`<div class="npm-m"><span class="npm-av sm">${npmInit(row.name)}</span>${b}</div>`}).join('');
+  conv=`<div class="npm-head"><button type="button" class="npm-back" onclick="npmBack()" aria-label="ফিরে যান">‹</button><div class="npm-logo">NP</div><div class="npm-hi"><b>NP TOURNAMENT BD</b><small>Admin Support Desk</small></div></div>
+  <div class="npm-officer"><span class="npm-av">${npmInit(row.name)}</span><div class="npm-oi"><b>${esc(row.name)}</b><small>${esc(row.email||'User Admin')}</small></div></div>
+  <div class="npm-body" id="master-chat-body"><div class="npm-div"><span>NP TOURNAMENT BD • SUPPORT</span></div>${msgs}</div>
+  <form class="npm-bar" onsubmit="sendMasterChatReply(event)"><textarea id="master-chat-reply-input" rows="1" maxlength="1000" autocomplete="off" placeholder="রিপ্লাই লিখুন..." onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendMasterChatReply()}"></textarea><button type="submit" aria-label="পাঠান">➤</button></form>`;
+ }else{
+  conv=`<div class="npm-head"><div class="npm-logo">NP</div><div class="npm-hi"><b>NP TOURNAMENT BD</b><small>Admin Support Desk</small></div></div><div class="npm-phb">💬</div>`}
+ return `<div class="npm${sel&&row?' has-sel':''}"><div class="npm-list"><div class="npm-head"><div class="npm-logo">NP</div><div class="npm-hi"><b>ইউজার অ্যাডমিন</b><small>${rows.length} জন</small></div></div><div class="npm-rows">${list}</div></div><div class="npm-conv">${conv}</div></div>`}
+(function(){
+ const _d=draw,CLR={};
+ draw=function(){
+  let val='',had=false,pos=null,scr=null;
+  if(cur==='chat'){
+   const ta=$('master-chat-reply-input');
+   if(ta){val=ta.value;had=document.activeElement===ta;pos=[ta.selectionStart,ta.selectionEnd]}
+   const b=$('master-chat-body');
+   if(b)scr={top:b.scrollTop,end:b.scrollHeight-b.scrollTop-b.clientHeight<80}}
+  _d();
+  if(cur!=='chat'||!started)return;
+  $('v').innerHTML=npmChatHtml();
+  const ta=$('master-chat-reply-input'),b=$('master-chat-body');
+  if(ta&&val){ta.value=val;if(had){ta.focus();try{ta.setSelectionRange(pos[0],pos[1])}catch(e){}}}
+  else if(ta&&had)ta.focus();
+  if(b){if(!scr||scr.end)b.scrollTop=b.scrollHeight;else b.scrollTop=scr.top}
+  const s=SEL_CHAT_ADMIN;
+  if(s&&(CHAT_METAS[s]||{}).unreadForMaster===true&&Date.now()-(CLR[s]||0)>3000){CLR[s]=Date.now();db.ref('master_admin_chats/'+s+'/meta/unreadForMaster').set(false).catch(()=>{})}
+ };
+})();
 </script>
 <script>
 /* ===== শুধু থিম/স্টাইল সহায়ক (ফিচার বা পারমিশনে কোনো পরিবর্তন নেই) ===== */

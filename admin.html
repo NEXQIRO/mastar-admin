@@ -1,3 +1,4 @@
+
   </script>
   <link rel="manifest" href="admin-manifest.json">
   <meta name="theme-color" content="#0A0A0A">
@@ -4621,6 +4622,7 @@
     }
 
     function executeLogoutUI() {
+      try { if (typeof stopMasterChatListener === 'function') stopMasterChatListener(); } catch (e) {}
       document.getElementById('login-overlay').style.display = 'flex';
       document.getElementById('sidebar-email').innerText = '';
     }
@@ -7372,202 +7374,7 @@
         <body>
           ${code}
         
-  <!-- ==================== MASTER ADMIN DIRECT CHAT MODAL (Requirement 5) ==================== -->
-  <div id="modal-master-chat" class="modal-backdrop" style="display:none; z-index:99999;">
-    <div class="modal-card" style="max-width: 520px; width: 95vw; height: 600px; max-height: 85vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; background: #151310; border: 1px solid #B97800; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
-      <div style="padding: 14px 18px; background: linear-gradient(135deg, #1D1A14, #2A2418); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #F59E0B, #B97800); display: grid; place-items: center; color: #000; font-weight: 800; font-size: 1.1rem;">👑</div>
-          <div>
-            <div style="font-weight: 700; color: #F5EFE0; font-size: 1rem;">NEXQIRO Master Administrator</div>
-            <div style="font-size: 0.75rem; color: #4ADE80; display: flex; align-items: center; gap: 5px;">
-              <span style="width: 7px; height: 7px; border-radius: 50%; background: #4ADE80; display: inline-block;"></span> লাইভ অ্যাডমিন সাপোর্ট ও চ্যাট
-            </div>
-          </div>
-        </div>
-        <button type="button" class="modal-close" onclick="closeMasterChatModal()" style="background:transparent; border:none; color:var(--text-muted); font-size:22px; cursor:pointer; padding: 4px 8px;">✕</button>
-      </div>
-
-      <div id="master-chat-messages" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: rgba(0,0,0,0.3);">
-        <div style="text-align: center; color: var(--text-dim); font-size: 0.8rem; margin: auto;">লোড হচ্ছে...</div>
-      </div>
-
-      <form id="master-chat-form" onsubmit="handleSendMasterChatMessage(event)" style="padding: 12px 14px; background: #1D1A14; border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center;">
-        <input type="text" id="master-chat-input" placeholder="মাস্টার অ্যাডমিনকে মেসেজ লিখুন..." maxlength="1000" autocomplete="off" style="flex: 1; background: #0F0E0C; border: 1px solid var(--border-color); color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; font-family: inherit;">
-        <button type="submit" id="master-chat-send-btn" class="btn btn-primary" style="background: linear-gradient(135deg, #F59E0B, #B97800); color: #000; font-weight: 700; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-          <span>পাঠান</span>
-          <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; fill: currentColor;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-        </button>
-      </form>
-    </div>
-  </div>
-
-<script>
-
-  // ==================== MASTER ADMIN DIRECT CHAT CLIENT LOGIC ====================
-  var _masterChatRef = null;
-  var _masterChatModalOpen = false;
-  var _masterChatUnreadCount = 0;
-
-  function openMasterChatModal() {
-    _masterChatModalOpen = true;
-    _masterChatUnreadCount = 0;
-    updateMasterChatBadges();
-    var m = document.getElementById('modal-master-chat');
-    if (m) m.style.display = 'flex';
-    initMasterChatListener();
-    setTimeout(function() {
-      var inp = document.getElementById('master-chat-input');
-      if (inp) inp.focus();
-      scrollMasterChatToBottom();
-    }, 200);
-  }
-
-  function closeMasterChatModal() {
-    _masterChatModalOpen = false;
-    var m = document.getElementById('modal-master-chat');
-    if (m) m.style.display = 'none';
-  }
-
-  function updateMasterChatBadges() {
-    var dot = document.getElementById('master-chat-badge-dot');
-    var sBadge = document.getElementById('sidebar-master-chat-badge');
-    if (dot) {
-      dot.innerText = _masterChatUnreadCount > 9 ? '9+' : _masterChatUnreadCount;
-      dot.style.display = _masterChatUnreadCount > 0 ? 'inline-block' : 'none';
-    }
-    if (sBadge) {
-      sBadge.innerText = _masterChatUnreadCount > 9 ? '9+' : _masterChatUnreadCount;
-      sBadge.style.display = _masterChatUnreadCount > 0 ? 'inline-block' : 'none';
-    }
-  }
-
-  function scrollMasterChatToBottom() {
-    var c = document.getElementById('master-chat-messages');
-    if (c) c.scrollTop = c.scrollHeight;
-  }
-
-  function initMasterChatListener() {
-    if (!db) return;
-    var uid = (STATE.adminUser && STATE.adminUser.uid) || (auth.currentUser && auth.currentUser.uid);
-    if (!uid) return;
-    if (_masterChatRef) return; // already listening
-
-    _masterChatRef = db.ref('master_admin_chats/' + uid + '/messages').limitToLast(120);
-    _masterChatRef.on('value', function(snapshot) {
-      var val = snapshot.val() || {};
-      var entries = Object.entries(val).sort(function(a, b) { return (a[1].timestamp || 0) - (b[1].timestamp || 0); });
-      var container = document.getElementById('master-chat-messages');
-      if (!container) return;
-
-      if (entries.length === 0) {
-        container.innerHTML = '<div style="text-align: center; color: var(--text-dim); font-size: 0.85rem; margin: auto; padding: 20px;">' +
-          '<div style="font-size: 2rem; margin-bottom: 8px;">👑</div>' +
-          'মাস্টার অ্যাডমিনের সাথে আপনার সরাসরি যোগাযোগ চ্যানেল।<br>যেকোনো সমস্যা, ব্যালেন্স অথবা সিস্টেম সংক্রান্ত সাহায্য চাইতে নিচে মেসেজ লিখুন।' +
-          '</div>';
-        return;
-      }
-
-      var html = '';
-      var newIncoming = false;
-
-      entries.forEach(function(item) {
-        var msg = item[1];
-        var isMe = (msg.sender === 'USER_ADMIN' || msg.sender === 'ADMIN');
-        var timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' }) : '';
-
-        if (!isMe && !_masterChatModalOpen && msg.read !== true) {
-          newIncoming = true;
-        }
-
-        if (isMe) {
-          html += '<div style="display: flex; flex-direction: column; align-items: flex-end; margin-bottom: 6px;">' +
-            '<div style="max-width: 80%; background: linear-gradient(135deg, #F59E0B, #D97706); color: #000; font-weight: 600; padding: 9px 13px; border-radius: 12px 12px 2px 12px; font-size: 0.88rem; word-break: break-word; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">' +
-            escapeHtml(msg.text || '') +
-            '</div>' +
-            '<div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 3px;">' + timeStr + ' · আপনি</div>' +
-            '</div>';
-        } else {
-          html += '<div style="display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 6px;">' +
-            '<div style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.68rem; color: #a78bfa; margin-bottom: 2px;">' +
-            '<span>👑 Master Administrator</span>' +
-            '</div>' +
-            '<div style="max-width: 80%; background: #26211A; color: #F5EFE0; border: 1px solid rgba(245, 158, 11, 0.3); padding: 9px 13px; border-radius: 12px 12px 12px 2px; font-size: 0.88rem; word-break: break-word; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">' +
-            escapeHtml(msg.text || '') +
-            '</div>' +
-            '<div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 3px;">' + timeStr + '</div>' +
-            '</div>';
-        }
-      });
-
-      container.innerHTML = html;
-      scrollMasterChatToBottom();
-
-      if (newIncoming) {
-        _masterChatUnreadCount++;
-        updateMasterChatBadges();
-        playNotificationSound();
-        showToast('💬 মাস্টার অ্যাডমিন থেকে নতুন মেসেজ এসেছে!', 'info');
-      }
-    });
-  }
-
-  async function handleSendMasterChatMessage(e) {
-    if (e) e.preventDefault();
-    if (!db) return;
-    var inp = document.getElementById('master-chat-input');
-    if (!inp) return;
-    var text = inp.value.trim();
-    if (!text) return;
-
-    var uid = (STATE.adminUser && STATE.adminUser.uid) || (auth.currentUser && auth.currentUser.uid);
-    var email = (STATE.adminUser && STATE.adminUser.email) || (auth.currentUser && auth.currentUser.email) || 'User Admin';
-    var name = (STATE.adminUser && STATE.adminUser.name) || email;
-    if (!uid) { showToast('লগইন তথ্য পাওয়া যায়নি', 'error'); return; }
-
-    var btn = document.getElementById('master-chat-send-btn');
-    if (btn) btn.disabled = true;
-
-    try {
-      var newMsgRef = db.ref('master_admin_chats/' + uid + '/messages').push();
-      await newMsgRef.set({
-        sender: 'USER_ADMIN',
-        senderName: name,
-        senderEmail: email,
-        text: text,
-        timestamp: firebase.database.ServerValue.TIMESTAMP,
-        read: false
-      });
-
-      // Update chat meta
-      await db.ref('master_admin_chats/' + uid + '/meta').update({
-        adminUid: uid,
-        adminName: name,
-        adminEmail: email,
-        lastMessage: text,
-        lastTimestamp: firebase.database.ServerValue.TIMESTAMP,
-        lastSender: 'USER_ADMIN',
-        unreadForMaster: true,
-        unreadForAdmin: false
-      });
-
-      inp.value = '';
-      inp.focus();
-      scrollMasterChatToBottom();
-    } catch (err) {
-      showToast('মেসেজ পাঠানো ব্যর্থ: ' + err.message, 'error');
-    } finally {
-      if (btn) btn.disabled = false;
-    }
-  }
-
-  window.npTriggerInstall = function() {
-    var btn = document.getElementById('np-install-btn');
-    if (btn) btn.click();
-  };
-
-<\/script>
-</body>
+        </body>
         </html>
       ` : `
         <!DOCTYPE html>
@@ -9770,6 +9577,242 @@ await db.ref('notices/not_2').set({
     db.ref('depositRequests').limitToLast(150).on('value', function (s) { DEPS = []; s.forEach(function (c) { var v = c.val() || {}; if (v.promoId) DEPS.unshift(Object.assign({ id: c.key }, v)); }); render(); }, nop);
   };
 })();
+</script>
+
+  <!-- ==================== MASTER ADMIN DIRECT CHAT MODAL (Requirement 5) ==================== -->
+  <div id="modal-master-chat" class="modal-backdrop" style="display:none; z-index:99999;">
+    <div class="modal-card" style="max-width: 520px; width: 95vw; height: 600px; max-height: 85vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; background: #151310; border: 1px solid #B97800; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
+      <div style="padding: 14px 18px; background: linear-gradient(135deg, #1D1A14, #2A2418); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #F59E0B, #B97800); display: grid; place-items: center; color: #000; font-weight: 800; font-size: 1.1rem;">👑</div>
+          <div>
+            <div style="font-weight: 700; color: #F5EFE0; font-size: 1rem;">NEXQIRO Master Administrator</div>
+            <div style="font-size: 0.75rem; color: #4ADE80; display: flex; align-items: center; gap: 5px;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #4ADE80; display: inline-block;"></span> লাইভ অ্যাডমিন সাপোর্ট ও চ্যাট
+            </div>
+          </div>
+        </div>
+        <button type="button" class="modal-close" onclick="closeMasterChatModal()" style="background:transparent; border:none; color:var(--text-muted); font-size:22px; cursor:pointer; padding: 4px 8px;">✕</button>
+      </div>
+
+      <div id="master-chat-messages" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: rgba(0,0,0,0.3);">
+        <div style="text-align: center; color: var(--text-dim); font-size: 0.8rem; margin: auto;">লোড হচ্ছে...</div>
+      </div>
+
+      <form id="master-chat-form" onsubmit="handleSendMasterChatMessage(event)" style="padding: 12px 14px; background: #1D1A14; border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center;">
+        <input type="text" id="master-chat-input" placeholder="মাস্টার অ্যাডমিনকে মেসেজ লিখুন..." maxlength="1000" autocomplete="off" style="flex: 1; background: #0F0E0C; border: 1px solid var(--border-color); color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; font-family: inherit;">
+        <button type="submit" id="master-chat-send-btn" class="btn btn-primary" style="background: linear-gradient(135deg, #F59E0B, #B97800); color: #000; font-weight: 700; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <span>পাঠান</span>
+          <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; fill: currentColor;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+<script>
+
+  // ==================== MASTER ADMIN DIRECT CHAT CLIENT LOGIC ====================
+  var _masterChatRef = null;
+  var _masterChatModalOpen = false;
+  var _masterChatUnreadCount = 0;
+
+  function openMasterChatModal() {
+    _masterChatModalOpen = true;
+    _masterChatUnreadCount = 0;
+    updateMasterChatBadges();
+    var m = document.getElementById('modal-master-chat');
+    if (m) m.style.display = 'flex';
+    initMasterChatListener();
+    markMasterChatRead();
+    setTimeout(function() {
+      var inp = document.getElementById('master-chat-input');
+      if (inp) inp.focus();
+      scrollMasterChatToBottom();
+    }, 200);
+  }
+
+  function closeMasterChatModal() {
+    _masterChatModalOpen = false;
+    var m = document.getElementById('modal-master-chat');
+    if (m) m.style.display = 'none';
+  }
+
+  function updateMasterChatBadges() {
+    var dot = document.getElementById('master-chat-badge-dot');
+    var sBadge = document.getElementById('sidebar-master-chat-badge');
+    if (dot) {
+      dot.innerText = _masterChatUnreadCount > 9 ? '9+' : _masterChatUnreadCount;
+      dot.style.display = _masterChatUnreadCount > 0 ? 'inline-block' : 'none';
+    }
+    if (sBadge) {
+      sBadge.innerText = _masterChatUnreadCount > 9 ? '9+' : _masterChatUnreadCount;
+      sBadge.style.display = _masterChatUnreadCount > 0 ? 'inline-block' : 'none';
+    }
+  }
+
+  function scrollMasterChatToBottom() {
+    var c = document.getElementById('master-chat-messages');
+    if (c) c.scrollTop = c.scrollHeight;
+  }
+
+  function initMasterChatListener() {
+    if (!db) return;
+    var uid = (STATE.adminUser && STATE.adminUser.uid) || (auth.currentUser && auth.currentUser.uid);
+    if (!uid) return;
+    if (_masterChatRef) return; // already listening
+
+    _masterChatRef = db.ref('master_admin_chats/' + uid + '/messages').limitToLast(120);
+    _masterChatRef.on('value', function(snapshot) {
+      var val = snapshot.val() || {};
+      var entries = Object.entries(val).sort(function(a, b) { return (a[1].timestamp || 0) - (b[1].timestamp || 0); });
+      var container = document.getElementById('master-chat-messages');
+      if (!container) return;
+
+      if (entries.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: var(--text-dim); font-size: 0.85rem; margin: auto; padding: 20px;">' +
+          '<div style="font-size: 2rem; margin-bottom: 8px;">👑</div>' +
+          'মাস্টার অ্যাডমিনের সাথে আপনার সরাসরি যোগাযোগ চ্যানেল।<br>যেকোনো সমস্যা, ব্যালেন্স অথবা সিস্টেম সংক্রান্ত সাহায্য চাইতে নিচে মেসেজ লিখুন।' +
+          '</div>';
+        return;
+      }
+
+      var html = '';
+      var newIncoming = false;
+
+      entries.forEach(function(item) {
+        var msg = item[1];
+        var isMe = (msg.sender === 'USER_ADMIN' || msg.sender === 'ADMIN');
+        var timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' }) : '';
+
+        if (!isMe && !_masterChatModalOpen && msg.read !== true) {
+          newIncoming = true;
+        }
+
+        if (isMe) {
+          html += '<div style="display: flex; flex-direction: column; align-items: flex-end; margin-bottom: 6px;">' +
+            '<div style="max-width: 80%; background: linear-gradient(135deg, #F59E0B, #D97706); color: #000; font-weight: 600; padding: 9px 13px; border-radius: 12px 12px 2px 12px; font-size: 0.88rem; word-break: break-word; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">' +
+            escapeHtml(msg.text || '') +
+            '</div>' +
+            '<div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 3px;">' + timeStr + ' · আপনি</div>' +
+            '</div>';
+        } else {
+          html += '<div style="display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 6px;">' +
+            '<div style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.68rem; color: #a78bfa; margin-bottom: 2px;">' +
+            '<span>👑 Master Administrator</span>' +
+            '</div>' +
+            '<div style="max-width: 80%; background: #26211A; color: #F5EFE0; border: 1px solid rgba(245, 158, 11, 0.3); padding: 9px 13px; border-radius: 12px 12px 12px 2px; font-size: 0.88rem; word-break: break-word; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">' +
+            escapeHtml(msg.text || '') +
+            '</div>' +
+            '<div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 3px;">' + timeStr + '</div>' +
+            '</div>';
+        }
+      });
+
+      container.innerHTML = html;
+      scrollMasterChatToBottom();
+
+      if (newIncoming) {
+        _masterChatUnreadCount++;
+        updateMasterChatBadges();
+        playNotificationSound();
+        showToast('💬 মাস্টার অ্যাডমিন থেকে নতুন মেসেজ এসেছে!', 'info');
+      }
+    });
+  }
+
+  async function handleSendMasterChatMessage(e) {
+    if (e) e.preventDefault();
+    if (!db) return;
+    var inp = document.getElementById('master-chat-input');
+    if (!inp) return;
+    var text = inp.value.trim();
+    if (!text) return;
+
+    var uid = (STATE.adminUser && STATE.adminUser.uid) || (auth.currentUser && auth.currentUser.uid);
+    var email = (STATE.adminUser && STATE.adminUser.email) || (auth.currentUser && auth.currentUser.email) || 'User Admin';
+    var name = (STATE.adminUser && STATE.adminUser.name) || email;
+    if (!uid) { showToast('লগইন তথ্য পাওয়া যায়নি', 'error'); return; }
+
+    var btn = document.getElementById('master-chat-send-btn');
+    if (btn) btn.disabled = true;
+
+    try {
+      var newMsgRef = db.ref('master_admin_chats/' + uid + '/messages').push();
+      await newMsgRef.set({
+        sender: 'USER_ADMIN',
+        senderName: name,
+        senderEmail: email,
+        text: text,
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        read: false
+      });
+
+      // Update chat meta
+      await db.ref('master_admin_chats/' + uid + '/meta').update({
+        adminUid: uid,
+        adminName: name,
+        adminEmail: email,
+        lastMessage: text,
+        lastTimestamp: firebase.database.ServerValue.TIMESTAMP,
+        lastSender: 'USER_ADMIN',
+        unreadForMaster: true,
+        unreadForAdmin: false
+      });
+
+      inp.value = '';
+      inp.focus();
+      scrollMasterChatToBottom();
+    } catch (err) {
+      showToast('মেসেজ পাঠানো ব্যর্থ: ' + err.message, 'error');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  function markMasterChatRead() {
+    try {
+      var uid = (STATE.adminUser && STATE.adminUser.uid) || (auth.currentUser && auth.currentUser.uid);
+      if (!db || !uid) return;
+      var base = 'master_admin_chats/' + uid;
+      db.ref(base + '/messages').limitToLast(120).once('value').then(function(s) {
+        var u = {};
+        s.forEach(function(c) { var m = c.val(); if (m && m.sender === 'MASTER' && m.read !== true) u[c.key + '/read'] = true; });
+        if (Object.keys(u).length) {
+          db.ref(base + '/messages').update(u).catch(function() {});
+          db.ref(base + '/meta/unreadForAdmin').set(false).catch(function() {});
+        }
+      }).catch(function() {});
+    } catch (e) {}
+  }
+
+  function stopMasterChatListener() {
+    try { if (_masterChatRef) _masterChatRef.off(); } catch (e) {}
+    _masterChatRef = null;
+    _masterChatUnreadCount = 0;
+    updateMasterChatBadges();
+  }
+
+  if (typeof window.playNotificationSound !== 'function') {
+    window.playNotificationSound = function() {
+      try { if (typeof playRequestAlertSound === 'function') playRequestAlertSound('deposit'); } catch (e) {}
+    };
+  }
+
+  // লগইন হলে চ্যাট লিসেনার চালু (নতুন মেসেজ এলে ব্যাজ/সাউন্ড)
+  (function waitChatLogin() {
+    var tries = 0;
+    var t = setInterval(function() {
+      tries++;
+      if (STATE && STATE.adminUser && STATE.adminUser.uid && db) { clearInterval(t); try { initMasterChatListener(); } catch (e) {} }
+      else if (tries > 120) clearInterval(t);
+    }, 1000);
+  })();
+
+  window.npTriggerInstall = function() {
+    var btn = document.getElementById('np-install-btn');
+    if (btn) btn.click();
+  };
+
 </script>
 </body>
 </html>

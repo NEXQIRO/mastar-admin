@@ -694,6 +694,25 @@
       50% { opacity: 0.55; }
     }
 
+    
+    /* Sticky Table Headers for Smooth Browsing (Image 1 fix) */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: var(--c-surface);
+      max-height: 75vh;
+    }
+    .table-container table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--c-inner, #1D1A14);
+      box-shadow: 0 1px 0 var(--border-subtle, rgba(255,255,255,0.08));
+    }
+
     /* Tables - Clean Luxury Slate Rows */
     .table-container {
       width: 100%;
@@ -1637,7 +1656,14 @@
             <span class="nav-label">ইউজার নোটিফিকেশন</span>
           </button>
         </li>
-        <li class="nav-item" data-view="view-settings">
+        <li class="nav-item">
+            <button onclick="openMasterChatModal()" style="display:flex; align-items:center; gap:12px; width:100%; position:relative;">
+              <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+              <span>মাস্টার অ্যাডমিন চ্যাট</span>
+              <span id="sidebar-master-chat-badge" style="display:none; margin-left:auto; background:#ef4444; color:#fff; border-radius:10px; padding:1px 6px; font-size:0.68rem; font-weight:800;">0</span>
+            </button>
+          </li>
+          <li class="nav-item" data-view="view-settings">
           <button onclick="switchView('view-settings')">
             <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
             <span class="nav-label">অ্যাপ সেটিংস</span>
@@ -1681,6 +1707,17 @@
         </div>
 
         <div class="topbar-actions">
+          <!-- PWA Install Button (Clean Topbar Integration) -->
+          <button class="btn btn-warning btn-sm" id="topbar-pwa-install-btn" onclick="npTriggerInstall()" style="display:none; font-weight:700; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+            <span>ইনস্টল করুন</span>
+          </button>
+
+          <!-- Master Admin Direct Chat Button (Requirement 5) -->
+          <button class="btn-icon" onclick="openMasterChatModal()" id="btn-topbar-master-chat" title="মাস্টার অ্যাডমিনের সাথে সরাসরি চ্যাট" style="position: relative;">
+            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+            <span id="master-chat-badge-dot" style="position: absolute; top: -3px; right: -3px; background: #ef4444; color: #fff; font-size: 0.65rem; font-weight: 800; border-radius: 10px; padding: 1px 5px; display: none; line-height: 1.2; box-shadow: 0 0 8px rgba(239,68,68,0.7);">0</span>
+          </button>
 
 
           <!-- Admin Notification Bell (Feature 3) -->
@@ -5819,11 +5856,6 @@
             <td>
               <div style="font-weight:700;">${escapeHtml(u.name || 'Player')}</div>
               <small style="font-family:monospace; color:var(--text-dim); font-size:0.75rem;">${escapeHtml(String(u.uid || ''))}</small>
-              <div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;">
-                <button type="button" class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:0.68rem; border-color:#8b5cf6; color:#a78bfa;" onclick="openTurnoverBonusModal('${escapeHtml(String(u.uid))}')" title="বোনাস ও টার্নওভার">🎁 BONUS / TURNOVER</button>
-                <button type="button" class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:0.68rem; border-color:#38bdf8; color:#38bdf8;" onclick="openPlayerSecurityModal('${escapeHtml(String(u.uid))}')" title="প্লেয়ার ট্র্যাকিং ও সিকিউরিটি">🛡️ TRACKING</button>
-                <button type="button" class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:0.68rem; border-color:#4ade80; color:#4ade80;" onclick="openPlayerFinancialReport('${escapeHtml(String(u.uid))}')" title="আর্থিক রিপোর্ট ও অডিট">📊 REPORT</button>
-              </div>
             </td>
             <td>
               <span class="badge badge-upcoming">${escapeHtml(u.ffIgn || u.ign || 'N/A')}</span>
@@ -7113,27 +7145,47 @@
       const turnoverBase = elBase ? elBase.value : 'deposit_plus_bonus';
       const enforceTurnover = elEnf ? elEnf.checked : true;
       const parsedTiers = elTiers ? parseAdminTiers(elTiers.value) : (Array.isArray(STATE.settings.depositBonusTiers) ? STATE.settings.depositBonusTiers : []);
+      const tiersPayload = (parsedTiers && parsedTiers.length > 0) ? parsedTiers : null;
 
       try {
         const adminUid = STATE.adminUser ? STATE.adminUser.uid : (auth.currentUser ? auth.currentUser.uid : null);
-        const updates = {};
-        updates['settings/depositBonusEnabled'] = depositBonusEnabled;
-        updates['settings/depositBonusPercent'] = depositBonusPercent;
-        updates['settings/minDepositForBonus'] = minDepositForBonus;
-        updates['settings/maxBonusAmount'] = maxBonusAmount;
-        updates['settings/turnoverMultiplier'] = turnoverMultiplier;
-        updates['settings/turnoverBase'] = turnoverBase;
-        updates['settings/enforceTurnover'] = enforceTurnover;
-        updates['settings/depositBonusTiers'] = parsedTiers;
-
-        if (adminUid) {
-          updates[`admins/${adminUid}/bonusPercent`] = depositBonusPercent;
-          updates[`admins/${adminUid}/turnoverPercent`] = turnoverMultiplier;
-          updates[`admins/${adminUid}/bonusEnabled`] = depositBonusEnabled;
-          updates[`admins/${adminUid}/depositBonusTiers`] = parsedTiers;
+        
+        // 1. Direct update to settings node (avoiding empty array update errors)
+        const settingsPayload = {
+          depositBonusEnabled: Boolean(depositBonusEnabled),
+          depositBonusPercent: Number(depositBonusPercent) || 0,
+          minDepositForBonus: Number(minDepositForBonus) || 0,
+          maxBonusAmount: Number(maxBonusAmount) || 0,
+          turnoverMultiplier: Number(turnoverMultiplier) || 1,
+          turnoverBase: String(turnoverBase || 'deposit_plus_bonus'),
+          enforceTurnover: Boolean(enforceTurnover)
+        };
+        if (tiersPayload) {
+          settingsPayload.depositBonusTiers = tiersPayload;
+        } else {
+          settingsPayload.depositBonusTiers = null;
         }
 
-        await db.ref().update(updates);
+        await db.ref('settings').update(settingsPayload);
+
+        // 2. Safely sync to admins profile node if UID available
+        if (adminUid) {
+          try {
+            const adminPayload = {
+              bonusPercent: Number(depositBonusPercent) || 0,
+              turnoverPercent: Number(turnoverMultiplier) || 1,
+              bonusEnabled: Boolean(depositBonusEnabled)
+            };
+            if (tiersPayload) {
+              adminPayload.depositBonusTiers = tiersPayload;
+            } else {
+              adminPayload.depositBonusTiers = null;
+            }
+            await db.ref('admins/' + adminUid).update(adminPayload);
+          } catch (adminErr) {
+            console.warn('Admin profile bonus sync notice:', adminErr);
+          }
+        }
 
         STATE.settings = {
           ...STATE.settings,
@@ -7149,7 +7201,7 @@
         };
         updateBonusTurnoverSummaryUI();
         recordAuditLog('SETTINGS_BONUS_UPDATE', 'SETTINGS', `Bonus: ${depositBonusEnabled ? 'ON' : 'OFF'} (${depositBonusPercent}%), Turnover: ${turnoverMultiplier}x, Tiers: ${parsedTiers.length}`);
-        showToast('🎁 ডিপোজিট প্রমোশন ও টার্নওভার অপশন সফলভাবে সেভ হয়েছে!', 'success');
+        showToast('🎁 ডিপোজিট বোনাস ও টার্নওভার সেটিংস সফলভাবে সেভ হয়েছে!', 'success');
       } catch (err) {
         showToast('সেটিংস সেভ করতে ব্যর্থ: ' + err.message, 'error');
       }
@@ -7311,7 +7363,203 @@
         </head>
         <body>
           ${code}
-        </body>
+        
+  <!-- ==================== MASTER ADMIN DIRECT CHAT MODAL (Requirement 5) ==================== -->
+  <div id="modal-master-chat" class="modal-backdrop" style="display:none; z-index:99999;">
+    <div class="modal-card" style="max-width: 520px; width: 95vw; height: 600px; max-height: 85vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; background: #151310; border: 1px solid #B97800; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
+      <div style="padding: 14px 18px; background: linear-gradient(135deg, #1D1A14, #2A2418); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #F59E0B, #B97800); display: grid; place-items: center; color: #000; font-weight: 800; font-size: 1.1rem;">👑</div>
+          <div>
+            <div style="font-weight: 700; color: #F5EFE0; font-size: 1rem;">NEXQIRO Master Administrator</div>
+            <div style="font-size: 0.75rem; color: #4ADE80; display: flex; align-items: center; gap: 5px;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #4ADE80; display: inline-block;"></span> লাইভ অ্যাডমিন সাপোর্ট ও চ্যাট
+            </div>
+          </div>
+        </div>
+        <button type="button" class="modal-close" onclick="closeMasterChatModal()" style="background:transparent; border:none; color:var(--text-muted); font-size:22px; cursor:pointer; padding: 4px 8px;">✕</button>
+      </div>
+
+      <div id="master-chat-messages" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: rgba(0,0,0,0.3);">
+        <div style="text-align: center; color: var(--text-dim); font-size: 0.8rem; margin: auto;">লোড হচ্ছে...</div>
+      </div>
+
+      <form id="master-chat-form" onsubmit="handleSendMasterChatMessage(event)" style="padding: 12px 14px; background: #1D1A14; border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center;">
+        <input type="text" id="master-chat-input" placeholder="মাস্টার অ্যাডমিনকে মেসেজ লিখুন..." maxlength="1000" autocomplete="off" style="flex: 1; background: #0F0E0C; border: 1px solid var(--border-color); color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; font-family: inherit;">
+        <button type="submit" id="master-chat-send-btn" class="btn btn-primary" style="background: linear-gradient(135deg, #F59E0B, #B97800); color: #000; font-weight: 700; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <span>পাঠান</span>
+          <svg viewBox="0 0 24 24" style="width: 15px; height: 15px; fill: currentColor;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+<script>
+
+  // ==================== MASTER ADMIN DIRECT CHAT CLIENT LOGIC ====================
+  var _masterChatRef = null;
+  var _masterChatModalOpen = false;
+  var _masterChatUnreadCount = 0;
+
+  function openMasterChatModal() {
+    _masterChatModalOpen = true;
+    _masterChatUnreadCount = 0;
+    updateMasterChatBadges();
+    var m = document.getElementById('modal-master-chat');
+    if (m) m.style.display = 'flex';
+    initMasterChatListener();
+    setTimeout(function() {
+      var inp = document.getElementById('master-chat-input');
+      if (inp) inp.focus();
+      scrollMasterChatToBottom();
+    }, 200);
+  }
+
+  function closeMasterChatModal() {
+    _masterChatModalOpen = false;
+    var m = document.getElementById('modal-master-chat');
+    if (m) m.style.display = 'none';
+  }
+
+  function updateMasterChatBadges() {
+    var dot = document.getElementById('master-chat-badge-dot');
+    var sBadge = document.getElementById('sidebar-master-chat-badge');
+    if (dot) {
+      dot.innerText = _masterChatUnreadCount > 9 ? '9+' : _masterChatUnreadCount;
+      dot.style.display = _masterChatUnreadCount > 0 ? 'inline-block' : 'none';
+    }
+    if (sBadge) {
+      sBadge.innerText = _masterChatUnreadCount > 9 ? '9+' : _masterChatUnreadCount;
+      sBadge.style.display = _masterChatUnreadCount > 0 ? 'inline-block' : 'none';
+    }
+  }
+
+  function scrollMasterChatToBottom() {
+    var c = document.getElementById('master-chat-messages');
+    if (c) c.scrollTop = c.scrollHeight;
+  }
+
+  function initMasterChatListener() {
+    if (!db) return;
+    var uid = (STATE.adminUser && STATE.adminUser.uid) || (auth.currentUser && auth.currentUser.uid);
+    if (!uid) return;
+    if (_masterChatRef) return; // already listening
+
+    _masterChatRef = db.ref('master_admin_chats/' + uid + '/messages').limitToLast(120);
+    _masterChatRef.on('value', function(snapshot) {
+      var val = snapshot.val() || {};
+      var entries = Object.entries(val).sort(function(a, b) { return (a[1].timestamp || 0) - (b[1].timestamp || 0); });
+      var container = document.getElementById('master-chat-messages');
+      if (!container) return;
+
+      if (entries.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: var(--text-dim); font-size: 0.85rem; margin: auto; padding: 20px;">' +
+          '<div style="font-size: 2rem; margin-bottom: 8px;">👑</div>' +
+          'মাস্টার অ্যাডমিনের সাথে আপনার সরাসরি যোগাযোগ চ্যানেল।<br>যেকোনো সমস্যা, ব্যালেন্স অথবা সিস্টেম সংক্রান্ত সাহায্য চাইতে নিচে মেসেজ লিখুন।' +
+          '</div>';
+        return;
+      }
+
+      var html = '';
+      var newIncoming = false;
+
+      entries.forEach(function(item) {
+        var msg = item[1];
+        var isMe = (msg.sender === 'USER_ADMIN' || msg.sender === 'ADMIN');
+        var timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' }) : '';
+
+        if (!isMe && !_masterChatModalOpen && msg.read !== true) {
+          newIncoming = true;
+        }
+
+        if (isMe) {
+          html += '<div style="display: flex; flex-direction: column; align-items: flex-end; margin-bottom: 6px;">' +
+            '<div style="max-width: 80%; background: linear-gradient(135deg, #F59E0B, #D97706); color: #000; font-weight: 600; padding: 9px 13px; border-radius: 12px 12px 2px 12px; font-size: 0.88rem; word-break: break-word; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">' +
+            escapeHtml(msg.text || '') +
+            '</div>' +
+            '<div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 3px;">' + timeStr + ' · আপনি</div>' +
+            '</div>';
+        } else {
+          html += '<div style="display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 6px;">' +
+            '<div style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.68rem; color: #a78bfa; margin-bottom: 2px;">' +
+            '<span>👑 Master Administrator</span>' +
+            '</div>' +
+            '<div style="max-width: 80%; background: #26211A; color: #F5EFE0; border: 1px solid rgba(245, 158, 11, 0.3); padding: 9px 13px; border-radius: 12px 12px 12px 2px; font-size: 0.88rem; word-break: break-word; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">' +
+            escapeHtml(msg.text || '') +
+            '</div>' +
+            '<div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 3px;">' + timeStr + '</div>' +
+            '</div>';
+        }
+      });
+
+      container.innerHTML = html;
+      scrollMasterChatToBottom();
+
+      if (newIncoming) {
+        _masterChatUnreadCount++;
+        updateMasterChatBadges();
+        playNotificationSound();
+        showToast('💬 মাস্টার অ্যাডমিন থেকে নতুন মেসেজ এসেছে!', 'info');
+      }
+    });
+  }
+
+  async function handleSendMasterChatMessage(e) {
+    if (e) e.preventDefault();
+    if (!db) return;
+    var inp = document.getElementById('master-chat-input');
+    if (!inp) return;
+    var text = inp.value.trim();
+    if (!text) return;
+
+    var uid = (STATE.adminUser && STATE.adminUser.uid) || (auth.currentUser && auth.currentUser.uid);
+    var email = (STATE.adminUser && STATE.adminUser.email) || (auth.currentUser && auth.currentUser.email) || 'User Admin';
+    var name = (STATE.adminUser && STATE.adminUser.name) || email;
+    if (!uid) { showToast('লগইন তথ্য পাওয়া যায়নি', 'error'); return; }
+
+    var btn = document.getElementById('master-chat-send-btn');
+    if (btn) btn.disabled = true;
+
+    try {
+      var newMsgRef = db.ref('master_admin_chats/' + uid + '/messages').push();
+      await newMsgRef.set({
+        sender: 'USER_ADMIN',
+        senderName: name,
+        senderEmail: email,
+        text: text,
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        read: false
+      });
+
+      // Update chat meta
+      await db.ref('master_admin_chats/' + uid + '/meta').update({
+        adminUid: uid,
+        adminName: name,
+        adminEmail: email,
+        lastMessage: text,
+        lastTimestamp: firebase.database.ServerValue.TIMESTAMP,
+        lastSender: 'USER_ADMIN',
+        unreadForMaster: true,
+        unreadForAdmin: false
+      });
+
+      inp.value = '';
+      inp.focus();
+      scrollMasterChatToBottom();
+    } catch (err) {
+      showToast('মেসেজ পাঠানো ব্যর্থ: ' + err.message, 'error');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  window.npTriggerInstall = function() {
+    var btn = document.getElementById('np-install-btn');
+    if (btn) btn.click();
+  };
+
+</script>
+</body>
         </html>
       ` : `
         <!DOCTYPE html>
@@ -9346,28 +9594,25 @@ await db.ref('notices/not_2').set({
       });
     } catch (e) {}
 
-    // ---- ইনস্টল ও নোটিফিকেশন বাটন বার ----
+    // ---- ইনস্টল ও নোটিফিকেশন বাটন বার (Bottom Non-intrusive Snackbar) ----
     var bar = document.createElement('div');
     bar.id = 'np-pwa-bar';
-    bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 12px);z-index:99990;display:none;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;background:transparent;border:0;border-radius:0;padding:0;box-shadow:none;max-width:94vw;font-family:inherit';
-    bar.innerHTML = '<button id="np-install-btn" style="display:none;background:#F59E0B;color:#0A0A0A;border:0;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px">📲 অ্যাপ ইনস্টল করুন</button>' +
-      '<button id="np-notif-btn" style="display:none;background:#1D1A14;color:#F59E0B;border:1px solid #B97800;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px">🔔 নোটিফিকেশন চালু করুন</button>' +
-      '<span id="np-notif-denied" style="display:none;color:#F87171;font-size:12px;max-width:260px">নোটিফিকেশন বন্ধ করা আছে। ব্রাউজার/ফোন সেটিংস থেকে এই সাইটের নোটিফিকেশন Allow করুন।</span>' +
-      '<button id="np-bar-close" title="বন্ধ করুন" style="background:transparent;color:#A89F8A;border:0;font-size:18px;cursor:pointer">✕</button>';
+    bar.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99990;display:none;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;background:#1D1A14;border:1px solid #B97800;border-radius:12px;padding:8px 16px;box-shadow:0 8px 30px rgba(0,0,0,0.8);max-width:92vw;font-family:inherit';
+    bar.innerHTML = '<button id="np-install-btn" style="display:none;background:#F59E0B;color:#0A0A0A;border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px">📲 অ্যাপ ইনস্টল করুন</button>' +
+      '<button id="np-notif-btn" style="display:none;background:#1D1A14;color:#F59E0B;border:1px solid #B97800;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px">🔔 নোটিফিকেশন চালু করুন</button>' +
+      '<span id="np-notif-denied" style="display:none;color:#F87171;font-size:12px;max-width:240px">নোটিফিকেশন বন্ধ করা আছে।</span>' +
+      '<button id="np-bar-close" title="বন্ধ করুন" style="background:transparent;color:#A89F8A;border:0;font-size:18px;cursor:pointer;padding:0 4px">✕</button>';
     function mountBar() { if (!document.body.contains(bar)) document.body.appendChild(bar); }
 
     function refreshBar() {
       mountBar();
-      if (sessionStorage.getItem('np_bar_closed') === '1') { bar.style.display = 'none'; return; }
-      var inst = document.getElementById('np-install-btn'), nb = document.getElementById('np-notif-btn'), nd = document.getElementById('np-notif-denied');
-      var showInst = !standalone && (!!deferredPrompt || isIOS || true);
-      inst.style.display = (!standalone) ? 'inline-block' : 'none';
-      var perm = hasNotif ? Notification.permission : 'unsupported';
-      nb.style.display = 'none';
-      nd.style.display = 'none';
-      var xb = document.getElementById('np-bar-close'); if (xb) xb.style.display = 'none';
-      var any = inst.style.display !== 'none';
-      bar.style.display = any ? 'flex' : 'none';
+      var topBtn = document.getElementById('topbar-pwa-install-btn');
+      if (topBtn) topBtn.style.display = (!standalone) ? 'inline-flex' : 'none';
+      if (sessionStorage.getItem('np_bar_closed') === '1' || standalone) { bar.style.display = 'none'; return; }
+      var inst = document.getElementById('np-install-btn');
+      if (inst) inst.style.display = (!standalone) ? 'inline-block' : 'none';
+      var xb = document.getElementById('np-bar-close'); if (xb) xb.style.display = 'inline-block';
+      bar.style.display = (!standalone && window.innerWidth <= 768) ? 'flex' : 'none';
     }
 
     window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferredPrompt = e; refreshBar(); });

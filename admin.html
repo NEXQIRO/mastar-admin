@@ -2086,6 +2086,14 @@
 
         <!-- ==================== 3. USERS MANAGEMENT ==================== -->
         <section id="view-users" class="view-section">
+          <div id="np-ref-card" style="margin-bottom:14px;padding:14px 16px;border-radius:14px;border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.08);">
+            <div style="font-weight:800;margin-bottom:4px;">🔗 আপনার ইউজার রেফারেল লিংক</div>
+            <div style="font-size:.78rem;opacity:.8;margin-bottom:8px;">এই লিংক দিয়ে যারা নতুন অ্যাকাউন্ট খুলবে, তারা স্বয়ংক্রিয়ভাবে আপনার ইউজার হবে।</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <input id="np-ref-link" readonly style="flex:1;min-width:200px;padding:9px 11px;border-radius:9px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.25);color:inherit;font-size:.8rem;">
+              <button class="btn btn-sm btn-accent" type="button" onclick="npCopyRefLink()" style="font-weight:700;">📋 কপি</button>
+            </div>
+          </div>
           <!-- Security Signal Alert Bar -->
           <div id="users-security-alert-bar" style="display:none; background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(245, 158, 11, 0.12)); border: 1px solid #ef4444; border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(239,68,68,0.2);">
             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
@@ -3999,6 +4007,28 @@
       console.warn("Firebase Init Exception in Admin:", e);
     }
 
+    // ---- Admin-ভিত্তিক ইউজার: প্রতিটি অ্যাডমিন শুধু নিজের ইউজার ও তাদের রিকোয়েস্ট দেখে ----
+    // (যে ইউজারের এখনো কোনো অ্যাডমিন নেই, সে আগের মতোই সবার কাছে দৃশ্যমান থাকে)
+    let NP_OWNER = {};
+    const NP_RAW = { deposits: [], withdrawals: [], ledger: [], sessions: [] };
+    function npMyUid() { return (STATE.adminUser && STATE.adminUser.uid) || (auth && auth.currentUser && auth.currentUser.uid) || null; }
+    function npOwns(uid, reqAdmin) { const o = reqAdmin || NP_OWNER[uid] || null; const me = npMyUid(); return !o || !me || o === me; }
+    function npRefilter() {
+      STATE.deposits = NP_RAW.deposits.filter(d => npOwns(d.uid, d.adminUid));
+      STATE.withdrawals = NP_RAW.withdrawals.filter(w => npOwns(w.uid, w.adminUid));
+      STATE.ledger = NP_RAW.ledger.filter(t => npOwns(t.uid));
+      STATE.gameSessions = NP_RAW.sessions.filter(x => npOwns(x.uid));
+    }
+    function npRefreshRefLink() {
+      const el = document.getElementById('np-ref-link'), me = npMyUid();
+      if (el && me) el.value = location.href.replace(/[?#].*$/, '').replace(/[^/]*$/, '') + 'index.html?ref=' + me;
+    }
+    function npCopyRefLink() {
+      const el = document.getElementById('np-ref-link'); if (!el || !el.value) { showToast('লিংক এখনো তৈরি হয়নি', 'error'); return; }
+      try { navigator.clipboard.writeText(el.value).then(() => showToast('লিংক কপি হয়েছে ✅', 'success')); }
+      catch (e) { el.select(); document.execCommand('copy'); showToast('লিংক কপি হয়েছে ✅', 'success'); }
+    }
+
     const STATE = {
       currentLanguage: 'bn',
       currentTheme: 'dark',
@@ -4157,10 +4187,12 @@
       db.ref('users').on('value', (snap) => {
         if (snap.exists()) {
           const val = snap.val();
-          STATE.users = Object.keys(val).map(k => ({ uid: k, ...val[k] }));
+          NP_OWNER = {}; Object.keys(val).forEach(k => { NP_OWNER[k] = (val[k] && val[k].adminUid) || null; });
+          STATE.users = Object.keys(val).filter(k => npOwns(k)).map(k => ({ uid: k, ...val[k] }));
         } else {
-          STATE.users = [];
+          NP_OWNER = {}; STATE.users = [];
         }
+        npRefilter(); npRefreshRefLink();
         renderUsers();
         renderDashboard();
         renderFinanceDashboard();
@@ -4173,7 +4205,9 @@
       db.ref('depositRequests').on('value', (snap) => {
         if (snap.exists()) {
           const val = snap.val();
-          const items = Object.keys(val).map(k => ({ id: k, ...val[k] })).reverse();
+          const allItems = Object.keys(val).map(k => ({ id: k, ...val[k] })).reverse();
+          NP_RAW.deposits = allItems;
+          const items = allItems.filter(d => npOwns(d.uid, d.adminUid));
           STATE.deposits = items;
 
           items.forEach(dep => {
@@ -4186,7 +4220,7 @@
             seenDepositIds.add(dep.id);
           });
         } else {
-          STATE.deposits = [];
+          NP_RAW.deposits = []; STATE.deposits = [];
         }
         isInitialDepositsLoaded = true;
         renderWallet();
@@ -4200,7 +4234,9 @@
       db.ref('withdrawalRequests').on('value', (snap) => {
         if (snap.exists()) {
           const val = snap.val();
-          const items = Object.keys(val).map(k => ({ id: k, ...val[k] })).reverse();
+          const allItems = Object.keys(val).map(k => ({ id: k, ...val[k] })).reverse();
+          NP_RAW.withdrawals = allItems;
+          const items = allItems.filter(w => npOwns(w.uid, w.adminUid));
           STATE.withdrawals = items;
 
           items.forEach(w => {
@@ -4213,7 +4249,7 @@
             seenWithdrawalIds.add(w.id);
           });
         } else {
-          STATE.withdrawals = [];
+          NP_RAW.withdrawals = []; STATE.withdrawals = [];
         }
         isInitialWithdrawalsLoaded = true;
         renderWallet();
@@ -4227,9 +4263,10 @@
       db.ref('transactions').on('value', (snap) => {
         if (snap.exists()) {
           const val = snap.val();
-          STATE.ledger = Object.keys(val).map(k => ({ trxId: k, ...val[k] })).reverse();
+          NP_RAW.ledger = Object.keys(val).map(k => ({ trxId: k, ...val[k] })).reverse();
+          STATE.ledger = NP_RAW.ledger.filter(t => npOwns(t.uid));
         } else {
-          STATE.ledger = [];
+          NP_RAW.ledger = []; STATE.ledger = [];
         }
         renderWallet();
         renderDashboard();
@@ -4243,9 +4280,10 @@
       db.ref('game_sessions').limitToLast(500).on('value', (snap) => {
         if (snap.exists()) {
           const val = snap.val();
-          STATE.gameSessions = Object.keys(val).map(k => ({ id: k, ...val[k] })).reverse();
+          NP_RAW.sessions = Object.keys(val).map(k => ({ id: k, ...val[k] })).reverse();
+          STATE.gameSessions = NP_RAW.sessions.filter(x => npOwns(x.uid));
         } else {
-          STATE.gameSessions = [];
+          NP_RAW.sessions = []; STATE.gameSessions = [];
         }
         renderGameActivity();
       }, (err) => {
@@ -5230,14 +5268,14 @@
 
         const updates = {};
         updates[`tournaments/${tourneyId}/participants/${uid}`] = null;
-        updates[`tournaments/${tourneyId}/joinedCount`] = newCount;
+        if ((t.joinedCount || 0) > 0) updates[`tournaments/${tourneyId}/joinedCount`] = firebase.database.ServerValue.increment(-1);
         updates[`users/${uid}/joinedMatches/${tourneyId}`] = null;
 
         // Get user fresh balance
         const uSnap = await db.ref(`users/${uid}/balance`).once('value');
         const curBal = parseFloat(uSnap.val()) || 0;
         const newBal = curBal + entryFee;
-        updates[`users/${uid}/balance`] = newBal;
+        updates[`users/${uid}/balance`] = firebase.database.ServerValue.increment(entryFee);   // atomic refund
 
         const trxKey = db.ref('transactions').push().key;
         updates[`transactions/${trxKey}`] = {
@@ -5315,7 +5353,7 @@
           const uSnap = await db.ref(`users/${uid}/balance`).once('value');
           const curBal = parseFloat(uSnap.val()) || 0;
           const newBal = curBal + amount;
-          updates[`users/${uid}/balance`] = newBal;
+          updates[`users/${uid}/balance`] = firebase.database.ServerValue.increment(amount);   // atomic: game payouts landing at the same time are kept
 
           const trxKey = db.ref('transactions').push().key;
           updates[`transactions/${trxKey}`] = {
@@ -6424,11 +6462,10 @@
       if (promoId) confirmMsg += (window.npPromoPreviewText ? window.npPromoPreviewText(dep) : '');
       if (!confirm(confirmMsg)) return;
 
-      if (promoId) {
-        if (String(dep.status || '').toLowerCase() !== 'pending') { showToast('এই ডিপোজিট ইতিমধ্যে প্রসেস হয়েছে', 'error'); return; }
-        const lk = await db.ref(`depositRequests/${depId}/approvalLock`).transaction(c => (c === null ? STATE.adminUser.uid : undefined));
-        if (!lk.committed) { showToast('এই ডিপোজিট অন্য কেউ প্রসেস করছেন', 'error'); return; }
-      }
+      // প্রতিটি ডিপোজিটের জন্য লক: একই ডিপোজিট দুবার অনুমোদন (ডাবল ক্লিক / দুই অ্যাডমিন) হতে পারবে না
+      if (String(dep.status || '').toLowerCase() !== 'pending') { showToast('এই ডিপোজিট ইতিমধ্যে প্রসেস হয়েছে', 'error'); return; }
+      const lk = await db.ref(`depositRequests/${depId}/approvalLock`).transaction(c => (c === null ? STATE.adminUser.uid : undefined));
+      if (!lk.committed) { showToast('এই ডিপোজিট অন্য কেউ প্রসেস করছেন বা প্রসেস হয়ে গেছে', 'error'); return; }
 
       try {
         const userRef = db.ref(`users/${dep.uid}`);
@@ -6444,7 +6481,7 @@
 
         const trxKey = db.ref('transactions').push().key;
         const curAdminBal = STATE.adminBalance || 0;
-        if (curAdminBal < depAmt) { if (promoId) db.ref(`depositRequests/${depId}/approvalLock`).remove().catch(() => {}); showToast(`আপনার ব্যালেন্স পর্যাপ্ত নয় (৳${curAdminBal})। Master-এর কাছে রিকোয়েস্ট করুন।`, 'error'); return; }
+        if (curAdminBal < depAmt) { db.ref(`depositRequests/${depId}/approvalLock`).remove().catch(() => {}); showToast(`আপনার ব্যালেন্স পর্যাপ্ত নয় (৳${curAdminBal})। Master-এর কাছে রিকোয়েস্ট করুন।`, 'error'); return; }
         const newAdminBal = curAdminBal - depAmt;
 
         const updates = {};
@@ -6455,14 +6492,18 @@
         updates[`depositRequests/${depId}/turnoverAdded`] = turnoverAdded;
         updates[`depositRequests/${depId}/turnoverMultiplier`] = mult;
 
-        updates[`users/${dep.uid}/balance`] = newBal;
-        updates[`users/${dep.uid}/bonusBalance`] = newBonusBal;
-        updates[`users/${dep.uid}/turnoverRequired`] = newTurnoverReq;
-        const curTurnDone = parseFloat(uData.turnoverDone !== undefined ? uData.turnoverDone : uData.turnoverCompleted) || 0;
-        updates[`users/${dep.uid}/turnoverDone`] = curTurnDone;
-        updates[`users/${dep.uid}/turnoverCompleted`] = curTurnDone;
-        updates[`users/${dep.uid}/adminUid`] = STATE.adminUser.uid;
-        updates[`admins/${STATE.adminUser.uid}/balance`] = newAdminBal;
+        // সার্ভার-সাইড increment: গেমের পেআউট/টার্নওভার একই মুহূর্তে এলে পুরোনো মান দিয়ে ওভাররাইট হবে না
+        updates[`users/${dep.uid}/balance`] = firebase.database.ServerValue.increment(totalCredited);
+        updates[`users/${dep.uid}/bonusBalance`] = firebase.database.ServerValue.increment(bonusAmt);
+        updates[`users/${dep.uid}/turnoverRequired`] = firebase.database.ServerValue.increment(turnoverAdded);
+        if (uData.turnoverDone === undefined) {   // শুধু প্রথমবার চালু করা; পরে সার্ভার/গেম এটি বাড়ায়, তাই আর ওভাররাইট নয়
+          const curTurnDone = parseFloat(uData.turnoverCompleted) || 0;
+          updates[`users/${dep.uid}/turnoverDone`] = curTurnDone;
+          updates[`users/${dep.uid}/turnoverCompleted`] = curTurnDone;
+        }
+        if (!uData.adminUid) updates[`users/${dep.uid}/adminUid`] = STATE.adminUser.uid;   // প্রথম অনুমোদনকারী অ্যাডমিনই ইউজারের অ্যাডমিন থাকে
+        updates[`depositRequests/${depId}/adminUid`] = STATE.adminUser.uid;
+        updates[`admins/${STATE.adminUser.uid}/balance`] = firebase.database.ServerValue.increment(-depAmt);
 
         const noteText = `${dep.method} TrxID: ${dep.trxId} Approved. Credited: ৳${totalCredited} (Deposit: ৳${depAmt}${bonusAmt > 0 ? ` + ৳${bonusAmt} Bonus` : ''}, Turnover: ৳${turnoverAdded})`;
         updates[`transactions/${trxKey}`] = {
@@ -6485,7 +6526,7 @@
         recordAuditLog('DEPOSIT_APPROVED', depId, `৳${depAmt} + ৳${bonusAmt} Bonus credited to ${dep.uid}, Turnover Req: ৳${newTurnoverReq}`);
         showToast(`ডিপোজিট ৳${depAmt}${bonusAmt > 0 ? ` + বোনাস ৳${bonusAmt}` : ''} অনুমোদিত! প্লেয়ার ওয়ালেটে ৳${totalCredited} যোগ হয়েছে।`, 'success');
       } catch (err) {
-        if (promoId) db.ref(`depositRequests/${depId}/approvalLock`).remove().catch(() => {});
+        db.ref(`depositRequests/${depId}/approvalLock`).remove().catch(() => {});
         showToast('অনুমোদনে সমস্যা: ' + err.message, 'error');
       }
     }
@@ -6497,6 +6538,10 @@
       const reason = prompt('ডিপোজিট বাতিলের কারণ লিখুন (যেমন: TrxID মিলেনি):', 'ভুল ট্রানজেকশন আইডি');
       if (!reason) return;
 
+      if (String(dep.status || '').toLowerCase() !== 'pending') { showToast('এই ডিপোজিট ইতিমধ্যে প্রসেস হয়েছে', 'error'); return; }
+      const rlk = await db.ref(`depositRequests/${depId}/approvalLock`).transaction(c => (c === null ? STATE.adminUser.uid : undefined));
+      if (!rlk.committed) { showToast('এই ডিপোজিট অন্য কেউ প্রসেস করছেন বা প্রসেস হয়ে গেছে', 'error'); return; }
+
       try {
         await db.ref(`depositRequests/${depId}`).update({
           status: 'Rejected',
@@ -6506,6 +6551,7 @@
         recordAuditLog('DEPOSIT_REJECTED', depId, `Reason: ${reason}`);
         showToast('ডিপোজিট রিকোয়েস্ট বাতিল করা হয়েছে', 'info');
       } catch (err) {
+        db.ref(`depositRequests/${depId}/approvalLock`).remove().catch(() => {});
         showToast('বাতিল করতে ব্যর্থ: ' + err.message, 'error');
       }
     }
@@ -6534,6 +6580,14 @@
       const refId = prompt(`ইউজার ${w.userName} কে ৳${wAmt} পাঠানোর পর আপনার পেমেন্ট TrxID লিখুন:`, 'TRX_' + Math.floor(Math.random() * 899999 + 100000));
       if (!refId) return;
 
+      // লক: একই উইথড্র দুবার Complete বা Complete + Refund হতে পারবে না
+      const wlk = await db.ref(`withdrawalRequests/${withKey}/actionLock`).transaction(c => (c === null ? (STATE.adminUser ? STATE.adminUser.uid : 'admin') : undefined));
+      if (!wlk.committed) { showToast('এই উইথড্র অন্য কেউ প্রসেস করছেন বা সম্পন্ন হয়ে গেছে', 'error'); return; }
+      try {
+        const freshSt = (await db.ref(`withdrawalRequests/${withKey}/status`).once('value')).val();
+        if (!isWithdrawalOpen(freshSt)) { await db.ref(`withdrawalRequests/${withKey}/actionLock`).remove().catch(() => {}); showToast('এই উইথড্র ইতিমধ্যে সম্পন্ন বা বাতিল হয়েছে', 'error'); return; }
+      } catch (e) { await db.ref(`withdrawalRequests/${withKey}/actionLock`).remove().catch(() => {}); showToast('স্ট্যাটাস যাচাই ব্যর্থ: ' + e.message, 'error'); return; }
+
       try {
         // User withdrawal: Money deducted from user is credited to user admin balance:
         const adminUid = STATE.adminUser ? STATE.adminUser.uid : (auth.currentUser ? auth.currentUser.uid : null);
@@ -6546,14 +6600,23 @@
         updates[`withdrawalRequests/${withKey}/statusUpdatedAt`] = firebase.database.ServerValue.TIMESTAMP;
         if (adminUid) {
           updates[`withdrawalRequests/${withKey}/adminUid`] = adminUid;
-          updates[`admins/${adminUid}/balance`] = newAdminBal;
+          updates[`admins/${adminUid}/balance`] = firebase.database.ServerValue.increment(wAmt);
+          updates[`admins/${adminUid}/creditRef`] = withKey;   // নতুন Rules: এই উইথড্রের সমান অঙ্কই অ্যাডমিন ব্যালেন্সে বাড়তে পারবে
         }
 
-        await db.ref().update(updates);
+        try {
+          await db.ref().update(updates);
+        } catch (e1) {
+          if (adminUid && e1 && (e1.code === 'PERMISSION_DENIED' || /permission/i.test(String(e1.message)))) {
+            delete updates[`admins/${adminUid}/creditRef`];   // পুরোনো Rules-এর সাথে সামঞ্জস্য
+            await db.ref().update(updates);
+          } else { throw e1; }
+        }
         setAdminBalance(newAdminBal, `Withdrawal Completed +৳${wAmt} from User ${w.userName}`);
         recordAuditLog('WITHDRAWAL_COMPLETED', withKey, `Paid ৳${wAmt} to ${w.receiverNumber}. Ref: ${refId}, Admin Balance credited: ৳${newAdminBal}`);
         showToast(`উইথড্র রিকোয়েস্ট সফলভাবে সম্পন্ন হয়েছে! ৳${wAmt} অ্যাডমিন ব্যালেন্সে জমা হয়েছে`, 'success');
       } catch (err) {
+        db.ref(`withdrawalRequests/${withKey}/actionLock`).remove().catch(() => {});
         showToast('সম্পন্ন ব্যর্থ: ' + err.message, 'error');
       }
     }
@@ -6567,21 +6630,28 @@
       const reason = prompt('উইথড্র বাতিলের কারণ লিখুন (টাকা ইউজারের ওয়ালেটে রিফান্ড হবে):', 'ভুল একাউন্ট নাম্বার');
       if (!reason) return;
 
+      const refAmt = parseFloat(w.amount);
+      if (!isFinite(refAmt) || refAmt <= 0) { showToast('অবৈধ উইথড্র পরিমাণ, রিফান্ড করা যাচ্ছে না', 'error'); return; }
+      const rlk2 = await db.ref(`withdrawalRequests/${withKey}/actionLock`).transaction(c => (c === null ? (STATE.adminUser ? STATE.adminUser.uid : 'admin') : undefined));
+      if (!rlk2.committed) { showToast('এই উইথড্র অন্য কেউ প্রসেস করছেন বা সম্পন্ন হয়ে গেছে', 'error'); return; }
+
       try {
+        const freshSt2 = (await db.ref(`withdrawalRequests/${withKey}/status`).once('value')).val();
+        if (!isWithdrawalOpen(freshSt2)) { await db.ref(`withdrawalRequests/${withKey}/actionLock`).remove().catch(() => {}); showToast('এই উইথড্র ইতিমধ্যে সম্পন্ন বা বাতিল হয়েছে', 'error'); return; }
         const uSnap = await db.ref(`users/${w.uid}/balance`).once('value');
         const curBal = parseFloat(uSnap.val()) || 0;
-        const newBal = curBal + w.amount;
+        const newBal = curBal + refAmt;
         const trxKey = db.ref('transactions').push().key;
 
         const updates = {};
         updates[`withdrawalRequests/${withKey}/status`] = 'Rejected';
         updates[`withdrawalRequests/${withKey}/adminNote`] = reason;
-        updates[`users/${w.uid}/balance`] = newBal;
+        updates[`users/${w.uid}/balance`] = firebase.database.ServerValue.increment(refAmt);   // atomic refund
         updates[`transactions/${trxKey}`] = {
           trxId: trxKey,
           uid: w.uid,
           type: 'WITHDRAW_REFUND',
-          amount: w.amount,
+          amount: refAmt,
           beforeBal: curBal,
           afterBal: newBal,
           date: new Date().toLocaleString('bn-BD'),
@@ -6593,6 +6663,7 @@
         recordAuditLog('WITHDRAWAL_REJECTED', withKey, `Refunded ৳${w.amount}. Reason: ${reason}`);
         showToast('উইথড্র বাতিল এবং ব্যালেন্স রিফান্ড সম্পন্ন!', 'info');
       } catch (err) {
+        db.ref(`withdrawalRequests/${withKey}/actionLock`).remove().catch(() => {});
         showToast('বাতিল করতে ব্যর্থ: ' + err.message, 'error');
       }
     }
@@ -9205,9 +9276,9 @@ await db.ref('notices/not_2').set({
 
         const trxKey = db.ref('transactions').push().key;
         const updates = {};
-        updates[`users/${u.uid}/balance`] = newBal;
-        updates[`users/${u.uid}/bonusBalance`] = newBonus;
-        updates[`users/${u.uid}/turnoverRequired`] = newReq;
+        updates[`users/${u.uid}/balance`] = firebase.database.ServerValue.increment(bonusAmt);
+        updates[`users/${u.uid}/bonusBalance`] = firebase.database.ServerValue.increment(bonusAmt);
+        updates[`users/${u.uid}/turnoverRequired`] = firebase.database.ServerValue.increment(extraTurnover);
         updates[`transactions/${trxKey}`] = {
           trxId: trxKey,
           uid: u.uid,

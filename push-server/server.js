@@ -198,6 +198,77 @@ setInterval(() => {
   Object.values(claims).forEach(c => { if (c.status === 'pending' && c.activateAt && n >= nz(c.activateAt)) activateClaim(c.uid, c.id); });
 }, 15000);
 
+// ===== ব্যালেন্স শেষ হলে সব Turnover (বোনাস সহ) নিজে থেকে মুছে যাওয়া =====
+// ইউজারের ব্যালেন্স RESET_BELOW (ডিফল্ট ৳১) এর নিচে নামলে, অর্থাৎ শূন্য বা শুধু পয়সা থাকলে:
+//   users/{uid}: turnoverRequired / turnoverDone / turnoverCompleted / bonusBalance = 0, আর প্রোমোর চলমান হিসাব বাতিল।
+// পরে ডিপোজিট করলে শুধু নতুন ডিপোজিটের নতুন Turnover আসে; পুরোনোটা ফিরে আসে না।
+// নিরাপত্তা: চলমান বেট (গেম রাউন্ড/ম্যাচ) থাকলে মোছা হয় না (সবকিছু বাজি ধরলে ব্যালেন্স সাময়িক ০ থাকে); বেট শেষ হওয়ার পর আবার যাচাই হয়।
+// উইথড্র রিকোয়েস্টের জন্য আলাদা শর্ত নেই: Turnover পূর্ণ না হলে উইথড্র রিকোয়েস্টই হয় না।
+const RESET_BELOW = Number(process.env.RESET_BELOW) || 1;
+let gameIds = [];
+const gamesReady = new Promise(res => db.ref('games').on('value', s => { gameIds = Object.keys(s.val() || {}); res(); }, () => res()));
+const deferred = new Set();
+const queued = new Set();
+let chain = Promise.resolve();
+
+async function hasLiveStake(uid) {
+  await gamesReady;                    // গেমের তালিকা আসার আগে যাচাই নয়
+  const nonEmpty = s => { const v = s.val(); return !!(v && (typeof v !== 'object' || Object.keys(v).length)); };
+  const scan = (path, test) => db.ref(path).once('value').then(s => { let f = false; s.forEach(r => { if (test(r.val() || {})) f = true; }); return f; });
+  const checks = [
+    db.ref('carrom/reserved/' + uid).once('value').then(nonEmpty),
+    db.ref('crazytime_active/' + uid).once('value').then(nonEmpty),
+    scan('roulette/live', v => !!v[uid]),
+    scan('aviator_live', v => Object.keys(v).some(k => k.indexOf(uid + '_') === 0)),
+    scan('ludo_active', v => Array.isArray(v.uids) && v.uids.indexOf(uid) >= 0),
+  ].concat(gameIds.map(id => scan(id + '_live', v => !!v[uid])));      // নতুন গেমের (np-game-kit) চলমান বেট
+  const res = await Promise.all(checks.map(p => p.catch(() => true)));  // যাচাই ব্যর্থ হলে নিরাপদে ধরে নিই বেট চলছে (পরে আবার দেখা হবে)
+  return res.some(Boolean);
+}
+
+async function resetIfBroke(uid) {
+  if (!uid) return;
+  const u = (await db.ref('users/' + uid).once('value')).val();
+  if (!u || !(nz(u.balance) < RESET_BELOW)) { deferred.delete(uid); return; }
+  const claims = (await db.ref('promoTurnover/' + uid).once('value')).val() || {};
+  const open = Object.keys(claims).filter(id => ['pending', 'activating', 'active'].indexOf((claims[id] || {}).status) >= 0);
+  const hasTurn = nz(u.turnoverRequired) > 0 || nz(u.turnoverDone) > 0 || nz(u.turnoverCompleted) > 0 || nz(u.bonusBalance) > 0;
+  if (!hasTurn && !open.length) { deferred.delete(uid); return; }
+  if (await hasLiveStake(uid)) { deferred.add(uid); return; }   // চলমান বেট শেষ হলে আবার যাচাই
+  let before = null;
+  const tx = await db.ref('users/' + uid).transaction(cur => {
+    before = null;
+    if (cur === null) return cur;
+    if (!(nz(cur.balance) < RESET_BELOW)) return undefined;     // এর মধ্যে ডিপোজিট এসে গেলে মোছা হবে না
+    before = { balance: nz(cur.balance), turnoverRequired: nz(cur.turnoverRequired), turnoverDone: nz(cur.turnoverDone), turnoverCompleted: nz(cur.turnoverCompleted), bonusBalance: nz(cur.bonusBalance) };
+    cur.turnoverRequired = 0; cur.turnoverDone = 0; cur.turnoverCompleted = 0; cur.bonusBalance = 0;
+    return cur;
+  }, undefined, false);
+  if (!tx.committed || !before) return;
+  deferred.delete(uid);
+  const up = {};
+  const logKey = db.ref('turnoverResets/' + uid).push().key;
+  open.forEach(id => {
+    up[`promoTurnover/${uid}/${id}/status`] = 'cancelled';
+    up[`promoTurnover/${uid}/${id}/cancelledTurnover`] = nz(claims[id].turnover);
+    up[`promoTurnover/${uid}/${id}/turnover`] = 0;
+    up[`promoTurnover/${uid}/${id}/done`] = 0;
+  });
+  up[`turnoverResets/${uid}/${logKey}`] = { at: admin.database.ServerValue.TIMESTAMP, reason: 'balance_empty', before, claimsCancelled: open.length };
+  await db.ref().update(up);
+  console.log(`[turnover-reset] ${uid}: balance ${before.balance}, turnover ${before.turnoverRequired}/${before.turnoverDone}, bonus ${before.bonusBalance}, claims ${open.length}`);
+}
+
+function enqueueReset(uid) {          // একটার পর একটা চলে, একই ইউজার একসাথে দুবার নয়
+  if (!uid || queued.has(uid)) return;
+  queued.add(uid);
+  chain = chain.then(() => resetIfBroke(uid)).catch(e => console.error('turnover-reset error:', uid, e && e.message)).then(() => { queued.delete(uid); });
+}
+const lowBalance = db.ref('users').orderByChild('balance').endAt(RESET_BELOW - 0.0001);
+lowBalance.on('child_added', s => enqueueReset(s.key), e => console.error('lowBalance listener:', e && e.message));
+lowBalance.on('child_changed', s => enqueueReset(s.key), () => {});
+setInterval(() => { deferred.forEach(uid => enqueueReset(uid)); }, 30000);   // চলমান বেট শেষ হলো কিনা
+
 // Render এর জন্য হেলথ চেক
 http.createServer((q, r) => { r.writeHead(200); r.end('NP push server ok'); })
   .listen(process.env.PORT || 3000);

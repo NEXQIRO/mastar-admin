@@ -2088,7 +2088,7 @@
         <section id="view-users" class="view-section">
           <div id="np-ref-card" style="margin-bottom:14px;padding:14px 16px;border-radius:14px;border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.08);">
             <div style="font-weight:800;margin-bottom:4px;">🔗 আপনার ইউজার রেফারেল লিংক</div>
-            <div style="font-size:.78rem;opacity:.8;margin-bottom:8px;">এই লিংক দিয়ে যারা নতুন অ্যাকাউন্ট খুলবে, তারা স্বয়ংক্রিয়ভাবে আপনার ইউজার হবে।</div>
+            <div style="font-size:.78rem;opacity:.8;margin-bottom:8px;">এই লিংক দিয়ে যারা নতুন অ্যাকাউন্ট খুলবে, তারা সারাজীবন আপনার ইউজার থাকবে এবং তাদের সব ডিপোজিট/উইথড্র রিকোয়েস্ট শুধু আপনার কাছে আসবে। লিংক ছাড়া কেউ অ্যাকাউন্ট খুলতে পারবে না।</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
               <input id="np-ref-link" readonly style="flex:1;min-width:200px;padding:9px 11px;border-radius:9px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.25);color:inherit;font-size:.8rem;">
               <button class="btn btn-sm btn-accent" type="button" onclick="npCopyRefLink()" style="font-weight:700;">📋 কপি</button>
@@ -4009,10 +4009,11 @@
 
     // ---- Admin-ভিত্তিক ইউজার: প্রতিটি অ্যাডমিন শুধু নিজের ইউজার ও তাদের রিকোয়েস্ট দেখে ----
     // (যে ইউজারের এখনো কোনো অ্যাডমিন নেই, সে আগের মতোই সবার কাছে দৃশ্যমান থাকে)
+    const NP_USER_PANEL_URL = 'https://trunamentgame-dev.github.io/NP-TRUNAMENT/index.html';   // ইউজার প্যানেলের আসল ঠিকানা (আলাদা GitHub)
     let NP_OWNER = {};
     const NP_RAW = { deposits: [], withdrawals: [], ledger: [], sessions: [] };
     function npMyUid() { return (STATE.adminUser && STATE.adminUser.uid) || (auth && auth.currentUser && auth.currentUser.uid) || null; }
-    function npOwns(uid, reqAdmin) { const o = reqAdmin || NP_OWNER[uid] || null; const me = npMyUid(); return !o || !me || o === me; }
+    function npOwns(uid, reqAdmin) { const o = reqAdmin || NP_OWNER[uid] || null; const me = npMyUid(); return !!o && !!me && o === me; }   // মালিক অ্যাডমিন না থাকলে কেউই দেখবে না
     function npRefilter() {
       STATE.deposits = NP_RAW.deposits.filter(d => npOwns(d.uid, d.adminUid));
       STATE.withdrawals = NP_RAW.withdrawals.filter(w => npOwns(w.uid, w.adminUid));
@@ -4021,7 +4022,7 @@
     }
     function npRefreshRefLink() {
       const el = document.getElementById('np-ref-link'), me = npMyUid();
-      if (el && me) el.value = location.href.replace(/[?#].*$/, '').replace(/[^/]*$/, '') + 'index.html?ref=' + me;
+      if (el && me) el.value = NP_USER_PANEL_URL + '?ref=' + me;
     }
     function npCopyRefLink() {
       const el = document.getElementById('np-ref-link'); if (!el || !el.value) { showToast('লিংক এখনো তৈরি হয়নি', 'error'); return; }
@@ -4142,8 +4143,15 @@
       if (!db || !u) return;
       const aSnap = await db.ref(`admins/${u.uid}`).once('value');
       const isApproved = aSnap.exists() && aSnap.val().active !== false;
-      if (!u.emailVerified && !isApproved) { showToast('অনুমোদিত অ্যাডমিন ছাড়া ব্যালেন্স রিকোয়েস্ট করা যাবে না', 'error'); return; }
+      if (!u.emailVerified && !isApproved) { showToast('অনুমোদিত অ্যাডমিন ছাড়া ব্যালেন্স রিকোয়েস্ট করা যাবে না', 'error'); return; }
       await u.getIdToken(true);
+      let pay = null;
+      try { pay = (await db.ref('master/payment').once('value')).val(); } catch (e) { pay = null; }
+      if (!pay || !pay.address || !(parseFloat(pay.rate) > 0)) { return npLegacyFundPrompt(u, suggestedAmt); }
+      npOpenFundPayModal(u, pay, suggestedAmt);
+    }
+    // Master এখনো পেমেন্ট তথ্য সেট না করলে আগের পদ্ধতিই চলবে
+    async function npLegacyFundPrompt(u, suggestedAmt) {
       const a = prompt(`বর্তমান ব্যালেন্স: ৳${STATE.adminBalance}\nMaster Administrator-এর কাছে কত টাকা চান?`, String((typeof suggestedAmt === 'number' && suggestedAmt > 0) ? suggestedAmt : 5000));
       const amt = Math.floor(parseFloat(a));
       if (!amt || amt <= 0) return;
@@ -4152,6 +4160,98 @@
         await db.ref('balanceRequests').push({ uid: u.uid, email: u.email, amount: amt, note, status: 'pending', createdAt: firebase.database.ServerValue.TIMESTAMP });
         showToast('রিকোয়েস্ট পাঠানো হয়েছে। Master অনুমোদন করলে ব্যালেন্স যোগ হবে।', 'success');
       } catch (e) { showToast('রিকোয়েস্ট ব্যর্থ: ' + e.message, 'error'); }
+    }
+    function npR2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+    function npOpenFundPayModal(u, pay, suggestedAmt) {
+      const old = document.getElementById('np-fund-ov'); if (old) old.remove();
+      const IN = 'width:100%;height:42px;margin:4px 0 10px;padding:0 12px;background:var(--bg-inner);color:var(--text-main);border:1px solid var(--border-subtle);border-radius:8px;font-size:14px;font-family:inherit;';
+      const LB = 'font-size:13px;color:var(--text-muted);';
+      const ov = document.createElement('div');
+      ov.id = 'np-fund-ov';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:12px;';
+      ov.innerHTML = `
+        <div style="width:100%;max-width:440px;max-height:92vh;overflow:auto;background:var(--bg-card);color:var(--text-main);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow-card);font-family:var(--font-body);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <b style="font-size:17px;color:var(--primary);">💰 Master-এর কাছে ব্যালেন্স রিকোয়েস্ট</b>
+            <button id="npf-x" type="button" style="background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;line-height:1;">✕</button>
+          </div>
+          <div style="${LB}margin-bottom:10px;">বর্তমান ব্যালেন্স: <b id="npf-bal" style="color:var(--text-main);"></b></div>
+          <label style="${LB}">কত টাকা ব্যালেন্স চান?</label>
+          <input id="npf-amt" type="number" min="1" inputmode="numeric" style="${IN}">
+          <div id="npf-sum" style="white-space:pre-line;background:var(--bg-inner);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:12px;margin:4px 0 12px;font-size:14px;line-height:1.8;"></div>
+          <div style="${LB}margin-bottom:8px;">নিচের Binance USDT ঠিকানায় উপরের USDT পরিমাণ পাঠান, তারপর ট্রানজেকশন আইডি (TxID) দিয়ে রিকোয়েস্ট করুন।</div>
+          <div style="text-align:center;margin-bottom:10px;"><img id="npf-qr" alt="Binance QR" style="display:none;width:200px;max-width:70%;height:auto;background:#fff;padding:6px;border-radius:10px;margin:0 auto;"></div>
+          <div style="${LB}">নেটওয়ার্ক: <b id="npf-net" style="color:var(--text-main);"></b></div>
+          <div style="display:flex;gap:8px;align-items:center;margin:6px 0 12px;">
+            <code id="npf-addr" style="flex:1;word-break:break-all;background:var(--bg-inner);border:1px solid var(--border-subtle);border-radius:8px;padding:8px;font-size:12px;"></code>
+            <button id="npf-copy" type="button" class="btn btn-outline btn-sm">কপি</button>
+          </div>
+          <label style="${LB}">Binance ট্রানজেকশন আইডি (TxID)</label>
+          <input id="npf-tx" type="text" maxlength="200" placeholder="TxID এখানে বসান" style="${IN}">
+          <label style="${LB}">নোট (ঐচ্ছিক)</label>
+          <input id="npf-note" type="text" maxlength="200" style="${IN}">
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button id="npf-send" type="button" class="btn btn-primary" style="flex:1;">রিকোয়েস্ট পাঠান</button>
+            <button id="npf-cancel" type="button" class="btn btn-outline">বাতিল</button>
+          </div>
+        </div>`;
+      document.body.appendChild(ov);
+      const q = (id) => ov.querySelector('#' + id);
+      let cur = pay;
+      const payRef = db.ref('master/payment');
+      const onPay = (s) => { const v = s.val(); if (v && v.address && parseFloat(v.rate) > 0) { cur = v; paintStatic(); paintSum(); } };
+      const close = () => { try { payRef.off('value', onPay); } catch (e) {} ov.remove(); };
+      function calc() {
+        const amt = Math.floor(parseFloat(q('npf-amt').value)) || 0;
+        let pct = parseFloat(cur.feePercent); if (!isFinite(pct) || pct < 0) pct = 0;
+        const rate = parseFloat(cur.rate) || 0;
+        const feeAmount = npR2(amt * pct / 100);
+        const usdt = rate > 0 ? npR2(feeAmount / rate) : 0;
+        return { amt, pct, rate, feeAmount, usdt };
+      }
+      function paintSum() {
+        const c = calc();
+        q('npf-sum').textContent = c.amt > 0
+          ? `আপনি চাইছেন: ৳${c.amt}\nমাস্টারকে ফি (${c.pct}%): ৳${c.feeAmount}\nআপনাকে দিতে হবে: ${c.usdt} USDT\n(১ USDT = ৳${c.rate})\nব্যালেন্স পাবেন: ৳${c.amt}`
+          : 'টাকার পরিমাণ লিখুন';
+      }
+      function paintStatic() {
+        q('npf-net').textContent = cur.network || '-';
+        q('npf-addr').textContent = cur.address;
+        const qr = q('npf-qr');
+        if (typeof cur.qr === 'string' && cur.qr.indexOf('data:image/') === 0) { qr.src = cur.qr; qr.style.display = 'block'; } else { qr.style.display = 'none'; }
+      }
+      q('npf-bal').textContent = '৳' + (STATE.adminBalance || 0);
+      q('npf-amt').value = (typeof suggestedAmt === 'number' && suggestedAmt > 0) ? Math.ceil(suggestedAmt) : 5000;
+      q('npf-amt').addEventListener('input', paintSum);
+      paintStatic(); paintSum();
+      payRef.on('value', onPay);
+      q('npf-x').onclick = close; q('npf-cancel').onclick = close;
+      ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+      q('npf-copy').onclick = () => {
+        const t = String(cur.address || '');
+        const done = () => showToast('ঠিকানা কপি হয়েছে', 'success');
+        try { navigator.clipboard.writeText(t).then(done, () => {}); } catch (e) {
+          const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); done(); } catch (_) {} ta.remove();
+        }
+      };
+      q('npf-send').onclick = async () => {
+        const c = calc();
+        const tx = q('npf-tx').value.trim();
+        const note = q('npf-note').value.trim();
+        if (!c.amt || c.amt <= 0) { showToast('টাকার পরিমাণ লিখুন', 'error'); return; }
+        if (c.usdt > 0 && tx.length < 6) { showToast('Binance-এর ট্রানজেকশন আইডি (TxID) দিন', 'error'); return; }
+        const btn = q('npf-send'); btn.disabled = true;
+        const data = { uid: u.uid, email: u.email, amount: c.amt, note, status: 'pending', createdAt: firebase.database.ServerValue.TIMESTAMP, payMethod: 'binance_usdt', feePercent: c.pct, feeAmount: c.feeAmount, usdt: c.usdt, rate: c.rate };
+        if (tx) data.txId = tx;
+        if (typeof cur.network === 'string' && cur.network) data.network = cur.network;
+        try {
+          await db.ref('balanceRequests').push(data);
+          close();
+          showToast('রিকোয়েস্ট পাঠানো হয়েছে। Master Binance-এ পেমেন্ট মিলিয়ে অনুমোদন করলে ব্যালেন্স যোগ হবে।', 'success');
+        } catch (e) { btn.disabled = false; showToast('রিকোয়েস্ট ব্যর্থ: ' + e.message, 'error'); }
+      };
     }
     // --- Firebase Live Listeners ---
     function initFirebaseListeners() {
@@ -4635,6 +4735,7 @@
     }
     function completeLogin(email, uid) {
       STATE.adminUser = { uid, email, role: 'USER_ADMIN' };
+      try { db.ref('adminLinks/' + uid).set(true).catch(() => {}); } catch (e) {}   // রেফারেল লিংক চালু (ইউজার প্যানেল এটা দেখে যাচাই করে)
       attachMyBalance(uid);
       attachFeatureFlags();
       try { attachPromotions(); } catch (e) { console.warn('Promotions:', e); }
@@ -6501,7 +6602,6 @@
           updates[`users/${dep.uid}/turnoverDone`] = curTurnDone;
           updates[`users/${dep.uid}/turnoverCompleted`] = curTurnDone;
         }
-        if (!uData.adminUid) updates[`users/${dep.uid}/adminUid`] = STATE.adminUser.uid;   // প্রথম অনুমোদনকারী অ্যাডমিনই ইউজারের অ্যাডমিন থাকে
         updates[`depositRequests/${depId}/adminUid`] = STATE.adminUser.uid;
         updates[`admins/${STATE.adminUser.uid}/balance`] = firebase.database.ServerValue.increment(-depAmt);
 

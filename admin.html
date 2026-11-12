@@ -9086,7 +9086,6 @@ await db.ref('notices/not_2').set({
     const GA_SESSION_GAP_MS = 10 * 60 * 1000;
 
     async function loadGameActivity() {
-      showToast('এটি শুধু MASTER ADMINISTRATOR করতে পারবেন।', 'error'); return;
       if (GA.loading || !db) return;
       GA.loading = true;
       const body = document.getElementById('ga-tbody');

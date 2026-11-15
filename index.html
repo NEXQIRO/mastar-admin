@@ -1,13 +1,472 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NP Panels</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title id="docTitle">MR TECH | Mijanur Rahman — Web & Mobile App Developer</title>
+  <meta name="description" id="docMetaDesc" content="Official personal portfolio of Mijanur Rahman (MR TECH). Full-Stack Web & Native Android App Developer building scalable digital solutions, high-performance web applications, and real-time cloud backends.">
+  <meta name="keywords" content="Mijanur Rahman, MR TECH, Web Developer, Android Developer, Mobile App Developer, Full-Stack, React, Next.js, Kotlin, Jetpack Compose, Firebase, Portfolio">
+  <meta name="author" content="Mijanur Rahman">
+  <meta name="theme-color" content="#040711">
+
+  <!-- Open Graph / Social Meta -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="MR TECH | Mijanur Rahman — Web & Mobile App Developer">
+  <meta property="og:description" content="Building Modern Websites, Web Applications & Native Mobile Apps. Explore genuine projects and get in touch with Mijanur.">
+  <meta property="og:image" content="images/profile.jpg">
+
+  <!-- Favicon & PWA Manifest -->
+  <link rel="icon" type="image/jpeg" href="images/profile.jpg">
+  <link rel="apple-touch-icon" href="images/profile.jpg">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
-<body style="font-family:sans-serif;text-align:center;padding:40px">
-<h2>NP Panels</h2>
-<p><a href="master.html">Master Panel</a></p>
-<p><a href="admin.html">Admin Panel</a></p>
+<body>
+
+  <!-- Ambient Glowing Background Elements -->
+  <div class="ambient-glow" aria-hidden="true">
+    <div class="glow-orb-1"></div>
+    <div class="glow-orb-2"></div>
+    <div class="glow-orb-3"></div>
+  </div>
+
+  <!-- Header & Navigation -->
+  <header class="header" id="navbar">
+    <div class="container nav-container">
+      <a href="#home" class="brand-logo" aria-label="MR TECH Homepage">
+        <div class="logo-badge">&lt;/&gt;</div>
+        <span class="brand-text" id="brandText">MR <span class="tech-pill-badge">TECH</span></span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-menu" id="navMenu">
+          <li><a href="#home" class="nav-link active">Home</a></li>
+          <li><a href="#about" class="nav-link">About</a></li>
+          <li><a href="#skills" class="nav-link">Skills</a></li>
+          <li><a href="#projects" class="nav-link">Projects</a></li>
+          <li><a href="#services" class="nav-link">Services</a></li>
+          <li><a href="#journey" class="nav-link">Journey</a></li>
+          <li><a href="#contact" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="#contact" class="btn btn-primary btn-sm nav-cta-btn">
+          <i class="fa-solid fa-paper-plane"></i>
+          <span>Hire Me</span>
+        </a>
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle navigation menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1. Home / Hero Section -->
+    <section class="hero-section" id="home">
+      <div class="container">
+        <div class="hero-grid">
+          <div class="hero-content">
+            <div class="status-badge" id="statusBadge">
+              <span class="pulse-dot"></span>
+              <span id="availabilityText">Available for Projects & Full-time Roles</span>
+            </div>
+            
+            <p class="hero-greeting" id="heroGreeting">Hello, world! I am</p>
+            <h1 class="hero-name"><span class="highlight" id="heroName">Mijanur Rahman</span></h1>
+            
+            <div class="hero-role-wrapper">
+              <span>Passionate</span>
+              <span class="role-typing" id="heroTitle">Web & Mobile App Developer</span>
+            </div>
+
+            <p class="hero-tagline" id="heroTagline">
+              Architecting high-velocity Web Applications, Native Android Apps & Resilient Cloud Backends. Transforming complex product requirements into seamless, pixel-perfect digital experiences.
+            </p>
+
+            <div class="hero-cta-group">
+              <a href="#projects" class="btn btn-primary" id="heroCta1">
+                <span>View Real Projects</span>
+                <i class="fa-solid fa-code"></i>
+              </a>
+              <button type="button" class="btn btn-gold" id="heroLiveChatBtn">
+                <i class="fa-solid fa-comments"></i>
+                <span>Live Chat With Me</span>
+              </button>
+              <a href="https://wa.me/8801700000000" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="heroWhatsappBtn">
+                <i class="fa-brands fa-whatsapp"></i>
+                <span>Direct WhatsApp</span>
+              </a>
+            </div>
+
+            <div class="hero-stats">
+              <div class="stat-item">
+                <span class="stat-num" id="statProjects">25+</span>
+                <span class="stat-label" id="statProjectsLabel">Core Projects</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-num" id="statExperience">4+</span>
+                <span class="stat-label" id="statExpLabel">Years Experience</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-num" id="statSatisfaction">100%</span>
+                <span class="stat-label" id="statSatLabel">Client Satisfaction</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-visual">
+            <div class="avatar-frame">
+              <img src="images/profile.jpg" alt="Mijanur Rahman portrait" class="avatar-img" id="heroAvatar">
+            </div>
+
+            <!-- Floating Tech Badges -->
+            <div class="floating-pill pill-1">
+              <i class="fa-brands fa-react" style="color: #00F0FF;"></i>
+              <span>React & Next.js</span>
+            </div>
+            <div class="floating-pill pill-2">
+              <i class="fa-brands fa-android" style="color: #34D399;"></i>
+              <span>Android Compose</span>
+            </div>
+            <div class="floating-pill pill-3">
+              <i class="fa-solid fa-fire" style="color: #F59E0B;"></i>
+              <span>Firebase Cloud</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. About Me Section -->
+    <section id="about">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-tag">
+            <i class="fa-solid fa-user-astronaut"></i>
+            <span>Professional Profile</span>
+          </div>
+          <h2 class="section-title">About <span>Me</span></h2>
+          <p class="section-desc">Get to know the developer behind the code, engineering principles, and technical trajectory.</p>
+        </div>
+
+        <div class="about-grid">
+          <div class="about-card">
+            <h3 class="about-headline">Engineering With Purpose & Precision</h3>
+            <p class="about-bio" id="aboutBio">
+              I am a dedicated Full-Stack Web and Native Android Application Developer with over 4 years of proven engineering experience. My technical journey centers on writing clean, scalable, and well-tested code that bridges fluid user experiences with robust cloud backends. From high-throughput real-time gaming engines to scalable enterprise administrative platforms and reactive mobile applications, I craft software that performs under load and scales effortlessly.
+            </p>
+
+            <div class="about-highlights">
+              <div class="highlight-box">
+                <div class="highlight-title">Current Location</div>
+                <div class="highlight-value" id="aboutLocation">Dhaka, Bangladesh</div>
+              </div>
+              <div class="highlight-box">
+                <div class="highlight-title">Work Preference</div>
+                <div class="highlight-value">Remote Worldwide</div>
+              </div>
+              <div class="highlight-box">
+                <div class="highlight-title">Primary Focus</div>
+                <div class="highlight-value">Web & Mobile Apps</div>
+              </div>
+              <div class="highlight-box">
+                <div class="highlight-title">Engineering Goal</div>
+                <div class="highlight-value">High Scale & Quality</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="values-list">
+            <div class="value-item">
+              <div class="value-icon"><i class="fa-solid fa-bolt"></i></div>
+              <div class="value-content">
+                <h4>Performance First</h4>
+                <p>Writing lean, highly optimized code with zero bloat, high Core Web Vitals, and sub-second load times.</p>
+              </div>
+            </div>
+            <div class="value-item">
+              <div class="value-icon"><i class="fa-solid fa-shield-halved"></i></div>
+              <div class="value-content">
+                <h4>Zero-Trust Cloud Security</h4>
+                <p>Implementing fine-grained Firebase security rules, protected REST APIs, secure token auth, and safe data access layers.</p>
+              </div>
+            </div>
+            <div class="value-item">
+              <div class="value-icon"><i class="fa-solid fa-mobile-screen"></i></div>
+              <div class="value-content">
+                <h4>Pixel-Perfect Responsiveness</h4>
+                <p>Every interface dynamically adapts to all smartphone display sizes, tablets, foldables, laptops, and ultra-wide screens.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Skills Section -->
+    <section id="skills">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-tag">
+            <i class="fa-solid fa-code"></i>
+            <span>Technical Arsenal</span>
+          </div>
+          <h2 class="section-title">Skills & <span>Expertise</span></h2>
+          <p class="section-desc">Technologies, frameworks, and developer tools I leverage to craft scalable digital products.</p>
+        </div>
+
+        <div class="skills-tabs" id="skillsTabs">
+          <button class="tab-btn active" data-category="all">All Technologies</button>
+          <button class="tab-btn" data-category="frontend">Frontend</button>
+          <button class="tab-btn" data-category="backend">Backend & APIs</button>
+          <button class="tab-btn" data-category="mobile">Mobile & PWA</button>
+          <button class="tab-btn" data-category="database">Cloud & Database</button>
+          <button class="tab-btn" data-category="tools">Tools & DevOps</button>
+        </div>
+
+        <div class="skills-grid" id="skillsGrid">
+          <!-- Dynamically populated from Firebase / Seed -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Projects Section -->
+    <section id="projects">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-tag">
+            <i class="fa-solid fa-cubes"></i>
+            <span>Real-World Work</span>
+          </div>
+          <h2 class="section-title">Featured <span>Projects</span></h2>
+          <p class="section-desc">Genuine applications and systems created with clear labeling of actual status and technology stack.</p>
+        </div>
+
+        <div class="projects-filter" id="projectsFilter">
+          <button class="project-filter-btn active" data-filter="all">All Projects</button>
+          <button class="project-filter-btn" data-filter="Full-Stack Web">Web Applications</button>
+          <button class="project-filter-btn" data-filter="Dashboard & CMS">Dashboards</button>
+          <button class="project-filter-btn" data-filter="Mobile & Web App">Mobile & Apps</button>
+          <button class="project-filter-btn" data-filter="Game Engine & Logic">Interactive & Games</button>
+        </div>
+
+        <div class="projects-grid" id="projectsGrid">
+          <!-- Dynamically populated from Firebase / Seed -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Services Section -->
+    <section id="services">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-tag">
+            <i class="fa-solid fa-briefcase"></i>
+            <span>What I Deliver</span>
+          </div>
+          <h2 class="section-title">Professional <span>Services</span></h2>
+          <p class="section-desc">End-to-end development services tailored to businesses, founders, startups, and product owners.</p>
+        </div>
+
+        <div class="services-grid" id="servicesGrid">
+          <!-- Dynamically populated from Firebase / Seed -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Experience / Journey Section -->
+    <section id="journey">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-tag">
+            <i class="fa-solid fa-route"></i>
+            <span>Career Path</span>
+          </div>
+          <h2 class="section-title">Developer <span>Journey</span></h2>
+          <p class="section-desc">A progressive timeline of my engineering milestones, roles, and technical growth.</p>
+        </div>
+
+        <div class="timeline-container" id="timelineContainer">
+          <!-- Dynamically populated from Firebase / Seed -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Contact Section -->
+    <section id="contact">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-tag">
+            <i class="fa-solid fa-envelope"></i>
+            <span>Get In Touch</span>
+          </div>
+          <h2 class="section-title">Contact <span>Me</span></h2>
+          <p class="section-desc">Have a project proposal, freelance opportunity, or technical question? Send a direct message.</p>
+        </div>
+
+        <div class="contact-grid">
+          <div class="contact-info">
+            <a href="mailto:mstrumaah1999@gmail.com" class="contact-card" id="contactEmailCard">
+              <div class="contact-card-icon"><i class="fa-solid fa-envelope"></i></div>
+              <div class="contact-card-content">
+                <h5>Email Address</h5>
+                <p id="contactEmail">mstrumaah1999@gmail.com</p>
+              </div>
+            </a>
+
+            <a href="https://wa.me/8801700000000" target="_blank" rel="noopener noreferrer" class="contact-card" id="contactWhatsappCard">
+              <div class="contact-card-icon"><i class="fa-brands fa-whatsapp"></i></div>
+              <div class="contact-card-content">
+                <h5>WhatsApp Direct</h5>
+                <p id="contactWhatsapp">+880 1700-000000</p>
+              </div>
+            </a>
+
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="contact-card" id="contactGithubCard">
+              <div class="contact-card-icon"><i class="fa-brands fa-github"></i></div>
+              <div class="contact-card-content">
+                <h5>GitHub Profile</h5>
+                <p id="contactGithub">github.com/mrdeveloper</p>
+              </div>
+            </a>
+
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="contact-card" id="contactLinkedinCard">
+              <div class="contact-card-icon"><i class="fa-brands fa-linkedin-in"></i></div>
+              <div class="contact-card-content">
+                <h5>LinkedIn Network</h5>
+                <p id="contactLinkedin">linkedin.com/in/mrdeveloper</p>
+              </div>
+            </a>
+          </div>
+
+          <div class="contact-form-card">
+            <form id="contactForm">
+              <div class="form-group">
+                <label for="contactName" class="form-label">Your Name *</label>
+                <input type="text" id="contactName" class="form-control" placeholder="John Doe" required autocomplete="name">
+              </div>
+
+              <div class="form-group">
+                <label for="contactFormEmail" class="form-label">Email Address *</label>
+                <input type="email" id="contactFormEmail" class="form-control" placeholder="john@example.com" required autocomplete="email">
+              </div>
+
+              <div class="form-group">
+                <label for="contactSubject" class="form-label">Subject</label>
+                <input type="text" id="contactSubject" class="form-control" placeholder="Project Inquiry / Job Opportunity">
+              </div>
+
+              <div class="form-group">
+                <label for="contactMessage" class="form-label">Message *</label>
+                <textarea id="contactMessage" class="form-control" placeholder="Describe your project, timeline, budget, or requirements..." required></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%;" id="submitMsgBtn">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Send Message to Mijanur</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Quick Floating Live Chat Trigger -->
+  <button class="livechat-trigger" id="chatTrigger" aria-label="Open Live Chat with Mijanur">
+    <i class="fa-solid fa-comments"></i>
+    <span class="badge-pulse"></span>
+  </button>
+
+  <!-- Live Chat Dialog with Conversational Lead Bot -->
+  <div class="livechat-dialog" id="chatDialog" role="dialog" aria-labelledby="chatAgentName" aria-modal="true">
+    <div class="chat-header">
+      <div class="chat-agent-info">
+        <img src="images/profile.jpg" alt="Mijanur Rahman" class="chat-agent-avatar" id="chatAgentAvatar">
+        <div>
+          <div class="chat-agent-title" id="chatAgentName">Mijanur Rahman</div>
+          <div class="chat-agent-subtitle">
+            <span class="status-dot"></span>
+            <span id="chatAgentStatus">Online • Typically replies in minutes</span>
+          </div>
+        </div>
+      </div>
+      <button class="chat-close-btn" id="chatCloseBtn" aria-label="Close Chat">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Quick suggestion / option chips -->
+    <div class="chat-quick-chips" id="chatQuickChips">
+      <!-- Populated dynamically by bot based on current step -->
+    </div>
+
+    <!-- Chat Messages Stream -->
+    <div class="chat-messages-container" id="chatMessages">
+      <!-- Welcome message and interactive conversation bubbles will appear here -->
+    </div>
+
+    <!-- Chat Input Bar -->
+    <div class="chat-input-bar">
+      <input type="text" id="chatInput" placeholder="Type your response..." autocomplete="off">
+      <button class="chat-send-btn" id="chatSendBtn" aria-label="Send message">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- 8. Footer Section -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#home" class="brand-logo">
+            <div class="logo-badge">&lt;/&gt;</div>
+            <span class="brand-text">MR TECH</span>
+          </a>
+          <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.5rem; max-width: 360px;">
+            Mijanur Rahman — Full-Stack Web & Native Mobile App Developer. Building modern websites, web applications, and resilient digital architectures.
+          </p>
+        </div>
+
+        <div class="footer-socials">
+          <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+          <a href="https://wa.me/8801700000000" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+          <a href="mailto:mstrumaah1999@gmail.com" class="social-btn" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 MR TECH (Mijanur Rahman). All rights reserved.</div>
+        <a href="#home" class="back-to-top">
+          <span>Back to Top</span>
+          <i class="fa-solid fa-arrow-up"></i>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- Firebase v10 Compat SDK from official CDN -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+
+  <!-- Application Configuration & Logic -->
+  <script src="firebase-config.js"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

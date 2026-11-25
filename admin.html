@@ -1555,6 +1555,39 @@
     body[data-theme="light"] [style*="#141c30" i]:not(.modal-card *):not(.toast),
     body[data-theme="light"] .accent-border { background-image: none !important; background-color: #FFF7E6 !important; }
 </style>
+<style id="np-mui">
+/* NP mobile UI: Dark&Gold app look (mobile only, desktop unchanged) */
+.np-mtitle{display:none}
+.topbar>.mobile-menu-btn{display:none}
+.bottom-nav{display:none}
+@media (max-width:900px){
+.topbar>.mobile-menu-btn{display:grid;background:transparent;border:0;color:var(--primary);width:34px;height:34px;flex:none}
+.mobile-menu-btn svg{width:26px;height:26px;fill:currentColor}
+.topbar{height:56px;padding:0 12px;gap:8px;background:#0A0A0A;border-bottom:1px solid var(--border-subtle)}
+.np-mtitle{display:block;flex:1;min-width:0;font:700 1.02rem var(--font-body);color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-actions{gap:6px;margin-left:0}
+.topbar-actions .theme-toggle-btn{display:none}
+.topbar-actions .btn-sm{padding:5px 8px;font-size:.72rem}
+#topbar-pwa-install-btn span{display:none}
+#topbar-admin-balance{padding:3px 8px!important;gap:4px!important;border-radius:999px;border:1px solid var(--border-color)}
+#topbar-admin-balance>span{font-size:0!important}
+#topbar-admin-balance>span:last-child::after{content:"+";font-size:.9rem}
+#topbar-admin-balance>span:first-of-type:not(:last-child){display:none}
+.sidebar-footer #btn-sound-toggle{width:100%;justify-content:center}
+.content-area{padding:14px 12px}
+.stats-grid{grid-template-columns:1fr 1fr!important;gap:10px}
+.stat-card{flex-direction:column;align-items:flex-start;gap:10px;padding:14px;border-radius:16px;background:#12100E;border:1px solid var(--border-subtle)}
+.stat-icon{width:36px;height:36px;border-radius:10px}
+.stat-title{font-size:.66rem;letter-spacing:.05em;text-transform:uppercase}
+.card{border-radius:16px;border-color:rgba(185,120,0,.55)}
+.main-wrapper{padding-bottom:78px}
+#toast{bottom:84px!important;right:12px!important}
+.bottom-nav{display:flex;position:fixed;left:0;right:0;bottom:0;height:66px;background:#0F0D0A;border-top:1px solid var(--border-subtle);z-index:95;align-items:center;padding:0 6px}
+.bottom-nav-btn{flex:1;background:transparent;border:0;color:var(--text-muted);display:flex;flex-direction:column;align-items:center;gap:3px;font:600 .66rem var(--font-body);padding:7px 2px;margin:0 2px;border-radius:14px;cursor:pointer}
+.bottom-nav-btn svg{width:22px;height:22px;fill:currentColor}
+.bottom-nav-btn.active{background:var(--primary);color:#0A0A0A}
+}
+</style>
 </head>
 <body data-theme="dark">
 <script>try{var __t=localStorage.getItem("np_admin_theme");if(__t==="light"||__t==="dark")document.body.setAttribute("data-theme",__t);}catch(e){}</script>
@@ -1697,6 +1730,7 @@
       
       <!-- TOPBAR -->
       <header class="topbar">
+<button class="mobile-menu-btn" onclick="toggleSidebar()" title="মেন্যু"><svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button><div class="np-mtitle" id="np-mtitle">ড্যাশবোর্ড</div>
 
         <!-- Admin Balance Pill (৳ 20,000) -->
         <div class="bal" id="topbar-admin-balance" onclick="openAdminFundModal()" title="এডমিনের নিজস্ব লেনদেন তহবিল (ক্লিক করুন বিস্তারিত দেখতে বা ব্যালেন্স রিচার্জ করতে)" style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
@@ -10026,5 +10060,10 @@ await db.ref('notices/not_2').set({
     if (btn) btn.click();
   };
 </script>
+<script id="np-mui-js">(function(){try{function npPlace(){var m=matchMedia('(max-width:900px)').matches||document.documentElement.classList.contains('force-mobile'),b=document.getElementById('btn-sound-toggle'),f=document.querySelector('.sidebar-footer'),a=document.querySelector('.topbar-actions');if(!b||!f||!a)return;if(m&&b.parentNode!==f)f.insertBefore(b,f.firstChild);else if(!m&&b.parentNode!==a)a.insertBefore(b,document.getElementById('lang-switch-btn'))}
+npPlace();addEventListener('resize',npPlace);
+function npTitle(v){var t=document.getElementById('np-mtitle'),l=document.querySelector('.nav-item[data-view="'+v+'"] .nav-label');if(t&&l)t.textContent=l.textContent.trim()}
+var _sv=window.switchView;if(_sv)window.switchView=function(v){var r=_sv.apply(this,arguments);npTitle(v);return r};
+setTimeout(function(){npTitle('view-dashboard')},300);}catch(e){console.warn(e)}})();</script>
 </body>
 </html>

@@ -305,6 +305,47 @@ apply();window.addEventListener('load',function(){setTimeout(apply,150)});window
 .login-logo{background:transparent !important;width:96px;height:96px;margin:0 auto 14px;border-radius:0}
 .login-logo img{width:96px;height:96px;display:block;object-fit:contain}
 </style>
+<style id="np-mui">
+/* NP mobile UI: Dark&Gold app look (mobile only, desktop unchanged) */
+.np-mtitle{display:none}
+.topbar>.mobile-menu-btn{display:none}
+.bottom-nav{display:none}
+@media (max-width:900px){
+.topbar>.mobile-menu-btn{display:grid;background:transparent;border:0;color:var(--primary);width:34px;height:34px;flex:none}
+.mobile-menu-btn svg{width:26px;height:26px;fill:currentColor}
+.topbar{height:56px;padding:0 12px;gap:8px;background:#0A0A0A;border-bottom:1px solid var(--border-subtle)}
+.np-mtitle{display:block;flex:1;min-width:0;font:700 1.02rem var(--font-body);color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-actions{gap:6px;margin-left:0}
+.topbar-actions .theme-toggle-btn{display:none}
+.topbar-actions .btn-sm{padding:5px 8px;font-size:.72rem}
+#topbar-pwa-install-btn span{display:none}
+#topbar-admin-balance{padding:3px 8px!important;gap:4px!important;border-radius:999px;border:1px solid var(--border-color)}
+#topbar-admin-balance>span{font-size:0!important}
+#topbar-admin-balance>span:last-child::after{content:"+";font-size:.9rem}
+#topbar-admin-balance>span:first-of-type:not(:last-child){display:none}
+.sidebar-footer #btn-sound-toggle{width:100%;justify-content:center}
+.content-area{padding:14px 12px}
+.stats-grid{grid-template-columns:1fr 1fr!important;gap:10px}
+.stat-card{flex-direction:column;align-items:flex-start;gap:10px;padding:14px;border-radius:16px;background:#12100E;border:1px solid var(--border-subtle)}
+.stat-icon{width:36px;height:36px;border-radius:10px}
+.stat-title{font-size:.66rem;letter-spacing:.05em;text-transform:uppercase}
+.card{border-radius:16px;border-color:rgba(185,120,0,.55)}
+.main-wrapper{padding-bottom:78px}
+#toast{bottom:84px!important;right:12px!important}
+.bottom-nav{display:flex;position:fixed;left:0;right:0;bottom:0;height:66px;background:#0F0D0A;border-top:1px solid var(--border-subtle);z-index:95;align-items:center;padding:0 6px}
+.bottom-nav-btn{flex:1;background:transparent;border:0;color:var(--text-muted);display:flex;flex-direction:column;align-items:center;gap:3px;font:600 .66rem var(--font-body);padding:7px 2px;margin:0 2px;border-radius:14px;cursor:pointer}
+.bottom-nav-btn svg{width:22px;height:22px;fill:currentColor}
+.bottom-nav-btn.active{background:var(--primary);color:#0A0A0A}
+}
+@media (max-width:900px){
+.topbar{height:auto;flex-wrap:wrap;padding:8px 12px}
+.topbar-left{flex:1;min-width:0}
+.topbar-left select{flex:1;min-width:0;max-width:100%}
+.topbar-actions{width:100%;justify-content:space-between;flex-wrap:nowrap}
+.topbar-actions .bal{flex:1;text-align:center}
+#snd-lb{display:none}
+}
+</style>
 </head>
 <body data-theme="dark">
 <script>try{var __t=localStorage.getItem("np_admin_theme");if(__t==="light"||__t==="dark")document.body.setAttribute("data-theme",__t);}catch(e){}</script>
@@ -1404,4 +1445,5 @@ function openPaySettings(){
     catch(e){this.disabled=false;toast('ব্যর্থ: '+e.message+' (নতুন রুলস পাবলিশ করেছেন তো?)')}};
 }
 </script>
+<nav class="bottom-nav" id="np-bnav"><button class="bottom-nav-btn" data-t="admins" onclick="tab('admins');document.getElementById('sidebar').classList.remove('open')"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>অ্যাডমিন</span></button><button class="bottom-nav-btn" data-t="reqs" onclick="tab('reqs');document.getElementById('sidebar').classList.remove('open')"><svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg><span>রিকোয়েস্ট</span></button><button class="bottom-nav-btn" data-t="players" onclick="tab('players');document.getElementById('sidebar').classList.remove('open')"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>প্লেয়ার</span></button><button class="bottom-nav-btn" data-t="led" onclick="tab('led');document.getElementById('sidebar').classList.remove('open')"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg><span>লেজার</span></button><button class="bottom-nav-btn" onclick="toggleSidebar()"><svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg><span>মেন্যু</span></button></nav><script id="np-mui-js">(function(){var _t=window.tab;function npSync(){try{document.querySelectorAll("#np-bnav [data-t]").forEach(function(b){b.classList.toggle("active",b.dataset.t===cur)})}catch(e){}}setInterval(npSync,500);npSync();})();</script>
 </body></html>
